@@ -3,5 +3,10 @@ version: 0.1.0.0
 author: Mitchell Rosen
 github: Sentenai/lucene-query
 
+dependencies:
+  - base
+  - bytestring
+  - text
+
 library:
   source-dirs: src
