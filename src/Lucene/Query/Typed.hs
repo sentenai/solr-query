@@ -2,8 +2,12 @@
 {-# LANGUAGE OverloadedStrings         #-}
 
 module Lucene.Query.Typed
-  ( LuceneQuery
+  (
+  -- * Query type
+    LuceneQuery
+  -- * Query construction
   , (=:), (&&:), (||:), (-:)
+  -- * Query compilation
   , compileLuceneQuery
   ) where
 
@@ -18,6 +22,7 @@ import qualified Data.Text.Encoding as T
 import qualified Data.ByteString.Builder as BS
 
 
+-- | A Lucene query.
 data LuceneQuery
   = forall a. QField Text (LuceneExpr a)
   | QAnd LuceneQuery LuceneQuery
@@ -25,19 +30,67 @@ data LuceneQuery
   | QNot LuceneQuery LuceneQuery
 
 
+-- | A field query.
+--
+-- Example:
+--
+-- @
+-- -- foo:bar
+-- query :: 'LuceneQuery'
+-- query = "foo" '=:' 'word' "bar"
+-- @
 (=:) :: Text -> LuceneExpr a -> LuceneQuery
 (=:) = QField
+infix 4 =:
 
+-- | An @AND@ query.
+--
+-- Example:
+--
+-- @
+-- -- foo:bar AND baz:qux
+-- query :: 'LuceneQuery'
+-- query =
+--       "foo" '=:' 'word' "bar"
+--   '&&:' "baz" '=:' 'word' "qux"
+-- @
 (&&:) :: LuceneQuery -> LuceneQuery -> LuceneQuery
 (&&:) = QAnd
+infixr 3 &&:
 
+-- | An @OR@ query.
+--
+-- Example:
+--
+-- @
+-- -- foo:bar OR baz:qux
+-- query :: 'LuceneQuery'
+-- query =
+--       "foo" '=:' 'word' "bar"
+--   '||:' "baz" '=:' 'word' "qux"
+-- @
 (||:) :: LuceneQuery -> LuceneQuery -> LuceneQuery
 (||:) = QOr
+infixr 2 ||:
 
+-- | A @NOT@ query.
+--
+-- Example:
+--
+-- @
+-- -- foo:bar NOT baz:qux
+-- query :: 'LuceneQuery'
+-- query =
+--      "foo" '=:' 'word' "bar"
+--   '-:' "baz" '=:' 'word' "qux"
+-- @
 (-:) :: LuceneQuery -> LuceneQuery -> LuceneQuery
 (-:) = QNot
+infixr 1 -:
 
 
+-- | Compile a Lucene query to a 'ByteString'. Because the underlying Lucene
+-- expressions are correct by construction, this function is total.
 compileLuceneQuery :: LuceneQuery -> ByteString
 compileLuceneQuery = BS.toLazyByteString . go
  where
