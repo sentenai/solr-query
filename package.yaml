@@ -1,0 +1,7 @@
+name: lucene-query
+version: 0.1.0.0
+author: Mitchell Rosen
+github: Sentenai/lucene-query
+
+library:
+  source-dirs: src
