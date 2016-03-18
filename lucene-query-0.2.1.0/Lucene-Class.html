@@ -23,10 +23,11 @@ query = &quot;foo&quot; <code><a href="Lucene-Class.html#v:-61-:">=:</a></code> 
  will be required (at the interpretation site or earlier).</p><p>Example:</p><pre>-- foo:bar
 query :: <code><a href="Lucene-Query.html#v:LuceneQuery">LuceneQuery</a></code>
 query = &quot;foo&quot; <code><a href="Lucene-Class.html#v:-61-:">=:</a></code> <code><a href="Lucene-Class.html#v:word">word</a></code> &quot;bar&quot;
-</pre><ul><li>- foo:bar
- query :: <code><a href="Lucene-Query.html#v:LuceneQuery">LuceneQuery</a></code>
- query = &quot;foo&quot; <code><a href="Lucene-Class.html#v:-61-:">=:</a></code> (&quot;bar&quot; :: <code><a href="Lucene-Query.html#v:LuceneExpr">LuceneExpr</a></code> <code><a href="Lucene-Type.html#v:TWord">TWord</a></code>)
- @</li></ul></div><p class="src"><a name="v:wild" class="def">wild</a> :: <a href="../text-1.2.2.0/Data-Text.html#t:Text">Text</a> -&gt; expr <a href="Lucene-Type.html#v:TWild">TWild</a> <a href="src/Lucene-Class.html#wild" class="link">Source</a></p><div class="doc"><p>A single word that may contain wildcard characters (<code>'?'</code> and <code>'*'</code>),
+
+-- foo:bar
+query :: <code><a href="Lucene-Query.html#v:LuceneQuery">LuceneQuery</a></code>
+query = &quot;foo&quot; <code><a href="Lucene-Class.html#v:-61-:">=:</a></code> (&quot;bar&quot; :: <code><a href="Lucene-Query.html#v:LuceneExpr">LuceneExpr</a></code> <code><a href="Lucene-Type.html#v:TWord">TWord</a></code>)
+</pre></div><p class="src"><a name="v:wild" class="def">wild</a> :: <a href="../text-1.2.2.0/Data-Text.html#t:Text">Text</a> -&gt; expr <a href="Lucene-Type.html#v:TWild">TWild</a> <a href="src/Lucene-Class.html#wild" class="link">Source</a></p><div class="doc"><p>A single word that may contain wildcard characters (<code>'?'</code> and <code>'*'</code>),
  although it must not begin with a <code>'*'</code>. Must also <em>not</em> contain any
  spaces or tildes (<code>'~'</code>), though this is not enforced by the type system.</p><p>Example:</p><pre>-- foo:b?r
 query :: <code><a href="Lucene-Query.html#v:LuceneQuery">LuceneQuery</a></code>

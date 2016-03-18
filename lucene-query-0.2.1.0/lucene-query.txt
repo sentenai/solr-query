@@ -114,12 +114,11 @@ false :: Lucene expr query => expr TBool
 --   -- foo:bar
 --   query :: <a>LuceneQuery</a>
 --   query = "foo" <a>=:</a> <a>word</a> "bar"
---   </pre>
 --   
---   <ul>
---   <li>- foo:bar query :: <a>LuceneQuery</a> query = "foo" <a>=:</a>
---   ("bar" :: <a>LuceneExpr</a> <a>TWord</a>) @</li>
---   </ul>
+--   -- foo:bar
+--   query :: <a>LuceneQuery</a>
+--   query = "foo" <a>=:</a> ("bar" :: <a>LuceneExpr</a> <a>TWord</a>)
+--   </pre>
 word :: Lucene expr query => Text -> expr TWord
 
 -- | A single word that may contain wildcard characters (<tt>'?'</tt> and
@@ -501,12 +500,11 @@ false :: Lucene expr query => expr TBool
 --   -- foo:bar
 --   query :: <a>LuceneQuery</a>
 --   query = "foo" <a>=:</a> <a>word</a> "bar"
---   </pre>
 --   
---   <ul>
---   <li>- foo:bar query :: <a>LuceneQuery</a> query = "foo" <a>=:</a>
---   ("bar" :: <a>LuceneExpr</a> <a>TWord</a>) @</li>
---   </ul>
+--   -- foo:bar
+--   query :: <a>LuceneQuery</a>
+--   query = "foo" <a>=:</a> ("bar" :: <a>LuceneExpr</a> <a>TWord</a>)
+--   </pre>
 word :: Lucene expr query => Text -> expr TWord
 
 -- | A single word that may contain wildcard characters (<tt>'?'</tt> and
