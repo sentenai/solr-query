@@ -43,12 +43,10 @@ module Lucene.Query
 import Lucene.Class
 import Lucene.Type
 
-import Control.Applicative
 import Data.ByteString.Builder    (Builder)
 import Data.ByteString.Lazy.Char8 (ByteString)
 import Data.Monoid
 import Data.String                (IsString(..))
-import Data.Text                  (Text)
 import GHC.Exts                   (IsList(..))
 
 import qualified Data.Text                  as T
@@ -66,7 +64,7 @@ newtype LuceneExpr (t :: LuceneType) = Expr { unExpr :: Builder }
 -- | This instance is only provided for convenient numeric literals. /ALL/ 'Num'
 -- functions besides 'fromInteger' are not implemented and will cause a runtime
 -- crash.
-instance Num (LuceneExpr TInt) where
+instance Num (LuceneExpr 'TInt) where
   (+) = error "LuceneExpr.Num.(+): not implemented"
   (*) = error "LuceneExpr.Num.(*): not implemented"
   abs = error "LuceneExpr.Num.abs: not implemented"
@@ -75,11 +73,11 @@ instance Num (LuceneExpr TInt) where
 
   fromInteger i = int (fromInteger i)
 
-instance IsString (LuceneExpr TWord) where
+instance IsString (LuceneExpr 'TWord) where
   fromString s = word (T.pack s)
 
-instance IsList (LuceneExpr TPhrase) where
-  type Item (LuceneExpr TPhrase) = LuceneExpr TWord
+instance IsList (LuceneExpr 'TPhrase) where
+  type Item (LuceneExpr 'TPhrase) = LuceneExpr 'TWord
 
   fromList = phrase
   toList = map (Expr . BS.lazyByteString) . BS.words . BS.toLazyByteString . unExpr

@@ -46,7 +46,7 @@ class Lucene expr query | query -> expr, expr -> query where
   -- query :: 'Lucene.Query.LuceneQuery'
   -- query = "foo" '=:' 'int' 5
   -- @
-  int :: Int -> expr TInt
+  int :: Int -> expr 'TInt
 
   -- | A @true@ expression.
   --
@@ -57,7 +57,7 @@ class Lucene expr query | query -> expr, expr -> query where
   -- query :: 'Lucene.Query.LuceneQuery'
   -- query = "foo" '=:' 'true'
   -- @
-  true :: expr TBool
+  true :: expr 'TBool
 
   -- | A @false@ expression.
   --
@@ -68,7 +68,7 @@ class Lucene expr query | query -> expr, expr -> query where
   -- query :: 'Lucene.Query.LuceneQuery'
   -- query = "foo" '=:' 'false'
   -- @
-  false :: expr TBool
+  false :: expr 'TBool
 
   -- | A single word. Must /not/ contain any spaces, wildcard characters
   -- (@\'?\'@ and @\'*\'@), or tildes (@\'~\'@), though this is not enforced by
@@ -93,7 +93,7 @@ class Lucene expr query | query -> expr, expr -> query where
   -- query :: 'Lucene.Query.LuceneQuery'
   -- query = "foo" '=:' ("bar" :: 'Lucene.Query.LuceneExpr' 'TWord')
   -- @
-  word :: Text -> expr TWord
+  word :: Text -> expr 'TWord
 
   -- | A single word that may contain wildcard characters (@\'?\'@ and @\'*\'@),
   -- although it must not begin with a @\'*\'@. Must also /not/ contain any
@@ -106,7 +106,7 @@ class Lucene expr query | query -> expr, expr -> query where
   -- query :: 'Lucene.Query.LuceneQuery'
   -- query = "foo" '=:' 'wild' "b?r"
   -- @
-  wild :: Text -> expr TWild
+  wild :: Text -> expr 'TWild
 
   -- | A regular expression, whose syntax is described by
   -- <http://lucene.apache.org/core/5_5_0/core/org/apache/lucene/util/automaton/RegExp.html?is-external=true>.
@@ -119,7 +119,7 @@ class Lucene expr query | query -> expr, expr -> query where
   -- query :: 'Lucene.Query.LuceneQuery'
   -- query = "foo" '=:' 'regex' "[mb]oat"
   -- @
-  regex :: Text -> expr TRegex
+  regex :: Text -> expr 'TRegex
 
   -- | A phrase, composed of multiple (non-fuzzy) words, none of which may
   -- contain wildcard characters. Both of these properties are enforced by the
@@ -153,7 +153,7 @@ class Lucene expr query | query -> expr, expr -> query where
   -- query :: 'Lucene.Query.LuceneQuery'
   -- query = "foo" '=:' (["bar", "baz"] :: 'Lucene.Query.LuceneExpr' 'TPhrase')
   -- @
-  phrase :: [expr TWord] -> expr TPhrase
+  phrase :: [expr 'TWord] -> expr 'TPhrase
 
   -- | The @\'~\'@ operator, which fuzzes its argument (either a word or phrase)
   -- by a numeric amount.
@@ -194,7 +194,7 @@ class Lucene expr query | query -> expr, expr -> query where
   -- query :: 'Lucene.Query.LuceneQuery'
   -- query = "foo" '=:' 'to' ('incl' ('int' 5)) ('excl' ('int' 10))
   -- @
-  to :: PrimType a => Boundary (expr a) -> Boundary (expr a) -> expr TRange
+  to :: PrimType a => Boundary (expr a) -> Boundary (expr a) -> expr 'TRange
   infixr 5 `to`
 
   -- | A boost expression.
@@ -289,7 +289,7 @@ infixr 5 ~:
 -- query :: 'Lucene.Query.LuceneQuery'
 -- query = "foo" '=:' 'fuzzy' "bar"
 -- @
-fuzzy :: Lucene expr query => expr TWord -> expr TFuzzyWord
+fuzzy :: Lucene expr query => expr 'TWord -> expr 'TFuzzyWord
 fuzzy e = e ~: 2
 
 -- | An infix version of 'boost'.
@@ -311,7 +311,7 @@ infixr 5 ^:
 -- query :: 'Lucene.Query.LuceneQuery'
 -- query = "foo" '=:' 'gt' ('int' 5)
 -- @
-gt :: (Lucene expr query, PrimType a) => expr a -> expr TRange
+gt :: (Lucene expr query, PrimType a) => expr a -> expr 'TRange
 gt e = excl e `to` star
 
 -- | Short-hand for a greater-than-or-equal-to range query.
@@ -328,13 +328,13 @@ gt e = excl e `to` star
 -- query :: 'Lucene.Query.LuceneQuery'
 -- query = "foo" '=:' 'gt' ('int' 5)
 -- @
-gte :: (Lucene expr query, PrimType a) => expr a -> expr TRange
+gte :: (Lucene expr query, PrimType a) => expr a -> expr 'TRange
 gte e = incl e `to` star
 
 -- | Short-hand for a less-than range query.
 --
 -- @
--- 'lt' e = 'star' \`to\` 'excl' e
+--  'lt' e = 'star' \`to\` 'excl' e
 -- @
 --
 -- Example:
@@ -345,7 +345,7 @@ gte e = incl e `to` star
 -- query :: 'Lucene.Query.LuceneQuery'
 -- query = "foo" '=:' 'lt' ('int' 5)
 -- @
-lt :: (Lucene expr query, PrimType a) => expr a -> expr TRange
+lt :: (Lucene expr query, PrimType a) => expr a -> expr 'TRange
 lt e = star `to` excl e
 
 -- | Short-hand for a less-than-or-equal-to range query.
@@ -362,7 +362,7 @@ lt e = star `to` excl e
 -- query :: 'Lucene.Query.LuceneQuery'
 -- query = "foo" '=:' 'lte' ('int' 5)
 -- @
-lte :: (Lucene expr query, PrimType a) => expr a -> expr TRange
+lte :: (Lucene expr query, PrimType a) => expr a -> expr 'TRange
 lte e = star `to` incl e
 
 
