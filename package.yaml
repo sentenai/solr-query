@@ -8,6 +8,7 @@ ghc-options: -Wall
 dependencies:
   - base
   - bytestring
+  - semigroups
   - text
 
 library:

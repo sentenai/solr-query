@@ -1,9 +1,9 @@
-{-# LANGUAGE DataKinds             #-}
-{-# LANGUAGE FlexibleInstances     #-}
-{-# LANGUAGE KindSignatures        #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE OverloadedStrings     #-}
-{-# LANGUAGE TypeFamilies          #-}
+{-# LANGUAGE DataKinds                  #-}
+{-# LANGUAGE FlexibleInstances          #-}
+{-# LANGUAGE KindSignatures             #-}
+{-# LANGUAGE MultiParamTypeClasses      #-}
+{-# LANGUAGE OverloadedStrings          #-}
+{-# LANGUAGE TypeFamilies               #-}
 
 -- | Solr query construction and compilation. You may prefer to import
 -- "Solr.Query.Qualified" instead, which does not contain any operators.
@@ -20,6 +20,7 @@ module Solr.Query
   , (||:)
   , (-:)
   , (^=:)
+  , localParams
   -- * Expression type
   , SolrExpr
   -- * Expression construction
@@ -39,6 +40,8 @@ module Solr.Query
   , lt
   , lte
   , (^:)
+  -- * Query local parameters
+  , paramDefaultField
   -- * Query compilation
   , compileSolrQuery
   ) where
@@ -48,8 +51,10 @@ import Solr.Type
 
 import Data.ByteString.Builder    (Builder)
 import Data.ByteString.Lazy.Char8 (ByteString)
-import Data.Monoid
+import Data.Maybe                 (catMaybes)
+import Data.Semigroup
 import Data.String                (IsString(..))
+import Data.Text                  (Text)
 import GHC.Exts                   (IsList(..))
 
 import qualified Data.Text                  as T
@@ -57,8 +62,19 @@ import qualified Data.Text.Encoding         as T
 import qualified Data.ByteString.Builder    as BS
 import qualified Data.ByteString.Lazy.Char8 as BS
 
--- | A Solr query.
-newtype SolrQuery = Query { unQuery :: Builder }
+-- | A Solr query. The boolean phantom type tracks whether or not this query has
+-- local params or not.
+data SolrQuery (params :: Bool) = Query { unQuery :: Builder }
+
+-- | Appending Solr queries simply puts a space between them. To Solr, this is
+-- equivalent to combining them with ('||:'), however, this behavior can be
+-- adjusted on a per-query basis using local parameters.
+--
+-- Due to limited precedence options, ('<>') will typically require parens
+-- around its arguments.
+instance Monoid (SolrQuery 'False) where
+  mempty = Query mempty
+  q1 `mappend` q2 = Query (unQuery q1 <> " " <> unQuery q2)
 
 
 -- | A Solr expression.
@@ -87,6 +103,11 @@ instance IsList (SolrExpr 'TPhrase) where
 
 
 instance Solr SolrExpr SolrQuery where
+  -- | Solr query local parameters. Not all local parameters are supported.
+  data LocalParams SolrQuery
+    = SolrQueryParams
+        (Maybe Text) -- default field
+
   int n = Expr (bshow n)
 
   true = Expr "true"
@@ -99,11 +120,7 @@ instance Solr SolrExpr SolrQuery where
 
   regex s = Expr ("/" <> T.encodeUtf8Builder s <> "/")
 
-  phrase ss = Expr ("\"" <> spaces ss <> "\"")
-   where
-    spaces [] = ""
-    spaces [w] = unExpr w
-    spaces (w:ws) = unExpr w <> " " <> spaces ws
+  phrase ss = Expr ("\"" <> spaces (map unExpr ss) <> "\"")
 
   e ~: n = Expr (unExpr e <> "~" <> bshow n)
 
@@ -131,16 +148,38 @@ instance Solr SolrExpr SolrQuery where
 
   q1 -: q2 = Query ("(" <> unQuery q1 <> " NOT " <> unQuery q2 <> ")")
 
-  q ^=: n = Query ("((" <> unQuery q <> ")^=" <> bshow n <> ")")
+  q ^=: n = Query ("(" <> unQuery q <> ")^=" <> bshow n)
 
-bshow :: Show a => a -> Builder
-bshow = BS.lazyByteString . BS.pack . show
+  localParams params q = Query (compileParams params <> unQuery q)
+   where
+    compileParams :: LocalParams SolrQuery -> Builder
+    compileParams (SolrQueryParams df) =
+      "{!" <> spaces (catMaybes [buildDefaultField <$> df]) <> "}"
+     where
+      buildDefaultField :: Text -> Builder
+      buildDefaultField s = "df=" <> T.encodeUtf8Builder s
+
+
+instance Semigroup (LocalParams SolrQuery) where
+  SolrQueryParams a0 <> SolrQueryParams a1 = SolrQueryParams (a0 <> a1)
+
+paramDefaultField :: Text -> LocalParams SolrQuery
+paramDefaultField s = SolrQueryParams (Just s)
 
 
 -- | Compile a 'SolrQuery' to a lazy 'ByteString'. Because the underlying
 -- expressions are correct by consutruction, this function is total.
-compileSolrQuery :: SolrQuery -> ByteString
+compileSolrQuery :: SolrQuery params -> ByteString
 compileSolrQuery = BS.toLazyByteString . unQuery
+
+
+bshow :: Show a => a -> Builder
+bshow = BS.lazyByteString . BS.pack . show
+
+spaces :: [Builder] -> Builder
+spaces [] = ""
+spaces [w] = w
+spaces (w:ws) = w <> " " <> spaces ws
 
 
 -- $note-simplicity

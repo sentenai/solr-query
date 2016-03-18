@@ -1,6 +1,7 @@
 {-# LANGUAGE DataKinds              #-}
 {-# LANGUAGE FunctionalDependencies #-}
 {-# LANGUAGE MultiParamTypeClasses  #-}
+{-# LANGUAGE TypeFamilies           #-}
 
 -- | This module defines the Solr DSL. Ordinary users should instead import
 -- either "Solr.Query" or "Solr.Query.Qualified".
@@ -34,6 +35,8 @@ import Data.Text (Text)
 -- functions to use 'Solr.Query.SolrQuery' (and therefore
 -- 'Solr.Query.SolrExpr', due to the functional dependency).
 class Solr expr query | query -> expr, expr -> query where
+  data LocalParams query :: *
+
   -- | An @int@ expression.
   --
   -- Note that sometimes you may use the 'Num' instance for
@@ -227,7 +230,8 @@ class Solr expr query | query -> expr, expr -> query where
   -- -- bar
   -- query :: 'Solr.Query.SolrQuery'
   -- query = 'word' "bar"
-  defaultField :: expr a -> query
+  -- @
+  defaultField :: expr a -> query 'False
 
   -- | A field query.
   --
@@ -238,7 +242,7 @@ class Solr expr query | query -> expr, expr -> query where
   -- query :: 'Solr.Query.SolrQuery'
   -- query = "foo" '=:' 'word' "bar"
   -- @
-  (=:) :: Text -> expr a -> query
+  (=:) :: Text -> expr a -> query 'False
   infix 5 =:
 
   -- | An @AND@ query.
@@ -251,7 +255,7 @@ class Solr expr query | query -> expr, expr -> query where
   -- query = "foo" '=:' 'word' "bar"
   --     '&&:' "baz" '=:' 'word' "qux"
   -- @
-  (&&:) :: query -> query -> query
+  (&&:) :: query 'False -> query 'False -> query 'False
   infixr 3 &&:
 
   -- | An @OR@ query.
@@ -264,7 +268,7 @@ class Solr expr query | query -> expr, expr -> query where
   -- query = "foo" '=:' 'word' "bar"
   --     '||:' "baz" '=:' 'word' "qux"
   -- @
-  (||:) :: query -> query -> query
+  (||:) :: query 'False -> query 'False -> query 'False
   infixr 2 ||:
 
   -- | A @NOT@, @\'!\'@, or @\'-\'@ query.
@@ -277,7 +281,7 @@ class Solr expr query | query -> expr, expr -> query where
   -- query = "foo" '=:' 'word' "bar"
   --      '-:' "baz" '=:' 'word' "qux"
   -- @
-  (-:) :: query -> query -> query
+  (-:) :: query 'False -> query 'False -> query 'False
   infixr 1 -:
 
   -- | The @\'^=\'@ constant score operator.
@@ -293,8 +297,10 @@ class Solr expr query | query -> expr, expr -> query where
   -- query :: 'Solr.Query.SolrQuery'
   -- query = "foo" '=:' 'word' "bar" '^=:' 3.5
   -- @
-  (^=:) :: query -> Float -> query
+  (^=:) :: query 'False -> Float -> query 'False
   infixr 4 ^=:
+
+  localParams :: LocalParams query -> query 'False -> query 'True
 
 
 -- | Short-hand for fuzzing a word by 2. This is the default behavior of a

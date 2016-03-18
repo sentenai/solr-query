@@ -38,6 +38,7 @@ module Solr.Class.Qualified
   , or
   , not
   , score
+  , localParams
     -- * Derived combinators
   , fuzzy
   , gt
@@ -52,7 +53,7 @@ module Solr.Class.Qualified
   ) where
 
 import Solr.Type
-import Solr.Class (Boundary(..), Solr, excl, incl, star)
+import Solr.Class (Boundary(..), LocalParams, Solr, excl, incl, star)
 
 import qualified Solr.Class as Solr
 
@@ -260,7 +261,8 @@ boost = (Solr.^:)
 -- -- bar
 -- query :: Solr.'Solr.Query.SolrQuery'
 -- query = Solr.'word' "bar"
-defaultField :: Solr expr query => expr a -> query
+-- @
+defaultField :: Solr expr query => expr a -> query 'False
 defaultField = Solr.defaultField
 
 -- | A field query.
@@ -272,7 +274,7 @@ defaultField = Solr.defaultField
 -- query :: Solr.'Solr.Query.SolrQuery'
 -- query = Solr.'field' "foo" (Solr.'word' "bar")
 -- @
-field :: Solr expr query => Text -> expr a -> query
+field :: Solr expr query => Text -> expr a -> query 'False
 field = (Solr.=:)
 
 -- | An @AND@ query.
@@ -284,7 +286,7 @@ field = (Solr.=:)
 -- query :: Solr.'Solr.Query.SolrQuery'
 -- query = Solr.'field' "foo" (Solr.'word' "bar") \`Solr.and\` Solr.'field' "baz" (Solr.'word' "qux")
 -- @
-and :: Solr expr query => query -> query -> query
+and :: Solr expr query => query 'False -> query 'False -> query 'False
 and = (Solr.&&:)
 infixr 3 `and`
 
@@ -297,7 +299,7 @@ infixr 3 `and`
 -- query :: Solr.'Solr.Query.SolrQuery'
 -- query = Solr.'field' "foo" (Solr.'word' "bar") \`Solr.or\` Solr.'field' "baz" (Solr.'word' "qux")
 -- @
-or :: Solr expr query => query -> query -> query
+or :: Solr expr query => query 'False -> query 'False -> query 'False
 or = (Solr.||:)
 infixr 2 `or`
 
@@ -310,7 +312,7 @@ infixr 2 `or`
 -- query :: Solr.'Solr.Query.SolrQuery'
 -- query = Solr.'field' "foo" (Solr.'word' "bar") \`Solr.not\` Solr.'field' "baz" (Solr.'word' "qux")
 -- @
-not :: Solr expr query => query -> query -> query
+not :: Solr expr query => query 'False -> query 'False -> query 'False
 not = (Solr.-:)
 infixr 1 `not`
 
@@ -327,9 +329,12 @@ infixr 1 `not`
 -- query :: Solr.'Solr.Query.SolrQuery'
 -- query = Solr.'score' (Solr.'field' "foo" (Solr.'word' "bar")) 3.5
 -- @
-score :: Solr expr query => query -> Float -> query
+score :: Solr expr query => query 'False -> Float -> query 'False
 score = (Solr.^=:)
 infixr 4 `score`
+
+localParams :: Solr expr query => LocalParams query -> query 'False -> query 'True
+localParams = Solr.localParams
 
 -- | Short-hand for fuzzing a word by 2. This is the default behavior of a
 -- Solr @\'~\'@ operator without an integer added.
