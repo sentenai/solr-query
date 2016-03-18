@@ -2,19 +2,20 @@
 {-# LANGUAGE FunctionalDependencies #-}
 {-# LANGUAGE MultiParamTypeClasses  #-}
 
+-- | This module defines the Lucene DSL. Ordinary users should instead import
+-- either "Lucene.Query" or "Lucene.Query.Qualified".
+
 module Lucene.Class
   (
     -- * Lucene language
     Lucene(..)
     -- * Derived combinators
-  , (~:)
   , fuzzy
-  , (^:)
   , gt
   , gte
   , lt
   , lte
-    -- * Range expression helpers
+    -- * Range query helpers
   , Boundary(..)
   , incl
   , excl
@@ -158,8 +159,8 @@ class Lucene expr query | query -> expr, expr -> query where
   -- This will have one of the following two types:
   --
   -- @
-  -- fuzz :: 'Lucene.Query.LuceneExpr' 'TWord'   -> Int -> 'Lucene.Query.LuceneExpr' 'TFuzzyWord'   -- Int must be 0, 1, or 2
-  -- fuzz :: 'Lucene.Query.LuceneExpr' 'TPhrase' -> Int -> 'Lucene.Query.LuceneExpr' 'TFuzzyPhrase' -- Int must be positive
+  -- (~:) :: 'Lucene.Query.LuceneExpr' 'TWord'   -> Int -> 'Lucene.Query.LuceneExpr' 'TFuzzyWord'   -- Int must be 0, 1, or 2
+  -- (~:) :: 'Lucene.Query.LuceneExpr' 'TPhrase' -> Int -> 'Lucene.Query.LuceneExpr' 'TFuzzyPhrase' -- Int must be positive
   -- @
   --
   -- Example:
@@ -167,13 +168,14 @@ class Lucene expr query | query -> expr, expr -> query where
   -- @
   -- -- foo:bar~1
   -- query :: 'Lucene.Query.LuceneQuery'
-  -- query = "foo" '=:' 'fuzz' ('word' "bar") 1
+  -- query = "foo" '=:' 'word' "bar" '~:' 1
   --
   -- -- foo:"bar baz qux"~10
   -- query :: 'Lucene.Query.LuceneQuery'
-  -- query = "foo" '=:' 'fuzz' ('phrase' ["bar", "baz", "qux"]) 10
+  -- query = "foo" '=:' 'phrase' ["bar", "baz", "qux"] '~:' 10
   -- @
-  fuzz :: FuzzableType a => expr a -> Int -> expr (TFuzzed a)
+  (~:) :: FuzzableType a => expr a -> Int -> expr (TFuzzed a)
+  infix 6 ~:
 
   -- | A range expression.
   --
@@ -189,18 +191,18 @@ class Lucene expr query | query -> expr, expr -> query where
   -- @
   -- -- foo:[5 TO 10}
   -- query :: 'Lucene.Query.LuceneQuery'
-  -- query = "foo" '=:' 'to' ('incl' ('int' 5)) ('excl' ('int' 10))
+  -- query = "foo" '=:' 'incl' ('int' 5) \`to\` 'excl' ('int' 10)
   -- @
   to :: PrimType a => Boundary (expr a) -> Boundary (expr a) -> expr 'TRange
   infix 6 `to`
 
-  -- | A boost expression.
+  -- | The @\'^\'@ operator, which boosts its argument.
   --
   -- This will have one of the following two types:
   --
   -- @
-  -- boost :: 'Lucene.Query.LuceneExpr' 'TWord'   -> Float -> 'Lucene.Query.LuceneExpr' 'TBoostedWord'
-  -- boost :: 'Lucene.Query.LuceneExpr' 'TPhrase' -> Float -> 'Lucene.Query.LuceneExpr' 'TBoostedPhrase'
+  -- (^:) :: 'Lucene.Query.LuceneExpr' 'TWord'   -> Float -> 'Lucene.Query.LuceneExpr' 'TBoostedWord'
+  -- (^:) :: 'Lucene.Query.LuceneExpr' 'TPhrase' -> Float -> 'Lucene.Query.LuceneExpr' 'TBoostedPhrase'
   -- @
   --
   -- Example:
@@ -208,13 +210,14 @@ class Lucene expr query | query -> expr, expr -> query where
   -- @
   -- -- foo:bar^3.5
   -- query :: 'Lucene.Query.LuceneQuery'
-  -- query = "foo" 'Lucene.Query.=:' 'boost' ('word' "bar") 3.5
+  -- query = "foo" '=:' 'word' "bar" '^:' 3.5
   --
   -- -- foo:"bar baz"^3.5
   -- query :: 'Lucene.Query.LuceneQuery'
-  -- query = "foo" 'Lucene.Query.=:' 'boost' ('phrase' ["bar", "baz"]) 3.5
+  -- query = "foo" '=:' 'phrase' ["bar", "baz"] '^:' 3.5
   -- @
-  boost :: BoostableType a => expr a -> Float -> expr (TBoosted a)
+  (^:) :: BoostableType a => expr a -> Float -> expr (TBoosted a)
+  infix 6 ^:
 
   -- | A field query.
   --
@@ -254,12 +257,12 @@ class Lucene expr query | query -> expr, expr -> query where
   (||:) :: query -> query -> query
   infixr 2 ||:
 
-  -- | A @NOT@ or @\'-\'@ query.
+  -- | A @NOT@, @\'!\'@, or @\'-\'@ query.
   --
   -- Example:
   --
   -- @
-  -- -- foo:bar -baz:qux
+  -- -- foo:bar NOT baz:qux
   -- query :: 'Lucene.Query.LuceneQuery'
   -- query = "foo" '=:' 'word' "bar"
   --      '-:' "baz" '=:' 'word' "qux"
@@ -272,15 +275,17 @@ class Lucene expr query | query -> expr, expr -> query where
   -- This is given right-fixity to reject queries like @q ^= 1 ^= 2@, which may
   -- very well be a valid Lucene query (I haven't tested), but are nonetheless
   -- nonsense.
+  --
+  -- Example:
+  --
+  -- @
+  -- -- (foo:bar)^=3.5
+  -- query :: 'Lucene.Query.LuceneQuery'
+  -- query = "foo" '=:' 'word' "bar" '^=:' 3.5
+  -- @
   (^=:) :: query -> Float -> query
   infixr 4 ^=:
 
-  -- foo ^= (5.0 ^= 5.0)
-
--- | An infix version of 'fuzz'.
-(~:) :: (Lucene expr query, FuzzableType a) => expr a -> Int -> expr (TFuzzed a)
-(~:) = fuzz
-infix 6 ~:
 
 -- | Short-hand for fuzzing a word by 2. This is the default behavior of a
 -- Lucene @\'~\'@ operator without an integer added.
@@ -298,11 +303,6 @@ infix 6 ~:
 -- @
 fuzzy :: Lucene expr query => expr 'TWord -> expr 'TFuzzyWord
 fuzzy e = e ~: 2
-
--- | An infix version of 'boost'.
-(^:) :: (Lucene expr query, BoostableType a) => expr a -> Float -> expr (TBoosted a)
-(^:) = boost
-infix 6 ^:
 
 -- | Short-hand for a greater-than range query.
 --
@@ -333,7 +333,7 @@ gt e = excl e `to` star
 -- -- foo:>=5
 -- -- foo:[5 TO *]
 -- query :: 'Lucene.Query.LuceneQuery'
--- query = "foo" '=:' 'gt' ('int' 5)
+-- query = "foo" '=:' 'gte' ('int' 5)
 -- @
 gte :: (Lucene expr query, PrimType a) => expr a -> expr 'TRange
 gte e = incl e `to` star

@@ -5,6 +5,9 @@
 {-# LANGUAGE OverloadedStrings     #-}
 {-# LANGUAGE TypeFamilies          #-}
 
+-- | Lucene query construction and compilation. You may prefer to import
+-- "Lucene.Query.Qualified" instead, which does not contain any operators.
+
 module Lucene.Query
   (
   -- * Query type
@@ -27,7 +30,6 @@ module Lucene.Query
   , wild
   , regex
   , phrase
-  , fuzz
   , (~:)
   , fuzzy
   , to
@@ -35,7 +37,6 @@ module Lucene.Query
   , gte
   , lt
   , lte
-  , boost
   , (^:)
   -- * Query compilation
   , compileLuceneQuery
@@ -103,7 +104,7 @@ instance Lucene LuceneExpr LuceneQuery where
     spaces [w] = unExpr w
     spaces (w:ws) = unExpr w <> " " <> spaces ws
 
-  fuzz e n = Expr (unExpr e <> "~" <> bshow n)
+  e ~: n = Expr (unExpr e <> "~" <> bshow n)
 
   to b1 b2 = Expr (lhs b1 <> " TO " <> rhs b2)
    where
@@ -117,7 +118,7 @@ instance Lucene LuceneExpr LuceneQuery where
     rhs (Exclusive e) = unExpr e <> BS.char8 '}'
     rhs Star          = BS.lazyByteString "*]"
 
-  boost e n = Expr (unExpr e <> "^" <> bshow n)
+  e ^: n = Expr (unExpr e <> "^" <> bshow n)
 
   f =: e = Query (T.encodeUtf8Builder f <> ":" <> unExpr e)
 
