@@ -86,9 +86,6 @@ class Lucene expr query | query -> expr, expr -> query where
   -- query = "foo" '=:' 'word' "bar"
   -- @
   --
-  -- Or, with @OverloadedStrings@:
-  --
-  -- @
   -- -- foo:bar
   -- query :: 'Lucene.Query.LuceneQuery'
   -- query = "foo" '=:' ("bar" :: 'Lucene.Query.LuceneExpr' 'TWord')
@@ -130,7 +127,7 @@ class Lucene expr query | query -> expr, expr -> query where
   -- 'Lucene.Query.LuceneExpr' 'TPhrase', but usually an explicit type signature
   -- will be required (at the interpretation site or earlier).
   --
-  -- Example (with @OverloadedStrings@):
+  -- Example:
   --
   -- @
   -- -- foo:"bar baz"
@@ -146,7 +143,7 @@ class Lucene expr query | query -> expr, expr -> query where
   -- query = "foo" '=:' 'phrase' ["bar", "b?z"] -- breaks 'word' contract
   -- @
   --
-  -- Or, with @OverloadedLists@ and @OverloadedStrings@:
+  -- Or, with @OverloadedLists@:
   --
   -- @
   -- -- foo:"bar baz"
