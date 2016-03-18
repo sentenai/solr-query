@@ -1,5 +1,5 @@
-# lucene-query
+# solr-query
 
-A type-safe interface to constructing Lucene queries.
+A type-safe interface to constructing Solr queries.
 
-See the [documentation](http://sentenai.github.io/lucene-query/).
+See the [documentation](http://sentenai.github.io/solr-query/).

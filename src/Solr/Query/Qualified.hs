@@ -1,8 +1,8 @@
--- | This module is an alternative to "Lucene.Query" that does not export any
+-- | This module is an alternative to "Solr.Query" that does not export any
 -- operators, and is intended to be imported qualified, because it contains
 -- function names that clash with the Prelude.
 --
--- > import qualified Lucene.Query.Qualified as Lucene
+-- > import qualified Solr.Query.Qualified as Solr
 --
 -- Here is a quick conversion guide:
 --
@@ -16,10 +16,10 @@
 -- ('^=:') = 'score'
 -- @
 
-module Lucene.Query.Qualified
+module Solr.Query.Qualified
   (
   -- * Query type
-    LuceneQuery
+    SolrQuery
   -- * Query construction
   -- $note-simplicity
   , field
@@ -28,7 +28,7 @@ module Lucene.Query.Qualified
   , not
   , score
   -- * Expression type
-  , LuceneExpr
+  , SolrExpr
   -- * Expression construction
   -- $note-simplicity
   , int
@@ -47,15 +47,15 @@ module Lucene.Query.Qualified
   , lte
   , boost
   -- * Query compilation
-  , compileLuceneQuery
+  , compileSolrQuery
   ) where
 
-import Lucene.Class.Qualified
-import Lucene.Query (LuceneExpr, LuceneQuery, compileLuceneQuery)
+import Solr.Class.Qualified
+import Solr.Query (SolrExpr, SolrQuery, compileSolrQuery)
 
 import Prelude hiding (and, not, or)
 
 -- $note-simplicity
 -- For simplicity, the type signatures in the examples below monomorphise the
--- functions to use 'LuceneQuery' (and therefore 'LuceneExpr', due to the
+-- functions to use 'SolrQuery' (and therefore 'SolrExpr', due to the
 -- functional dependency).

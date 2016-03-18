@@ -5,13 +5,13 @@
 {-# LANGUAGE OverloadedStrings     #-}
 {-# LANGUAGE TypeFamilies          #-}
 
--- | Lucene query construction and compilation. You may prefer to import
--- "Lucene.Query.Qualified" instead, which does not contain any operators.
+-- | Solr query construction and compilation. You may prefer to import
+-- "Solr.Query.Qualified" instead, which does not contain any operators.
 
-module Lucene.Query
+module Solr.Query
   (
   -- * Query type
-    LuceneQuery
+    SolrQuery
   -- * Query construction
   -- $note-simplicity
   , (=:)
@@ -20,7 +20,7 @@ module Lucene.Query
   , (-:)
   , (^=:)
   -- * Expression type
-  , LuceneExpr
+  , SolrExpr
   -- * Expression construction
   -- $note-simplicity
   , int
@@ -39,11 +39,11 @@ module Lucene.Query
   , lte
   , (^:)
   -- * Query compilation
-  , compileLuceneQuery
+  , compileSolrQuery
   ) where
 
-import Lucene.Class
-import Lucene.Type
+import Solr.Class
+import Solr.Type
 
 import Data.ByteString.Builder    (Builder)
 import Data.ByteString.Lazy.Char8 (ByteString)
@@ -56,36 +56,36 @@ import qualified Data.Text.Encoding         as T
 import qualified Data.ByteString.Builder    as BS
 import qualified Data.ByteString.Lazy.Char8 as BS
 
--- | A Lucene query.
-newtype LuceneQuery = Query { unQuery :: Builder }
+-- | A Solr query.
+newtype SolrQuery = Query { unQuery :: Builder }
 
 
--- | A Lucene expression.
-newtype LuceneExpr (t :: LuceneType) = Expr { unExpr :: Builder }
+-- | A Solr expression.
+newtype SolrExpr (t :: SolrType) = Expr { unExpr :: Builder }
 
 -- | This instance is only provided for convenient numeric literals. /ALL/ 'Num'
 -- functions besides 'fromInteger' are not implemented and will cause a runtime
 -- crash.
-instance Num (LuceneExpr 'TInt) where
-  (+) = error "LuceneExpr.Num.(+): not implemented"
-  (*) = error "LuceneExpr.Num.(*): not implemented"
-  abs = error "LuceneExpr.Num.abs: not implemented"
-  signum = error "LuceneExpr.Num.signum: not implemented"
-  negate = error "LuceneExpr.Num.negate: not implemented"
+instance Num (SolrExpr 'TInt) where
+  (+) = error "SolrExpr.Num.(+): not implemented"
+  (*) = error "SolrExpr.Num.(*): not implemented"
+  abs = error "SolrExpr.Num.abs: not implemented"
+  signum = error "SolrExpr.Num.signum: not implemented"
+  negate = error "SolrExpr.Num.negate: not implemented"
 
   fromInteger i = int (fromInteger i)
 
-instance IsString (LuceneExpr 'TWord) where
+instance IsString (SolrExpr 'TWord) where
   fromString s = word (T.pack s)
 
-instance IsList (LuceneExpr 'TPhrase) where
-  type Item (LuceneExpr 'TPhrase) = LuceneExpr 'TWord
+instance IsList (SolrExpr 'TPhrase) where
+  type Item (SolrExpr 'TPhrase) = SolrExpr 'TWord
 
   fromList = phrase
   toList = map (Expr . BS.lazyByteString) . BS.words . BS.toLazyByteString . unExpr
 
 
-instance Lucene LuceneExpr LuceneQuery where
+instance Solr SolrExpr SolrQuery where
   int n = Expr (bshow n)
 
   true = Expr "true"
@@ -108,12 +108,12 @@ instance Lucene LuceneExpr LuceneQuery where
 
   to b1 b2 = Expr (lhs b1 <> " TO " <> rhs b2)
    where
-    lhs :: Boundary (LuceneExpr a) -> Builder
+    lhs :: Boundary (SolrExpr a) -> Builder
     lhs (Inclusive e) = BS.char8 '[' <> unExpr e
     lhs (Exclusive e) = BS.char8 '{' <> unExpr e
     lhs Star          = BS.lazyByteString "[*"
 
-    rhs :: Boundary (LuceneExpr a) -> Builder
+    rhs :: Boundary (SolrExpr a) -> Builder
     rhs (Inclusive e) = unExpr e <> BS.char8 ']'
     rhs (Exclusive e) = unExpr e <> BS.char8 '}'
     rhs Star          = BS.lazyByteString "*]"
@@ -134,13 +134,13 @@ bshow :: Show a => a -> Builder
 bshow = BS.lazyByteString . BS.pack . show
 
 
--- | Compile a 'LuceneQuery' to a lazy 'ByteString'. Because the underlying
+-- | Compile a 'SolrQuery' to a lazy 'ByteString'. Because the underlying
 -- expressions are correct by consutruction, this function is total.
-compileLuceneQuery :: LuceneQuery -> ByteString
-compileLuceneQuery = BS.toLazyByteString . unQuery
+compileSolrQuery :: SolrQuery -> ByteString
+compileSolrQuery = BS.toLazyByteString . unQuery
 
 
 -- $note-simplicity
 -- For simplicity, the type signatures in the examples below monomorphise the
--- functions to use 'LuceneQuery' (and therefore 'LuceneExpr', due to the
+-- functions to use 'SolrQuery' (and therefore 'SolrExpr', due to the
 -- functional dependency).

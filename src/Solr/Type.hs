@@ -2,11 +2,11 @@
 {-# LANGUAGE KindSignatures #-}
 {-# LANGUAGE TypeFamilies   #-}
 
-module Lucene.Type where
+module Solr.Type where
 
 
--- | A Lucene type.
-data LuceneType
+-- | A Solr type.
+data SolrType
   = TInt
   | TBool
   | TWord
@@ -21,8 +21,8 @@ data LuceneType
 
 
 -- | Types that can be fuzzed by a @\'~\'@ operator.
-class FuzzableType (a :: LuceneType) where
-  type TFuzzed a :: LuceneType
+class FuzzableType (a :: SolrType) where
+  type TFuzzed a :: SolrType
 
 -- | @type TFuzzed TWord = TFuzzyWord@
 instance FuzzableType 'TWord where
@@ -34,8 +34,8 @@ instance FuzzableType 'TPhrase where
 
 
 -- | Types that can be boosted by a @\'^\'@ operator.
-class BoostableType (a :: LuceneType) where
-  type TBoosted a :: LuceneType
+class BoostableType (a :: SolrType) where
+  type TBoosted a :: SolrType
 
 -- | @type TBoosted TWord = TBoostedWord@
 instance BoostableType 'TWord where
@@ -47,7 +47,7 @@ instance BoostableType 'TPhrase where
 
 
 -- | Types that can appear in a range expression.
-class PrimType (a :: LuceneType)
+class PrimType (a :: SolrType)
 
 instance PrimType 'TWord
 instance PrimType 'TInt
