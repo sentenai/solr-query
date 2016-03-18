@@ -15,6 +15,7 @@ module Lucene.Query
   , (&&:)
   , (||:)
   , (-:)
+  , (^=:)
   -- * Expression type
   , LuceneExpr
   -- * Expression construction
@@ -84,7 +85,7 @@ instance IsList (LuceneExpr 'TPhrase) where
 
 
 instance Lucene LuceneExpr LuceneQuery where
-  int n = Expr (BS.lazyByteString (BS.pack (show n)))
+  int n = Expr (bshow n)
 
   true = Expr "true"
 
@@ -102,7 +103,7 @@ instance Lucene LuceneExpr LuceneQuery where
     spaces [w] = unExpr w
     spaces (w:ws) = unExpr w <> " " <> spaces ws
 
-  fuzz e n = Expr (unExpr e <> "~" <> BS.lazyByteString (BS.pack (show n)))
+  fuzz e n = Expr (unExpr e <> "~" <> bshow n)
 
   to b1 b2 = Expr (lhs b1 <> " TO " <> rhs b2)
    where
@@ -116,7 +117,7 @@ instance Lucene LuceneExpr LuceneQuery where
     rhs (Exclusive e) = unExpr e <> BS.char8 '}'
     rhs Star          = BS.lazyByteString "*]"
 
-  boost e n = Expr (unExpr e <> "^" <> BS.lazyByteString (BS.pack (show n)))
+  boost e n = Expr (unExpr e <> "^" <> bshow n)
 
   f =: e = Query (T.encodeUtf8Builder f <> ":" <> unExpr e)
 
@@ -125,6 +126,11 @@ instance Lucene LuceneExpr LuceneQuery where
   q1 ||: q2 = Query ("(" <> unQuery q1 <> " OR " <> unQuery q2 <> ")")
 
   q1 -: q2 = Query ("(" <> unQuery q1 <> " NOT " <> unQuery q2 <> ")")
+
+  q ^=: n = Query ("((" <> unQuery q <> ")^=" <> bshow n <> ")")
+
+bshow :: Show a => a -> Builder
+bshow = BS.lazyByteString . BS.pack . show
 
 
 -- | Compile a 'LuceneQuery' to a lazy 'ByteString'. Because the underlying

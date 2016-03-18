@@ -92,8 +92,9 @@ class Lucene expr query | query -> expr, expr -> query where
   word :: Text -> expr 'TWord
 
   -- | A single word that may contain wildcard characters (@\'?\'@ and @\'*\'@),
-  -- although it must not begin with a @\'*\'@. Must also /not/ contain any
-  -- spaces or tildes (@\'~\'@), though this is not enforced by the type system.
+  -- although the meaning of consecutive @\'*\'@s is probably ill-defined. Must
+  -- also /not/ contain any spaces or tildes (@\'~\'@), though this is not
+  -- enforced by the type system.
   --
   -- Example:
   --
@@ -191,7 +192,7 @@ class Lucene expr query | query -> expr, expr -> query where
   -- query = "foo" '=:' 'to' ('incl' ('int' 5)) ('excl' ('int' 10))
   -- @
   to :: PrimType a => Boundary (expr a) -> Boundary (expr a) -> expr 'TRange
-  infixr 5 `to`
+  infix 6 `to`
 
   -- | A boost expression.
   --
@@ -225,7 +226,7 @@ class Lucene expr query | query -> expr, expr -> query where
   -- query = "foo" '=:' 'word' "bar"
   -- @
   (=:) :: Text -> expr a -> query
-  infix 4 =:
+  infix 5 =:
 
   -- | An @AND@ query.
   --
@@ -266,10 +267,20 @@ class Lucene expr query | query -> expr, expr -> query where
   (-:) :: query -> query -> query
   infixr 1 -:
 
+  -- | The @\'^=\'@ constant score operator.
+  --
+  -- This is given right-fixity to reject queries like @q ^= 1 ^= 2@, which may
+  -- very well be a valid Lucene query (I haven't tested), but are nonetheless
+  -- nonsense.
+  (^=:) :: query -> Float -> query
+  infixr 4 ^=:
+
+  -- foo ^= (5.0 ^= 5.0)
+
 -- | An infix version of 'fuzz'.
 (~:) :: (Lucene expr query, FuzzableType a) => expr a -> Int -> expr (TFuzzed a)
 (~:) = fuzz
-infixr 5 ~:
+infix 6 ~:
 
 -- | Short-hand for fuzzing a word by 2. This is the default behavior of a
 -- Lucene @\'~\'@ operator without an integer added.
@@ -291,7 +302,7 @@ fuzzy e = e ~: 2
 -- | An infix version of 'boost'.
 (^:) :: (Lucene expr query, BoostableType a) => expr a -> Float -> expr (TBoosted a)
 (^:) = boost
-infixr 5 ^:
+infix 6 ^:
 
 -- | Short-hand for a greater-than range query.
 --
