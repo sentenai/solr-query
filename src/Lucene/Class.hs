@@ -84,7 +84,6 @@ class Lucene expr query | query -> expr, expr -> query where
   -- -- foo:bar
   -- query :: 'Lucene.Query.LuceneQuery'
   -- query = "foo" '=:' 'word' "bar"
-  -- @
   --
   -- -- foo:bar
   -- query :: 'Lucene.Query.LuceneQuery'
@@ -158,8 +157,8 @@ class Lucene expr query | query -> expr, expr -> query where
   -- This will have one of the following two types:
   --
   -- @
-  -- fuzz :: 'Lucene.Query.LuceneExpr' 'TWord'   -> Int -> 'LuceneExpr' 'TFuzzyWord'   -- Int must be 0, 1, or 2
-  -- fuzz :: 'Lucene.Query.LuceneExpr' 'TPhrase' -> Int -> 'LuceneExpr' 'TFuzzyPhrase' -- Int must be positive
+  -- fuzz :: 'Lucene.Query.LuceneExpr' 'TWord'   -> Int -> 'Lucene.Query.LuceneExpr' 'TFuzzyWord'   -- Int must be 0, 1, or 2
+  -- fuzz :: 'Lucene.Query.LuceneExpr' 'TPhrase' -> Int -> 'Lucene.Query.LuceneExpr' 'TFuzzyPhrase' -- Int must be positive
   -- @
   --
   -- Example:
