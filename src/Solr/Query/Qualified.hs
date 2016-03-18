@@ -22,6 +22,7 @@ module Solr.Query.Qualified
     SolrQuery
   -- * Query construction
   -- $note-simplicity
+  , defaultField
   , field
   , and
   , or

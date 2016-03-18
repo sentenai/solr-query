@@ -32,6 +32,7 @@ module Solr.Class.Qualified
   , fuzz
   , to
   , boost
+  , defaultField
   , field
   , and
   , or
@@ -250,6 +251,17 @@ infix 6 `to`
 -- @
 boost :: (Solr expr query, BoostableType a) => expr a -> Float -> expr (TBoosted a)
 boost = (Solr.^:)
+
+-- | A default field query.
+--
+-- Example:
+--
+-- @
+-- -- bar
+-- query :: Solr.'Solr.Query.SolrQuery'
+-- query = Solr.'word' "bar"
+defaultField :: Solr expr query => expr a -> query
+defaultField = Solr.defaultField
 
 -- | A field query.
 --

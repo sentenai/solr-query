@@ -14,6 +14,7 @@ module Solr.Query
     SolrQuery
   -- * Query construction
   -- $note-simplicity
+  , defaultField
   , (=:)
   , (&&:)
   , (||:)
@@ -119,6 +120,8 @@ instance Solr SolrExpr SolrQuery where
     rhs Star          = BS.lazyByteString "*]"
 
   e ^: n = Expr (unExpr e <> "^" <> bshow n)
+
+  defaultField e = Query (unExpr e)
 
   f =: e = Query (T.encodeUtf8Builder f <> ":" <> unExpr e)
 

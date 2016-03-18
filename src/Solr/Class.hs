@@ -219,6 +219,16 @@ class Solr expr query | query -> expr, expr -> query where
   (^:) :: BoostableType a => expr a -> Float -> expr (TBoosted a)
   infix 6 ^:
 
+  -- | A default field query.
+  --
+  -- Example:
+  --
+  -- @
+  -- -- bar
+  -- query :: 'Solr.Query.SolrQuery'
+  -- query = 'word' "bar"
+  defaultField :: expr a -> query
+
   -- | A field query.
   --
   -- Example:
