@@ -248,6 +248,13 @@ to :: (Solr expr query, PrimType a) => Boundary (expr a) -> Boundary (expr a) ->
 --   </pre>
 (^:) :: (Solr expr query, BoostableType a) => expr a -> Float -> expr (TBoosted a)
 
+-- | A default field query.
+--   
+--   Example:
+--   
+--   @ -- bar query :: <a>SolrQuery</a> query = <a>word</a> "bar"
+defaultField :: Solr expr query => expr a -> query
+
 -- | A field query.
 --   
 --   Example:
@@ -619,6 +626,13 @@ to :: (Solr expr query, PrimType a) => Boundary (expr a) -> Boundary (expr a) ->
 --   </pre>
 boost :: (Solr expr query, BoostableType a) => expr a -> Float -> expr (TBoosted a)
 
+-- | A default field query.
+--   
+--   Example:
+--   
+--   @ -- bar query :: Solr.<a>SolrQuery</a> query = Solr.<a>word</a> "bar"
+defaultField :: Solr expr query => expr a -> query
+
 -- | A field query.
 --   
 --   Example:
@@ -782,6 +796,13 @@ module Solr.Query
 
 -- | A Solr query.
 data SolrQuery
+
+-- | A default field query.
+--   
+--   Example:
+--   
+--   @ -- bar query :: <a>SolrQuery</a> query = <a>word</a> "bar"
+defaultField :: Solr expr query => expr a -> query
 
 -- | A field query.
 --   
@@ -1143,6 +1164,13 @@ module Solr.Query.Qualified
 
 -- | A Solr query.
 data SolrQuery
+
+-- | A default field query.
+--   
+--   Example:
+--   
+--   @ -- bar query :: Solr.<a>SolrQuery</a> query = Solr.<a>word</a> "bar"
+defaultField :: Solr expr query => expr a -> query
 
 -- | A field query.
 --   
