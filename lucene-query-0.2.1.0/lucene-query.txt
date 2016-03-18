@@ -188,8 +188,8 @@ phrase :: Lucene expr query => [expr TWord] -> expr TPhrase
 --   This will have one of the following two types:
 --   
 --   <pre>
---   fuzz :: <a>LuceneExpr</a> <a>TWord</a>   -&gt; Int -&gt; <tt>LuceneExpr</tt> <a>TFuzzyWord</a>   -- Int must be 0, 1, or 2
---   fuzz :: <a>LuceneExpr</a> <a>TPhrase</a> -&gt; Int -&gt; <tt>LuceneExpr</tt> <a>TFuzzyPhrase</a> -- Int must be positive
+--   fuzz :: <a>LuceneExpr</a> <a>TWord</a>   -&gt; Int -&gt; <a>LuceneExpr</a> <a>TFuzzyWord</a>   -- Int must be 0, 1, or 2
+--   fuzz :: <a>LuceneExpr</a> <a>TPhrase</a> -&gt; Int -&gt; <a>LuceneExpr</a> <a>TFuzzyPhrase</a> -- Int must be positive
 --   </pre>
 --   
 --   Example:
@@ -574,8 +574,8 @@ phrase :: Lucene expr query => [expr TWord] -> expr TPhrase
 --   This will have one of the following two types:
 --   
 --   <pre>
---   fuzz :: <a>LuceneExpr</a> <a>TWord</a>   -&gt; Int -&gt; <tt>LuceneExpr</tt> <a>TFuzzyWord</a>   -- Int must be 0, 1, or 2
---   fuzz :: <a>LuceneExpr</a> <a>TPhrase</a> -&gt; Int -&gt; <tt>LuceneExpr</tt> <a>TFuzzyPhrase</a> -- Int must be positive
+--   fuzz :: <a>LuceneExpr</a> <a>TWord</a>   -&gt; Int -&gt; <a>LuceneExpr</a> <a>TFuzzyWord</a>   -- Int must be 0, 1, or 2
+--   fuzz :: <a>LuceneExpr</a> <a>TPhrase</a> -&gt; Int -&gt; <a>LuceneExpr</a> <a>TFuzzyPhrase</a> -- Int must be positive
 --   </pre>
 --   
 --   Example:
