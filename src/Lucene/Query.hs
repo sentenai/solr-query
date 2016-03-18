@@ -30,6 +30,10 @@ module Lucene.Query
   , (~:)
   , fuzzy
   , to
+  , gt
+  , gte
+  , lt
+  , lte
   , boost
   , (^:)
   -- * Query compilation
@@ -102,20 +106,17 @@ instance Lucene LuceneExpr LuceneQuery where
 
   fuzz e n = Expr (unExpr e <> "~" <> BS.lazyByteString (BS.pack (show n)))
 
-  to b1 b2 =
-    case (b1, b2) of
-      (Inclusive e1, Inclusive e2) -> go '[' ']' e1 e2
-      (Inclusive e1, Exclusive e2) -> go '[' '}' e1 e2
-      (Exclusive e1, Inclusive e2) -> go '{' ']' e1 e2
-      (Exclusive e1, Exclusive e2) -> go '{' '}' e1 e2
+  to b1 b2 = Expr (lhs b1 <> " TO " <> rhs b2)
    where
-    go :: Char -> Char -> LuceneExpr a -> LuceneExpr a -> LuceneExpr TRange
-    go c1 c2 e1 e2 =
-      Expr (BS.char8 c1 <>
-            unExpr e1   <>
-            " TO "      <>
-            unExpr e2   <>
-            BS.char8 c2)
+    lhs :: Boundary (LuceneExpr a) -> Builder
+    lhs (Inclusive e) = BS.char8 '[' <> unExpr e
+    lhs (Exclusive e) = BS.char8 '{' <> unExpr e
+    lhs Star          = BS.lazyByteString "[*"
+
+    rhs :: Boundary (LuceneExpr a) -> Builder
+    rhs (Inclusive e) = unExpr e <> BS.char8 ']'
+    rhs (Exclusive e) = unExpr e <> BS.char8 '}'
+    rhs Star          = BS.lazyByteString "*]"
 
   boost e n = Expr (unExpr e <> "^" <> BS.lazyByteString (BS.pack (show n)))
 

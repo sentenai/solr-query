@@ -10,10 +10,15 @@ module Lucene.Class
   , (~:)
   , fuzzy
   , (^:)
+  , gt
+  , gte
+  , lt
+  , lte
     -- * Range expression helpers
   , Boundary(..)
   , incl
   , excl
+  , star
   ) where
 
 import Lucene.Type
@@ -273,13 +278,16 @@ infixr 5 ~:
 -- | Short-hand for fuzzing a word by 2. This is the default behavior of a
 -- Lucene @\'~\'@ operator without an integer added.
 --
+-- @
+-- 'fuzzy' e = 'fuzz' e 2
+-- @
+--
 -- Example:
 --
 -- @
 -- -- foo:bar~
 -- query :: 'Lucene.Query.LuceneQuery'
 -- query = "foo" '=:' 'fuzzy' "bar"
--- -- equivalent to: "foo" '=:' 'fuzz' ('word' "bar") 2
 -- @
 fuzzy :: Lucene expr query => expr TWord -> expr TFuzzyWord
 fuzzy e = e ~: 2
@@ -289,14 +297,83 @@ fuzzy e = e ~: 2
 (^:) = boost
 infixr 5 ^:
 
+-- | Short-hand for a greater-than range query.
+--
+-- @
+-- 'gt' e = 'excl' e \`to\` 'star'
+-- @
+--
+-- Example:
+--
+-- @
+-- -- foo:>5
+-- -- foo:{5 TO *]
+-- query :: 'Lucene.Query.LuceneQuery'
+-- query = "foo" '=:' 'gt' ('int' 5)
+-- @
+gt :: (Lucene expr query, PrimType a) => expr a -> expr TRange
+gt e = excl e `to` star
+
+-- | Short-hand for a greater-than-or-equal-to range query.
+--
+-- @
+-- 'gte' e = 'incl' e \`to\` 'star'
+-- @
+--
+-- Example:
+--
+-- @
+-- -- foo:>=5
+-- -- foo:[5 TO *]
+-- query :: 'Lucene.Query.LuceneQuery'
+-- query = "foo" '=:' 'gt' ('int' 5)
+-- @
+gte :: (Lucene expr query, PrimType a) => expr a -> expr TRange
+gte e = incl e `to` star
+
+-- | Short-hand for a less-than range query.
+--
+-- @
+-- 'lt' e = 'star' \`to\` 'excl' e
+-- @
+--
+-- Example:
+--
+-- @
+-- -- foo:<5
+-- -- foo:[* TO 5}
+-- query :: 'Lucene.Query.LuceneQuery'
+-- query = "foo" '=:' 'lt' ('int' 5)
+-- @
+lt :: (Lucene expr query, PrimType a) => expr a -> expr TRange
+lt e = star `to` excl e
+
+-- | Short-hand for a less-than-or-equal-to range query.
+--
+-- @
+-- 'lte' e = 'star' \`to\` 'incl' e
+-- @
+--
+-- Example:
+--
+-- @
+-- -- foo:<=5
+-- -- foo:[* TO 5]
+-- query :: 'Lucene.Query.LuceneQuery'
+-- query = "foo" '=:' 'lte' ('int' 5)
+-- @
+lte :: (Lucene expr query, PrimType a) => expr a -> expr TRange
+lte e = star `to` incl e
+
 
 -- | An inclusive or exclusive expression for use in a range query, built with
--- either 'incl' or 'excl'.
+-- either 'incl', 'excl', or 'star'.
 --
 -- The constructors are exported for use in interpreters.
 data Boundary a
   = Inclusive a
   | Exclusive a
+  | Star
 
 -- | Mark an expression as inclusive, for use in a range query.
 incl :: Lucene expr query => expr a -> Boundary (expr a)
@@ -305,3 +382,6 @@ incl = Inclusive
 -- | Mark an expression as exclusive, for use in a range query.
 excl :: Lucene expr query => expr a -> Boundary (expr a)
 excl = Exclusive
+
+star :: Lucene expr query => Boundary (expr a)
+star = Star
