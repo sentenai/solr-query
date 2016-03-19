@@ -28,6 +28,7 @@ module Solr.Query
   -- * Expression construction
   -- $note-simplicity
   , int
+  , float
   , true
   , false
   , word
@@ -68,18 +69,6 @@ import qualified Data.ByteString.Lazy.Char8 as BS
 -- | A Solr expression.
 newtype SolrExpr (t :: SolrType) = Expr { unExpr :: Builder }
 
--- | This instance is only provided for convenient numeric literals. /ALL/ 'Num'
--- functions besides 'fromInteger' are not implemented and will cause a runtime
--- crash.
-instance Num (SolrExpr 'TInt) where
-  (+) = error "(+) not implemented for SolrExpr"
-  (*) = error "(*) not implemented for SolrExpr"
-  abs = error "'abs' not implemented for SolrExpr"
-  signum = error "'signum' not implemented for SolrExpr"
-  negate = error "'negate' not implemented for SolrExpr"
-
-  fromInteger i = int (fromInteger i)
-
 instance IsString (SolrExpr 'TWord) where
   fromString s = word (T.pack s)
 
@@ -92,6 +81,8 @@ instance IsList (SolrExpr 'TPhrase) where
 
 instance SolrExprSYM SolrExpr where
   int n = Expr (bshow n)
+
+  float n = Expr (bshow n)
 
   true = Expr "true"
 
@@ -129,17 +120,14 @@ instance SolrExprSYM SolrExpr where
 --
 -- While this approach allows fewer bad queries to typecheck, it is not
 -- extensible, leaks abstraction, makes documentation more difficult to read,
--- and basically suffers from type-level boolean blindness. A \"Could not match
--- True with False\" type error is useless. So, this might change eventually.
-data SolrQuery :: Bool -> Bool -> * where
-  Query :: Builder -> SolrQuery a b
-
-unQuery :: SolrQuery a b -> Builder
-unQuery (Query x) = x
+-- and basically suffers from type-level boolean blindness (a \"Could not match
+-- True with False\" type error is not very helpful). So, this might change
+-- eventually.
+data SolrQuery (isNeg :: Bool) (hasParams :: Bool) = Query { unQuery :: Builder }
 
 -- | Appending Solr queries simply puts a space between them. To Solr, this is
 -- equivalent to combining them with \'OR\'. However, this behavior can be
--- adjusted on a per-query basis using local parameters.
+-- adjusted on a per-query basis using 'paramOp'.
 --
 -- Due to limited precedence options, ('<>') will typically require parens
 -- around its arguments.

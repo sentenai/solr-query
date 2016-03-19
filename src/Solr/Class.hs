@@ -53,6 +53,17 @@ class SolrExprSYM (expr :: SolrType -> *) where
   -- @
   int :: Int -> expr 'TInt
 
+  -- | A @float@ expression.
+  --
+  -- Example:
+  --
+  -- @
+  -- -- foo:5.5
+  -- query :: 'Solr.Query.SolrQuery' 'False 'False
+  -- query = "foo" '=:' 'float' 5.5
+  -- @
+  float :: Float -> expr 'TFloat
+
   -- | A @true@ expression.
   --
   -- Example:

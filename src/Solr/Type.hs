@@ -8,6 +8,7 @@ module Solr.Type where
 -- | A Solr type.
 data SolrType
   = TInt
+  | TFloat
   | TBool
   | TWord
   | TFuzzyWord
@@ -49,5 +50,6 @@ instance BoostableType 'TPhrase where
 -- | Types that can appear in a range expression.
 class PrimType (a :: SolrType)
 
-instance PrimType 'TWord
 instance PrimType 'TInt
+instance PrimType 'TFloat
+instance PrimType 'TWord
