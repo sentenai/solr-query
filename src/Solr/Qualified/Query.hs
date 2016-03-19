@@ -2,7 +2,7 @@
 -- operators, and is intended to be imported qualified, because it contains
 -- function names that clash with the Prelude.
 --
--- > import qualified Solr.Query.Qualified as Solr
+-- > import qualified Solr.Qualified.Query as Solr
 --
 -- Here is a quick conversion guide:
 --
@@ -16,7 +16,7 @@
 -- ('Solr.Class.^=:') = 'score'
 -- @
 
-module Solr.Query.Qualified
+module Solr.Qualified.Query
   (
   -- * Query type
     SolrQuery
@@ -51,7 +51,7 @@ module Solr.Query.Qualified
   , compileSolrQuery
   ) where
 
-import Solr.Class.Qualified
+import Solr.Qualified.Class
 import Solr.Query (SolrExpr, SolrQuery, compileSolrQuery)
 
 import Prelude hiding (and, not, or)

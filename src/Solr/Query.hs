@@ -7,7 +7,7 @@
 {-# LANGUAGE TypeFamilies          #-}
 
 -- | Solr query construction and compilation. You may prefer to import
--- "Solr.Query.Qualified" instead, which does not export any operators.
+-- "Solr.Qualified.Query" instead, which does not export any operators.
 
 module Solr.Query
   (

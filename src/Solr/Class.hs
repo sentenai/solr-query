@@ -8,7 +8,7 @@
 -- multiple interpreters, one of which (lazy 'Data.ByteString.Lazy.ByteString's)
 -- is provided by this library in the "Solr.Query" module.
 --
--- Users should instead import either "Solr.Query" or "Solr.Query.Qualified".
+-- Users should instead import either "Solr.Query" or "Solr.Qualified.Query".
 
 module Solr.Class
   (

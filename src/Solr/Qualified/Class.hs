@@ -4,7 +4,7 @@
 -- operators, and is intended to be imported qualified, because it contains
 -- function names that clash with the Prelude.
 --
--- > import qualified Solr.Class.Qualified as Solr
+-- > import qualified Solr.Qualified.Class as Solr
 --
 -- Here is a quick conversion guide:
 --
@@ -18,7 +18,7 @@
 -- ('Solr.Class.^=:') = 'score'
 -- @
 
-module Solr.Class.Qualified
+module Solr.Qualified.Class
   (
     -- * Solr language
     SolrExprSYM
