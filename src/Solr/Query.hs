@@ -1,12 +1,13 @@
-{-# LANGUAGE DataKinds                  #-}
-{-# LANGUAGE FlexibleInstances          #-}
-{-# LANGUAGE KindSignatures             #-}
-{-# LANGUAGE MultiParamTypeClasses      #-}
-{-# LANGUAGE OverloadedStrings          #-}
-{-# LANGUAGE TypeFamilies               #-}
+{-# LANGUAGE DataKinds             #-}
+{-# LANGUAGE FlexibleInstances     #-}
+{-# LANGUAGE GADTSyntax            #-}
+{-# LANGUAGE KindSignatures        #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE OverloadedStrings     #-}
+{-# LANGUAGE TypeFamilies          #-}
 
 -- | Solr query construction and compilation. You may prefer to import
--- "Solr.Query.Qualified" instead, which does not contain any operators.
+-- "Solr.Query.Qualified" instead, which does not export any operators.
 
 module Solr.Query
   (
@@ -40,7 +41,10 @@ module Solr.Query
   , lt
   , lte
   , (^:)
-  -- * Query local parameters
+  -- * Local parameters
+  --
+  -- | Combine 'LocalParams' 'SolrQuery' with ('<>') and mark a query as having
+  -- local parameters with 'localParams'.
   , paramDefaultField
   -- * Query compilation
   , compileSolrQuery
@@ -61,20 +65,6 @@ import qualified Data.Text                  as T
 import qualified Data.Text.Encoding         as T
 import qualified Data.ByteString.Builder    as BS
 import qualified Data.ByteString.Lazy.Char8 as BS
-
--- | A Solr query. The boolean phantom type tracks whether or not this query has
--- local params or not.
-data SolrQuery (params :: Bool) = Query { unQuery :: Builder }
-
--- | Appending Solr queries simply puts a space between them. To Solr, this is
--- equivalent to combining them with ('||:'), however, this behavior can be
--- adjusted on a per-query basis using local parameters.
---
--- Due to limited precedence options, ('<>') will typically require parens
--- around its arguments.
-instance Monoid (SolrQuery 'False) where
-  mempty = Query mempty
-  q1 `mappend` q2 = Query (unQuery q1 <> " " <> unQuery q2)
 
 
 -- | A Solr expression.
@@ -102,12 +92,7 @@ instance IsList (SolrExpr 'TPhrase) where
   toList = map (Expr . BS.lazyByteString) . BS.words . BS.toLazyByteString . unExpr
 
 
-instance Solr SolrExpr SolrQuery where
-  -- | Solr query local parameters. Not all local parameters are supported.
-  data LocalParams SolrQuery
-    = SolrQueryParams
-        (Maybe Text) -- default field
-
+instance SolrExprSYM SolrExpr where
   int n = Expr (bshow n)
 
   true = Expr "true"
@@ -138,6 +123,36 @@ instance Solr SolrExpr SolrQuery where
 
   e ^: n = Expr (unExpr e <> "^" <> bshow n)
 
+
+-- | A Solr query. The boolean phantom type tracks whether or not this query has
+-- local params or not.
+--
+-- You may ignore the @data 'LocalParams' 'SolrQuery'@ instance below; the data
+-- constructor @SolrQueryParams@ is not exported, but shows up in the Haddocks
+-- anyway.
+data SolrQuery :: Bool -> * where
+  Query :: Builder -> SolrQuery a
+
+unQuery :: SolrQuery a -> Builder
+unQuery (Query x) = x
+
+-- | Appending Solr queries simply puts a space between them. To Solr, this is
+-- equivalent to combining them with \'OR\'. However, this behavior can be
+-- adjusted on a per-query basis using local parameters.
+--
+-- Due to limited precedence options, ('<>') will typically require parens
+-- around its arguments.
+instance Semigroup (SolrQuery 'False) where
+  q1 <> q2 = Query (unQuery q1 <> " " <> unQuery q2)
+
+-- | See @Semigroup@ instance.
+instance Monoid (SolrQuery 'False) where
+  mempty = Query mempty
+  mappend = (<>)
+
+instance SolrQuerySYM SolrExpr SolrQuery where
+  data LocalParams SolrQuery = SolrQueryParams (Maybe Text)
+
   defaultField e = Query (unExpr e)
 
   f =: e = Query (T.encodeUtf8Builder f <> ":" <> unExpr e)
@@ -159,17 +174,36 @@ instance Solr SolrExpr SolrQuery where
       buildDefaultField :: Text -> Builder
       buildDefaultField s = "df=" <> T.encodeUtf8Builder s
 
-
+-- | Local parameters are built from smart constructors such as
+-- 'paramDefaultField', combined together with ('<>'), and attached to a query
+-- with 'localParams'.
 instance Semigroup (LocalParams SolrQuery) where
   SolrQueryParams a0 <> SolrQueryParams a1 = SolrQueryParams (a0 <> a1)
 
+-- | Set the @\'df\'@ local parameter.
+--
+-- Example:
+--
+-- @
+-- -- {!df=foo}bar
+-- query :: 'SolrQuery' 'True
+-- query = 'localParams' ('paramDefaultField' "foo") ('defaultField' ('word' "bar"))
+-- @
 paramDefaultField :: Text -> LocalParams SolrQuery
 paramDefaultField s = SolrQueryParams (Just s)
 
 
--- | Compile a 'SolrQuery' to a lazy 'ByteString'. Because the underlying
--- expressions are correct by consutruction, this function is total.
-compileSolrQuery :: SolrQuery params -> ByteString
+-- | Compile a 'SolrQuery' to a lazy 'ByteString'.
+--
+-- Example:
+--
+-- @
+-- λ let params = 'paramDefaultField' "body"
+-- λ let query = "foo" =: 'phrase' ["bar", "baz"] '~:' 5 '&&:' 'defaultField' ('regex' "wh?at")
+-- λ 'compileSolrQuery' ('localParams' params query)
+-- "{!df=body}(foo:\"bar baz\"~5 AND /wh?t/)"
+-- @
+compileSolrQuery :: SolrQuery a -> ByteString
 compileSolrQuery = BS.toLazyByteString . unQuery
 
 

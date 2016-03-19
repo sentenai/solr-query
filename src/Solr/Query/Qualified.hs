@@ -7,13 +7,13 @@
 -- Here is a quick conversion guide:
 --
 -- @
--- ('~:')  = 'fuzz'
--- ('^:')  = 'boost'
--- ('=:')  = 'field'
--- ('&&:') = 'and'
--- ('||:') = 'or'
--- ('-:')  = 'not'
--- ('^=:') = 'score'
+-- ('Solr.Class.~:')  = 'fuzz'
+-- ('Solr.Class.^:')  = 'boost'
+-- ('Solr.Class.=:')  = 'field'
+-- ('Solr.Class.&&:') = 'and'
+-- ('Solr.Class.||:') = 'or'
+-- ('Solr.Class.-:')  = 'not'
+-- ('Solr.Class.^=:') = 'score'
 -- @
 
 module Solr.Query.Qualified

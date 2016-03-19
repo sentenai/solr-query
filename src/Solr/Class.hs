@@ -1,15 +1,20 @@
+{-# LANGUAGE ConstraintKinds        #-}
 {-# LANGUAGE DataKinds              #-}
 {-# LANGUAGE FunctionalDependencies #-}
 {-# LANGUAGE MultiParamTypeClasses  #-}
 {-# LANGUAGE TypeFamilies           #-}
 
--- | This module defines the Solr DSL. Ordinary users should instead import
--- either "Solr.Query" or "Solr.Query.Qualified".
+-- | This module defines the finally tagless Solr DSL. This style admits
+-- multiple interpreters, one of which (lazy 'Data.ByteString.Lazy.ByteString's)
+-- is provided by this library in the "Solr.Query" module.
+--
+-- Users should instead import either "Solr.Query" or "Solr.Query.Qualified".
 
 module Solr.Class
   (
     -- * Solr language
-    Solr(..)
+    SolrExprSYM(..)
+  , SolrQuerySYM(..)
     -- * Derived combinators
   , fuzzy
   , gt
@@ -27,16 +32,8 @@ import Solr.Type
 
 import Data.Text (Text)
 
--- | The finally tagless Solr class. This admits multiple interpreters, with
--- one (lazy 'Data.ByteString.Lazy.ByteString's) provided by this library, in
--- the "Solr.Query" module.
---
--- For simplicity, the type signatures in the examples below monomorphise the
--- functions to use 'Solr.Query.SolrQuery' (and therefore
--- 'Solr.Query.SolrExpr', due to the functional dependency).
-class Solr expr query | query -> expr, expr -> query where
-  data LocalParams query :: *
-
+-- | Solr expression.
+class SolrExprSYM (expr :: SolrType -> *) where
   -- | An @int@ expression.
   --
   -- Note that sometimes you may use the 'Num' instance for
@@ -47,7 +44,7 @@ class Solr expr query | query -> expr, expr -> query where
   --
   -- @
   -- -- foo:5
-  -- query :: 'Solr.Query.SolrQuery'
+  -- query :: 'Solr.Query.SolrQuery' 'False
   -- query = "foo" '=:' 'int' 5
   -- @
   int :: Int -> expr 'TInt
@@ -58,7 +55,7 @@ class Solr expr query | query -> expr, expr -> query where
   --
   -- @
   -- -- foo:true
-  -- query :: 'Solr.Query.SolrQuery'
+  -- query :: 'Solr.Query.SolrQuery' 'False
   -- query = "foo" '=:' 'true'
   -- @
   true :: expr 'TBool
@@ -69,7 +66,7 @@ class Solr expr query | query -> expr, expr -> query where
   --
   -- @
   -- -- foo:false
-  -- query :: 'Solr.Query.SolrQuery'
+  -- query :: 'Solr.Query.SolrQuery' 'False
   -- query = "foo" '=:' 'false'
   -- @
   false :: expr 'TBool
@@ -86,11 +83,11 @@ class Solr expr query | query -> expr, expr -> query where
   --
   -- @
   -- -- foo:bar
-  -- query :: 'Solr.Query.SolrQuery'
+  -- query :: 'Solr.Query.SolrQuery' 'False
   -- query = "foo" '=:' 'word' "bar"
   --
   -- -- foo:bar
-  -- query :: 'Solr.Query.SolrQuery'
+  -- query :: 'Solr.Query.SolrQuery' 'False
   -- query = "foo" '=:' ("bar" :: 'Solr.Query.SolrExpr' 'TWord')
   -- @
   word :: Text -> expr 'TWord
@@ -104,7 +101,7 @@ class Solr expr query | query -> expr, expr -> query where
   --
   -- @
   -- -- foo:b?r
-  -- query :: 'Solr.Query.SolrQuery'
+  -- query :: 'Solr.Query.SolrQuery' 'False
   -- query = "foo" '=:' 'wild' "b?r"
   -- @
   wild :: Text -> expr 'TWild
@@ -117,7 +114,7 @@ class Solr expr query | query -> expr, expr -> query where
   --
   -- @
   -- -- foo:\/[mb]oat\/
-  -- query :: 'Solr.Query.SolrQuery'
+  -- query :: 'Solr.Query.SolrQuery' 'False
   -- query = "foo" '=:' 'regex' "[mb]oat"
   -- @
   regex :: Text -> expr 'TRegex
@@ -135,15 +132,15 @@ class Solr expr query | query -> expr, expr -> query where
   --
   -- @
   -- -- foo:"bar baz"
-  -- query :: 'Solr.Query.SolrQuery'
+  -- query :: 'Solr.Query.SolrQuery' 'False
   -- query = "foo" '=:' 'phrase' ["bar", "baz"] -- ok
   --
   -- -- foo:"bar b?z" (an invalid Solr query)
-  -- query :: 'Solr.Query.SolrQuery'
+  -- query :: 'Solr.Query.SolrQuery' 'False
   -- query = "foo" '=:' 'phrase' ["bar", 'wild' "b?z"] -- type error
   --
   -- -- foo:"bar b?z" (an invalid Solr query)
-  -- query :: 'Solr.Query.SolrQuery'
+  -- query :: 'Solr.Query.SolrQuery' 'False
   -- query = "foo" '=:' 'phrase' ["bar", "b?z"] -- breaks 'word' contract
   -- @
   --
@@ -151,7 +148,7 @@ class Solr expr query | query -> expr, expr -> query where
   --
   -- @
   -- -- foo:"bar baz"
-  -- query :: 'Solr.Query.SolrQuery'
+  -- query :: 'Solr.Query.SolrQuery' 'False
   -- query = "foo" '=:' (["bar", "baz"] :: 'Solr.Query.SolrExpr' 'TPhrase')
   -- @
   phrase :: [expr 'TWord] -> expr 'TPhrase
@@ -170,11 +167,11 @@ class Solr expr query | query -> expr, expr -> query where
   --
   -- @
   -- -- foo:bar~1
-  -- query :: 'Solr.Query.SolrQuery'
+  -- query :: 'Solr.Query.SolrQuery' 'False
   -- query = "foo" '=:' 'word' "bar" '~:' 1
   --
   -- -- foo:"bar baz qux"~10
-  -- query :: 'Solr.Query.SolrQuery'
+  -- query :: 'Solr.Query.SolrQuery' 'False
   -- query = "foo" '=:' 'phrase' ["bar", "baz", "qux"] '~:' 10
   -- @
   (~:) :: FuzzableType a => expr a -> Int -> expr (TFuzzed a)
@@ -193,7 +190,7 @@ class Solr expr query | query -> expr, expr -> query where
   --
   -- @
   -- -- foo:[5 TO 10}
-  -- query :: 'Solr.Query.SolrQuery'
+  -- query :: 'Solr.Query.SolrQuery' 'False
   -- query = "foo" '=:' 'incl' ('int' 5) \`to\` 'excl' ('int' 10)
   -- @
   to :: PrimType a => Boundary (expr a) -> Boundary (expr a) -> expr 'TRange
@@ -212,24 +209,115 @@ class Solr expr query | query -> expr, expr -> query where
   --
   -- @
   -- -- foo:bar^3.5
-  -- query :: 'Solr.Query.SolrQuery'
+  -- query :: 'Solr.Query.SolrQuery' 'False
   -- query = "foo" '=:' 'word' "bar" '^:' 3.5
   --
   -- -- foo:"bar baz"^3.5
-  -- query :: 'Solr.Query.SolrQuery'
+  -- query :: 'Solr.Query.SolrQuery' 'False
   -- query = "foo" '=:' 'phrase' ["bar", "baz"] '^:' 3.5
   -- @
   (^:) :: BoostableType a => expr a -> Float -> expr (TBoosted a)
   infix 6 ^:
+
+
+-- | Short-hand for fuzzing a word by 2. This is the default behavior of a
+-- Solr @\'~\'@ operator without an integer added.
+--
+-- @
+-- 'fuzzy' e = 'fuzz' e 2
+-- @
+--
+-- Example:
+--
+-- @
+-- -- foo:bar~
+-- query :: 'Solr.Query.SolrQuery' 'False
+-- query = "foo" '=:' 'fuzzy' "bar"
+-- @
+fuzzy :: SolrExprSYM expr => expr 'TWord -> expr 'TFuzzyWord
+fuzzy e = e ~: 2
+
+-- | Short-hand for a greater-than range query.
+--
+-- @
+-- 'gt' e = 'excl' e \`to\` 'star'
+-- @
+--
+-- Example:
+--
+-- @
+-- -- foo:>5
+-- -- foo:{5 TO *]
+-- query :: 'Solr.Query.SolrQuery' 'False
+-- query = "foo" '=:' 'gt' ('int' 5)
+-- @
+gt :: (SolrExprSYM expr, PrimType a) => expr a -> expr 'TRange
+gt e = excl e `to` star
+
+-- | Short-hand for a greater-than-or-equal-to range query.
+--
+-- @
+-- 'gte' e = 'incl' e \`to\` 'star'
+-- @
+--
+-- Example:
+--
+-- @
+-- -- foo:>=5
+-- -- foo:[5 TO *]
+-- query :: 'Solr.Query.SolrQuery' 'False
+-- query = "foo" '=:' 'gte' ('int' 5)
+-- @
+gte :: (SolrExprSYM expr, PrimType a) => expr a -> expr 'TRange
+gte e = incl e `to` star
+
+-- | Short-hand for a less-than range query.
+--
+-- @
+--  'lt' e = 'star' \`to\` 'excl' e
+-- @
+--
+-- Example:
+--
+-- @
+-- -- foo:<5
+-- -- foo:[* TO 5}
+-- query :: 'Solr.Query.SolrQuery' 'False
+-- query = "foo" '=:' 'lt' ('int' 5)
+-- @
+lt :: (SolrExprSYM expr, PrimType a) => expr a -> expr 'TRange
+lt e = star `to` excl e
+
+-- | Short-hand for a less-than-or-equal-to range query.
+--
+-- @
+-- 'lte' e = 'star' \`to\` 'incl' e
+-- @
+--
+-- Example:
+--
+-- @
+-- -- foo:<=5
+-- -- foo:[* TO 5]
+-- query :: 'Solr.Query.SolrQuery' 'False
+-- query = "foo" '=:' 'lte' ('int' 5)
+-- @
+lte :: (SolrExprSYM expr, PrimType a) => expr a -> expr 'TRange
+lte e = star `to` incl e
+
+
+-- | Solr query.
+class SolrExprSYM expr => SolrQuerySYM expr query | query -> expr where
+  data LocalParams query :: *
 
   -- | A default field query.
   --
   -- Example:
   --
   -- @
-  -- -- bar
-  -- query :: 'Solr.Query.SolrQuery'
-  -- query = 'word' "bar"
+  -- -- foo
+  -- query :: 'Solr.Query.SolrQuery' 'False
+  -- query = 'defaultField' ('word' "foo")
   -- @
   defaultField :: expr a -> query 'False
 
@@ -239,7 +327,7 @@ class Solr expr query | query -> expr, expr -> query where
   --
   -- @
   -- -- foo:bar
-  -- query :: 'Solr.Query.SolrQuery'
+  -- query :: 'Solr.Query.SolrQuery' 'False
   -- query = "foo" '=:' 'word' "bar"
   -- @
   (=:) :: Text -> expr a -> query 'False
@@ -251,7 +339,7 @@ class Solr expr query | query -> expr, expr -> query where
   --
   -- @
   -- -- foo:bar AND baz:qux
-  -- query :: 'Solr.Query.SolrQuery'
+  -- query :: 'Solr.Query.SolrQuery' 'False
   -- query = "foo" '=:' 'word' "bar"
   --     '&&:' "baz" '=:' 'word' "qux"
   -- @
@@ -264,7 +352,7 @@ class Solr expr query | query -> expr, expr -> query where
   --
   -- @
   -- -- foo:bar OR baz:qux
-  -- query :: 'Solr.Query.SolrQuery'
+  -- query :: 'Solr.Query.SolrQuery' 'False
   -- query = "foo" '=:' 'word' "bar"
   --     '||:' "baz" '=:' 'word' "qux"
   -- @
@@ -277,7 +365,7 @@ class Solr expr query | query -> expr, expr -> query where
   --
   -- @
   -- -- foo:bar NOT baz:qux
-  -- query :: 'Solr.Query.SolrQuery'
+  -- query :: 'Solr.Query.SolrQuery' 'False
   -- query = "foo" '=:' 'word' "bar"
   --      '-:' "baz" '=:' 'word' "qux"
   -- @
@@ -294,99 +382,25 @@ class Solr expr query | query -> expr, expr -> query where
   --
   -- @
   -- -- (foo:bar)^=3.5
-  -- query :: 'Solr.Query.SolrQuery'
+  -- query :: 'Solr.Query.SolrQuery' 'False
   -- query = "foo" '=:' 'word' "bar" '^=:' 3.5
   -- @
   (^=:) :: query 'False -> Float -> query 'False
   infixr 4 ^=:
 
+  -- | Add local parameters to a query. A query can only have one set of local
+  -- parameters, hence the boolean tag that tracks whether or not they've been
+  -- added.
+  --
+  -- Example:
+  --
+  -- @
+  -- -- {!df=foo}bar
+  -- query :: 'Solr.Query.SolrQuery' 'True
+  -- query = 'localParams' ('Solr.Query.SolrQuery.paramDefaultField' "foo") ('defaultField' ('word' "bar"))
+  -- @
   localParams :: LocalParams query -> query 'False -> query 'True
 
-
--- | Short-hand for fuzzing a word by 2. This is the default behavior of a
--- Solr @\'~\'@ operator without an integer added.
---
--- @
--- 'fuzzy' e = 'fuzz' e 2
--- @
---
--- Example:
---
--- @
--- -- foo:bar~
--- query :: 'Solr.Query.SolrQuery'
--- query = "foo" '=:' 'fuzzy' "bar"
--- @
-fuzzy :: Solr expr query => expr 'TWord -> expr 'TFuzzyWord
-fuzzy e = e ~: 2
-
--- | Short-hand for a greater-than range query.
---
--- @
--- 'gt' e = 'excl' e \`to\` 'star'
--- @
---
--- Example:
---
--- @
--- -- foo:>5
--- -- foo:{5 TO *]
--- query :: 'Solr.Query.SolrQuery'
--- query = "foo" '=:' 'gt' ('int' 5)
--- @
-gt :: (Solr expr query, PrimType a) => expr a -> expr 'TRange
-gt e = excl e `to` star
-
--- | Short-hand for a greater-than-or-equal-to range query.
---
--- @
--- 'gte' e = 'incl' e \`to\` 'star'
--- @
---
--- Example:
---
--- @
--- -- foo:>=5
--- -- foo:[5 TO *]
--- query :: 'Solr.Query.SolrQuery'
--- query = "foo" '=:' 'gte' ('int' 5)
--- @
-gte :: (Solr expr query, PrimType a) => expr a -> expr 'TRange
-gte e = incl e `to` star
-
--- | Short-hand for a less-than range query.
---
--- @
---  'lt' e = 'star' \`to\` 'excl' e
--- @
---
--- Example:
---
--- @
--- -- foo:<5
--- -- foo:[* TO 5}
--- query :: 'Solr.Query.SolrQuery'
--- query = "foo" '=:' 'lt' ('int' 5)
--- @
-lt :: (Solr expr query, PrimType a) => expr a -> expr 'TRange
-lt e = star `to` excl e
-
--- | Short-hand for a less-than-or-equal-to range query.
---
--- @
--- 'lte' e = 'star' \`to\` 'incl' e
--- @
---
--- Example:
---
--- @
--- -- foo:<=5
--- -- foo:[* TO 5]
--- query :: 'Solr.Query.SolrQuery'
--- query = "foo" '=:' 'lte' ('int' 5)
--- @
-lte :: (Solr expr query, PrimType a) => expr a -> expr 'TRange
-lte e = star `to` incl e
 
 
 -- | An inclusive or exclusive expression for use in a range query, built with
@@ -399,12 +413,14 @@ data Boundary a
   | Star
 
 -- | Mark an expression as inclusive, for use in a range query.
-incl :: Solr expr query => expr a -> Boundary (expr a)
+incl :: SolrExprSYM expr => expr a -> Boundary (expr a)
 incl = Inclusive
 
 -- | Mark an expression as exclusive, for use in a range query.
-excl :: Solr expr query => expr a -> Boundary (expr a)
+excl :: SolrExprSYM expr => expr a -> Boundary (expr a)
 excl = Exclusive
 
-star :: Solr expr query => Boundary (expr a)
+-- | @\'*\'@ operator, signifying the minimum or maximun bound of a range. A
+-- @[* TO *]@ query is allowed, but will require a type annotation.
+star :: SolrExprSYM expr => Boundary (expr a)
 star = Star
