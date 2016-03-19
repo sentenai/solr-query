@@ -39,6 +39,7 @@ module Solr.Qualified.Class
   , or
   , not
   , score
+  , neg
   , localParams
     -- * Derived combinators
   , fuzzy
@@ -68,25 +69,25 @@ boost :: (SolrExprSYM expr, BoostableType a) => expr a -> Float -> expr (TBooste
 boost = (^:)
 
 -- | Named version of ('=:').
-field :: SolrQuerySYM expr query => Text -> expr a -> query 'False
+field :: SolrQuerySYM expr query => Text -> expr a -> query 'False 'False
 field = (=:)
 
 -- | Named version of ('&&:').
-and :: SolrQuerySYM expr query => query 'False -> query 'False -> query 'False
+and :: SolrQuerySYM expr query => query 'False 'False -> query 'False 'False -> query 'False 'False
 and = (&&:)
 infixr 3 `and`
 
 -- | Named version of ('||:').
-or :: SolrQuerySYM expr query => query 'False -> query 'False -> query 'False
+or :: SolrQuerySYM expr query => query 'False 'False -> query 'False 'False -> query 'False 'False
 or = (||:)
 infixr 2 `or`
 
 -- | Named version of ('-:').
-not :: SolrQuerySYM expr query => query 'False -> query 'False -> query 'False
+not :: SolrQuerySYM expr query => query 'False 'False -> query 'False 'False -> query 'False 'False
 not = (-:)
 infixr 1 `not`
 
 -- | Named version of ('^=:').
-score :: SolrQuerySYM expr query => query 'False -> Float -> query 'False
+score :: SolrQuerySYM expr query => query 'False 'False -> Float -> query 'False 'False
 score = (^=:)
 infixr 4 `score`

@@ -28,6 +28,7 @@ module Solr.Qualified.Query
   , or
   , not
   , score
+  , neg
   , localParams
   -- * Expression type
   , SolrExpr

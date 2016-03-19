@@ -21,6 +21,7 @@ module Solr.Query
   , (||:)
   , (-:)
   , (^=:)
+  , neg
   , localParams
   -- * Expression type
   , SolrExpr
@@ -75,11 +76,11 @@ newtype SolrExpr (t :: SolrType) = Expr { unExpr :: Builder }
 -- functions besides 'fromInteger' are not implemented and will cause a runtime
 -- crash.
 instance Num (SolrExpr 'TInt) where
-  (+) = error "SolrExpr.Num.(+): not implemented"
-  (*) = error "SolrExpr.Num.(*): not implemented"
-  abs = error "SolrExpr.Num.abs: not implemented"
-  signum = error "SolrExpr.Num.signum: not implemented"
-  negate = error "SolrExpr.Num.negate: not implemented"
+  (+) = error "(+) not implemented for SolrExpr"
+  (*) = error "(*) not implemented for SolrExpr"
+  abs = error "'abs' not implemented for SolrExpr"
+  signum = error "'signum' not implemented for SolrExpr"
+  negate = error "'negate' not implemented for SolrExpr"
 
   fromInteger i = int (fromInteger i)
 
@@ -125,16 +126,23 @@ instance SolrExprSYM SolrExpr where
   e ^: n = Expr (unExpr e <> "^" <> bshow n)
 
 
--- | A Solr query. The boolean phantom type tracks whether or not this query has
--- local params or not.
+-- | A Solr query.
+--
+-- The two boolean phantom types track whether or not this query has been
+-- negated, and whether or not this query has local parameters.
+--
+-- While this approach allows fewer bad queries to typecheck, it is not
+-- extensible, leaks abstraction, makes documentation more difficult to read,
+-- and basically suffers from type-level boolean blindness. A \"Could not match
+-- True with False\" type error is useless. So, this might change eventually.
 --
 -- You may ignore the @data 'LocalParams' 'SolrQuery'@ instance below; the data
 -- constructor @SolrQueryParams@ is not exported, but shows up in the Haddocks
 -- anyway.
-data SolrQuery :: Bool -> * where
-  Query :: Builder -> SolrQuery a
+data SolrQuery :: Bool -> Bool -> * where
+  Query :: Builder -> SolrQuery a b
 
-unQuery :: SolrQuery a -> Builder
+unQuery :: SolrQuery a b -> Builder
 unQuery (Query x) = x
 
 -- | Appending Solr queries simply puts a space between them. To Solr, this is
@@ -143,11 +151,11 @@ unQuery (Query x) = x
 --
 -- Due to limited precedence options, ('<>') will typically require parens
 -- around its arguments.
-instance Semigroup (SolrQuery 'False) where
+instance Semigroup (SolrQuery 'False 'False) where
   q1 <> q2 = Query (unQuery q1 <> " " <> unQuery q2)
 
 -- | See @Semigroup@ instance.
-instance Monoid (SolrQuery 'False) where
+instance Monoid (SolrQuery 'False 'False) where
   mempty = Query mempty
   mappend = (<>)
 
@@ -168,6 +176,8 @@ instance SolrQuerySYM SolrExpr SolrQuery where
   q1 -: q2 = Query ("(" <> unQuery q1 <> " NOT " <> unQuery q2 <> ")")
 
   q ^=: n = Query ("(" <> unQuery q <> ")^=" <> bshow n)
+
+  neg q = Query ("-" <> unQuery q)
 
   localParams params q = Query (compileParams params <> unQuery q)
    where
@@ -236,9 +246,9 @@ paramOp s = SolrQueryParams Nothing (Just s)
 -- λ let params = 'paramDefaultField' "body"
 -- λ let query = "foo" =: 'phrase' ["bar", "baz"] '~:' 5 '&&:' 'defaultField' ('regex' "wh?at")
 -- λ 'compileSolrQuery' ('localParams' params query)
--- "{!df=body}(foo:\"bar baz\"~5 AND \/wh?t\/)"
+-- "{!df=body}(foo:\\"bar baz\\"~5 AND \/wh?t\/)"
 -- @
-compileSolrQuery :: SolrQuery a -> ByteString
+compileSolrQuery :: SolrQuery a b -> ByteString
 compileSolrQuery = BS.toLazyByteString . unQuery
 
 
