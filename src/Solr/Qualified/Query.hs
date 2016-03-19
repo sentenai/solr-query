@@ -28,6 +28,7 @@ module Solr.Qualified.Query
   , or
   , not
   , score
+  , localParams
   -- * Expression type
   , SolrExpr
   -- * Expression construction
@@ -58,7 +59,7 @@ module Solr.Qualified.Query
   ) where
 
 import Solr.Qualified.Class
-import Solr.Query (SolrExpr, SolrQuery, compileSolrQuery, paramDefaultField, paramOp)
+import Solr.Query
 
 import Prelude hiding (and, not, or)
 
