@@ -46,6 +46,7 @@ module Solr.Query
   -- | Combine 'LocalParams' 'SolrQuery' with ('<>') and mark a query as having
   -- local parameters with 'localParams'.
   , paramDefaultField
+  , paramOp
   -- * Query compilation
   , compileSolrQuery
   ) where
@@ -151,7 +152,10 @@ instance Monoid (SolrQuery 'False) where
   mappend = (<>)
 
 instance SolrQuerySYM SolrExpr SolrQuery where
-  data LocalParams SolrQuery = SolrQueryParams (Maybe Text)
+  data LocalParams SolrQuery
+    = SolrQueryParams
+        (Maybe Text) -- default field
+        (Maybe Text) -- operator
 
   defaultField e = Query (unExpr e)
 
@@ -168,17 +172,27 @@ instance SolrQuerySYM SolrExpr SolrQuery where
   localParams params q = Query (compileParams params <> unQuery q)
    where
     compileParams :: LocalParams SolrQuery -> Builder
-    compileParams (SolrQueryParams df) =
-      "{!" <> spaces (catMaybes [buildDefaultField <$> df]) <> "}"
+    compileParams (SolrQueryParams df op) =
+      let
+        mbuilders =
+          [ buildDefaultField <$> df
+          , buildOp           <$> op
+          ]
+      in
+        "{!" <> spaces (catMaybes mbuilders) <> "}"
      where
       buildDefaultField :: Text -> Builder
       buildDefaultField s = "df=" <> T.encodeUtf8Builder s
+
+      buildOp :: Text -> Builder
+      buildOp s = "q.op=" <> T.encodeUtf8Builder s
 
 -- | Local parameters are built from smart constructors such as
 -- 'paramDefaultField', combined together with ('<>'), and attached to a query
 -- with 'localParams'.
 instance Semigroup (LocalParams SolrQuery) where
-  SolrQueryParams a0 <> SolrQueryParams a1 = SolrQueryParams (a0 <> a1)
+  SolrQueryParams a0 b0 <> SolrQueryParams a1 b1 =
+    SolrQueryParams (a0 <> a1) (b0 <> b1)
 
 -- | Set the @\'df\'@ local parameter.
 --
@@ -190,7 +204,28 @@ instance Semigroup (LocalParams SolrQuery) where
 -- query = 'localParams' ('paramDefaultField' "foo") ('defaultField' ('word' "bar"))
 -- @
 paramDefaultField :: Text -> LocalParams SolrQuery
-paramDefaultField s = SolrQueryParams (Just s)
+paramDefaultField s = SolrQueryParams (Just s) Nothing
+
+-- | Set the @\'op\'@ local parameter.
+--
+-- Stringly typed to avoid a verbose sum type like
+--
+-- @
+-- data SolrQueryOp = SolrQueryOpAnd | SolrQueryOpOr | ...
+-- @
+--
+-- which seems to have little value in cases like this. Instead, just pass
+-- @\"AND\"@, @\"OR\"@, ...
+--
+-- Example:
+--
+-- @
+-- -- {!q.op=AND}foo bar
+-- query :: 'SolrQuery' 'True
+-- query = 'localParams' ('paramOp' \"AND\") ('defaultField' ('word' "foo") '<>' 'defaultField' ('word' "bar"))
+-- @
+paramOp :: Text -> LocalParams SolrQuery
+paramOp s = SolrQueryParams Nothing (Just s)
 
 
 -- | Compile a 'SolrQuery' to a lazy 'ByteString'.
@@ -201,7 +236,7 @@ paramDefaultField s = SolrQueryParams (Just s)
 -- λ let params = 'paramDefaultField' "body"
 -- λ let query = "foo" =: 'phrase' ["bar", "baz"] '~:' 5 '&&:' 'defaultField' ('regex' "wh?at")
 -- λ 'compileSolrQuery' ('localParams' params query)
--- "{!df=body}(foo:\"bar baz\"~5 AND /wh?t/)"
+-- "{!df=body}(foo:\"bar baz\"~5 AND \/wh?t\/)"
 -- @
 compileSolrQuery :: SolrQuery a -> ByteString
 compileSolrQuery = BS.toLazyByteString . unQuery

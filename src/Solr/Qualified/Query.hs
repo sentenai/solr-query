@@ -47,12 +47,18 @@ module Solr.Qualified.Query
   , lt
   , lte
   , boost
+  -- * Local parameters
+  --
+  -- | Combine 'LocalParams' 'SolrQuery' with ('<>') and mark a query as having
+  -- local parameters with 'localParams'.
+  , paramDefaultField
+  , paramOp
   -- * Query compilation
   , compileSolrQuery
   ) where
 
 import Solr.Qualified.Class
-import Solr.Query (SolrExpr, SolrQuery, compileSolrQuery)
+import Solr.Query (SolrExpr, SolrQuery, compileSolrQuery, paramDefaultField, paramOp)
 
 import Prelude hiding (and, not, or)
 
