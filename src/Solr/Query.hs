@@ -1,6 +1,6 @@
 {-# LANGUAGE DataKinds             #-}
 {-# LANGUAGE FlexibleInstances     #-}
-{-# LANGUAGE GADTSyntax            #-}
+{-# LANGUAGE GADTs                 #-}
 {-# LANGUAGE KindSignatures        #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE OverloadedStrings     #-}
@@ -22,7 +22,7 @@ module Solr.Query
   , (-:)
   , (^=:)
   , neg
-  , localParams
+  , params
   -- * Expression type
   , SolrExpr
   -- * Expression construction
@@ -43,9 +43,6 @@ module Solr.Query
   , lte
   , (^:)
   -- * Local parameters
-  --
-  -- | Combine 'LocalParams' 'SolrQuery' with ('<>') and mark a query as having
-  -- local parameters with 'localParams'.
   , paramDefaultField
   , paramOp
   -- * Query compilation
@@ -57,7 +54,6 @@ import Solr.Type
 
 import Data.ByteString.Builder    (Builder)
 import Data.ByteString.Lazy.Char8 (ByteString)
-import Data.Maybe                 (catMaybes)
 import Data.Semigroup
 import Data.String                (IsString(..))
 import Data.Text                  (Text)
@@ -135,10 +131,6 @@ instance SolrExprSYM SolrExpr where
 -- extensible, leaks abstraction, makes documentation more difficult to read,
 -- and basically suffers from type-level boolean blindness. A \"Could not match
 -- True with False\" type error is useless. So, this might change eventually.
---
--- You may ignore the @data 'LocalParams' 'SolrQuery'@ instance below; the data
--- constructor @SolrQueryParams@ is not exported, but shows up in the Haddocks
--- anyway.
 data SolrQuery :: Bool -> Bool -> * where
   Query :: Builder -> SolrQuery a b
 
@@ -160,10 +152,9 @@ instance Monoid (SolrQuery 'False 'False) where
   mappend = (<>)
 
 instance SolrQuerySYM SolrExpr SolrQuery where
-  data LocalParams SolrQuery
-    = SolrQueryParams
-        (Maybe Text) -- default field
-        (Maybe Text) -- operator
+  data ParamKey SolrQuery a where
+    SolrQueryDefaultField :: ParamKey SolrQuery Text
+    SolrQueryOp           :: ParamKey SolrQuery Text
 
   defaultField e = Query (unExpr e)
 
@@ -179,49 +170,36 @@ instance SolrQuerySYM SolrExpr SolrQuery where
 
   neg q = Query ("-" <> unQuery q)
 
-  localParams params q = Query (compileParams params <> unQuery q)
+  params ps q = Query (compileParams ps <> unQuery q)
    where
-    compileParams :: LocalParams SolrQuery -> Builder
-    compileParams (SolrQueryParams df op) =
-      let
-        mbuilders =
-          [ buildDefaultField <$> df
-          , buildOp           <$> op
-          ]
-      in
-        "{!" <> spaces (catMaybes mbuilders) <> "}"
-     where
-      buildDefaultField :: Text -> Builder
-      buildDefaultField s = "df=" <> T.encodeUtf8Builder s
+    compileParams [] = ""
+    compileParams ps' = "{!" <> spaces (map compileParam ps') <> "}"
 
-      buildOp :: Text -> Builder
-      buildOp s = "q.op=" <> T.encodeUtf8Builder s
+    compileParam :: Param SolrQuery -> Builder
+    compileParam (Param k v) =
+      case k of
+        SolrQueryDefaultField -> "df=" <> T.encodeUtf8Builder v
+        SolrQueryOp -> "q.op=" <> T.encodeUtf8Builder v
 
--- | Local parameters are built from smart constructors such as
--- 'paramDefaultField', combined together with ('<>'), and attached to a query
--- with 'localParams'.
-instance Semigroup (LocalParams SolrQuery) where
-  SolrQueryParams a0 b0 <> SolrQueryParams a1 b1 =
-    SolrQueryParams (a0 <> a1) (b0 <> b1)
 
--- | Set the @\'df\'@ local parameter.
+-- | The @\'df\'@ local parameter.
 --
 -- Example:
 --
 -- @
 -- -- {!df=foo}bar
--- query :: 'SolrQuery' 'True
--- query = 'localParams' ('paramDefaultField' "foo") ('defaultField' ('word' "bar"))
+-- query :: 'SolrQuery' 'False 'True
+-- query = 'params' ['paramDefaultField' '.=' "foo"] ('defaultField' ('word' "bar"))
 -- @
-paramDefaultField :: Text -> LocalParams SolrQuery
-paramDefaultField s = SolrQueryParams (Just s) Nothing
+paramDefaultField :: ParamKey SolrQuery Text
+paramDefaultField = SolrQueryDefaultField
 
--- | Set the @\'op\'@ local parameter.
+-- | The @\'op\'@ local parameter.
 --
--- Stringly typed to avoid a verbose sum type like
+-- Stringly typed to avoid a clunky sum type like
 --
 -- @
--- data SolrQueryOp = SolrQueryOpAnd | SolrQueryOpOr | ...
+-- data Val = And | Or | ...
 -- @
 --
 -- which seems to have little value in cases like this. Instead, just pass
@@ -231,11 +209,11 @@ paramDefaultField s = SolrQueryParams (Just s) Nothing
 --
 -- @
 -- -- {!q.op=AND}foo bar
--- query :: 'SolrQuery' 'True
--- query = 'localParams' ('paramOp' \"AND\") ('defaultField' ('word' "foo") '<>' 'defaultField' ('word' "bar"))
+-- query :: 'SolrQuery' 'False 'True
+-- query = 'params' ['paramOp' '.=' \"AND\"] ('defaultField' ('word' "foo") '<>' 'defaultField' ('word' "bar"))
 -- @
-paramOp :: Text -> LocalParams SolrQuery
-paramOp s = SolrQueryParams Nothing (Just s)
+paramOp :: ParamKey SolrQuery Text
+paramOp = SolrQueryOp
 
 
 -- | Compile a 'SolrQuery' to a lazy 'ByteString'.
@@ -243,12 +221,12 @@ paramOp s = SolrQueryParams Nothing (Just s)
 -- Example:
 --
 -- @
--- λ let params = 'paramDefaultField' "body"
--- λ let query = "foo" =: 'phrase' ["bar", "baz"] '~:' 5 '&&:' 'defaultField' ('regex' "wh?at")
--- λ 'compileSolrQuery' ('localParams' params query)
+-- λ let ps = ['paramDefaultField' "body"]
+-- λ let q = "foo" =: 'phrase' ["bar", "baz"] '~:' 5 '&&:' 'defaultField' ('regex' "wh?at")
+-- λ 'compileSolrQuery' ('params' ps q)
 -- "{!df=body}(foo:\\"bar baz\\"~5 AND \/wh?t\/)"
 -- @
-compileSolrQuery :: SolrQuery a b -> ByteString
+compileSolrQuery :: SolrQuery isNeg hasParams -> ByteString
 compileSolrQuery = BS.toLazyByteString . unQuery
 
 

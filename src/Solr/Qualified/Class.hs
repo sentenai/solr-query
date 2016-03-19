@@ -20,74 +20,55 @@
 
 module Solr.Qualified.Class
   (
-    -- * Solr language
-    SolrExprSYM
-  , int
-  , true
-  , false
-  , word
-  , wild
-  , regex
-  , phrase
-  , fuzz
-  , to
+    -- * Named operators
+    fuzz
   , boost
-  , SolrQuerySYM
-  , defaultField
   , field
   , and
   , or
   , not
   , score
-  , neg
-  , localParams
-    -- * Derived combinators
-  , fuzzy
-  , gt
-  , gte
-  , lt
-  , lte
-    -- * Range query helpers
-  , Boundary(..)
-  , incl
-  , excl
-  , star
+  -- * Re-exports
+  , module Solr.Class
   ) where
 
+import Solr.Class hiding ((~:), (^:), (=:), (&&:), (||:), (-:), (^=:))
 import Solr.Type
-import Solr.Class
+
+import qualified Solr.Class as Solr
 
 import Data.Text (Text)
 import Prelude   hiding (and, not, or)
 
--- | Named version of ('~:').
+
+-- | Named version of ('Solr.Class.~:').
 fuzz :: (SolrExprSYM expr, FuzzableType a) => expr a -> Int -> expr (TFuzzed a)
-fuzz = (~:)
+fuzz = (Solr.~:)
 
--- | Named version of ('^:').
+-- | Named version of ('Solr.Class.^:').
 boost :: (SolrExprSYM expr, BoostableType a) => expr a -> Float -> expr (TBoosted a)
-boost = (^:)
+boost = (Solr.^:)
 
--- | Named version of ('=:').
+-- | Named version of ('Solr.Class.=:').
 field :: SolrQuerySYM expr query => Text -> expr a -> query 'False 'False
-field = (=:)
+field = (Solr.=:)
 
--- | Named version of ('&&:').
+-- | Named version of ('Solr.Class.&&:').
 and :: SolrQuerySYM expr query => query 'False 'False -> query 'False 'False -> query 'False 'False
-and = (&&:)
+and = (Solr.&&:)
 infixr 3 `and`
 
--- | Named version of ('||:').
+-- | Named version of ('Solr.Class.||:').
 or :: SolrQuerySYM expr query => query 'False 'False -> query 'False 'False -> query 'False 'False
-or = (||:)
+or = (Solr.||:)
 infixr 2 `or`
 
--- | Named version of ('-:').
+-- | Named version of ('Solr.Class.-:').
 not :: SolrQuerySYM expr query => query 'False 'False -> query 'False 'False -> query 'False 'False
-not = (-:)
+not = (Solr.-:)
 infixr 1 `not`
 
--- | Named version of ('^=:').
+-- | Named version of ('Solr.Class.^=:').
 score :: SolrQuerySYM expr query => query 'False 'False -> Float -> query 'False 'False
-score = (^=:)
+score = (Solr.^=:)
 infixr 4 `score`

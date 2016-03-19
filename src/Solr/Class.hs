@@ -1,6 +1,7 @@
 {-# LANGUAGE ConstraintKinds        #-}
 {-# LANGUAGE DataKinds              #-}
 {-# LANGUAGE FunctionalDependencies #-}
+{-# LANGUAGE GADTs                  #-}
 {-# LANGUAGE MultiParamTypeClasses  #-}
 {-# LANGUAGE TypeFamilies           #-}
 
@@ -21,6 +22,9 @@ module Solr.Class
   , gte
   , lt
   , lte
+    -- * Local parameters
+  , Param(..)
+  , (.=)
     -- * Range query helpers
   , Boundary(..)
   , incl
@@ -308,7 +312,18 @@ lte e = star `to` incl e
 
 -- | Solr query.
 class SolrExprSYM expr => SolrQuerySYM expr query | query -> expr where
-  data LocalParams query :: *
+  -- | Different queries support different sets of local parameters. Each
+  -- parameter is indexed by the type of its value.
+  --
+  -- Example:
+  --
+  -- @
+  -- data ParamKey MyQuery a where
+  --   Foo :: ParamKey MyQuery Int
+  --   Bar :: ParamKey MyQuery Bool
+  --   Baz :: ParamKey MyQuery String
+  -- @
+  data ParamKey query :: * -> *
 
   -- | A default field query.
   --
@@ -412,10 +427,18 @@ class SolrExprSYM expr => SolrQuerySYM expr query | query -> expr where
   -- @
   -- -- {!df=foo}bar
   -- query :: 'Solr.Query.SolrQuery' 'False 'True
-  -- query = 'localParams' ('Solr.Query.SolrQuery.paramDefaultField' "foo") ('defaultField' ('word' "bar"))
+  -- query = 'params' ['Solr.Query.SolrQuery.paramDefaultField' '.=' "foo"] ('defaultField' ('word' "bar"))
   -- @
-  localParams :: LocalParams query -> query a 'False -> query a 'True
+  params :: [Param query] -> query isNeg 'False -> query isNeg 'True
 
+
+-- | A parameter is built from a key and a value, whose type depends on the key.
+data Param query where
+  Param :: ParamKey query a -> a -> Param query
+
+-- | Smart constructor for 'Param'.
+(.=) :: ParamKey query a -> a -> Param query
+(.=) = Param
 
 
 -- | An inclusive or exclusive expression for use in a range query, built with
