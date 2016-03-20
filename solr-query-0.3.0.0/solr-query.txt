@@ -877,6 +877,17 @@ paramOp :: ParamOp query => ParamKey query Text
 --   </pre>
 paramCache :: ParamKey SolrFilterQuery Bool
 
+-- | The <tt>'cache'</tt> local parameter.
+--   
+--   Example:
+--   
+--   <pre>
+--   -- {!cost=5}foo:bar
+--   query :: <a>SolrFilterQuery</a> 'False 'True
+--   query = <a>params</a> [<a>paramCost</a> <a>.=</a> 5] ("foo" <a>=:</a> <a>word</a> "bar")
+--   </pre>
+paramCost :: ParamKey SolrFilterQuery Int
+
 -- | Compile a <a>SolrQuery</a> to a lazy <a>ByteString</a>.
 --   
 --   Example:
