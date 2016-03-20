@@ -475,6 +475,11 @@ module Solr.Query
 --   this might change eventually.
 data SolrQuery (isNeg :: Bool) (hasParams :: Bool)
 
+-- | A Solr filter query. This is like <a>SolrQuery</a>, but with different
+--   local parameters available. All functions polymorphic over
+--   <a>SolrQuerySYM</a> will work with both.
+data SolrFilterQuery (isNeg :: Bool) (hasParams :: Bool)
+
 -- | A default field query.
 --   
 --   Example:
@@ -824,6 +829,9 @@ Param :: ParamKey query val -> val -> Param query
 -- | Infix constructor for <a>Param</a>.
 (.=) :: ParamKey query val -> val -> Param query
 
+-- | The class of queries that support the <tt>'df'</tt> local parameter.
+class ParamDefaultField query
+
 -- | The <tt>'df'</tt> local parameter.
 --   
 --   Example:
@@ -833,7 +841,10 @@ Param :: ParamKey query val -> val -> Param query
 --   query :: <a>SolrQuery</a> 'False 'True
 --   query = <a>params</a> [<a>paramDefaultField</a> <a>.=</a> "foo"] (<a>defaultField</a> (<a>word</a> "bar"))
 --   </pre>
-paramDefaultField :: ParamKey SolrQuery Text
+paramDefaultField :: ParamDefaultField query => ParamKey query Text
+
+-- | The class of queries that support the <tt>'op'</tt> local parameter.
+class ParamOp query
 
 -- | The <tt>'op'</tt> local parameter.
 --   
@@ -853,25 +864,46 @@ paramDefaultField :: ParamKey SolrQuery Text
 --   query :: <a>SolrQuery</a> 'False 'True
 --   query = <a>params</a> [<a>paramOp</a> <a>.=</a> "AND"] (<a>defaultField</a> (<a>word</a> "foo") <a>&lt;&gt;</a> <a>defaultField</a> (<a>word</a> "bar"))
 --   </pre>
-paramOp :: ParamKey SolrQuery Text
+paramOp :: ParamOp query => ParamKey query Text
+
+-- | The <tt>'cache'</tt> local parameter.
+--   
+--   Example:
+--   
+--   <pre>
+--   -- {!cache=false}foo:bar
+--   query :: <a>SolrFilterQuery</a> 'False 'True
+--   query = <a>params</a> [<a>paramCache</a> <a>.=</a> False] ("foo" <a>=:</a> <a>word</a> "bar")
+--   </pre>
+paramCache :: ParamKey SolrFilterQuery Bool
 
 -- | Compile a <a>SolrQuery</a> to a lazy <a>ByteString</a>.
 --   
 --   Example:
 --   
 --   <pre>
---   λ let ps = [<a>paramDefaultField</a> "body"]
+--   λ let ps = [<a>paramDefaultField</a> <a>.=</a> "body"]
 --   λ let q = "foo" =: <a>phrase</a> ["bar", "baz"] <a>~:</a> 5 <a>&amp;&amp;:</a> <a>defaultField</a> (<a>regex</a> "wh?at")
 --   λ <a>compileSolrQuery</a> (<a>params</a> ps q)
 --   "{!df=body}(foo:\"bar baz\"~5 AND /wh?t/)"
 --   </pre>
 compileSolrQuery :: SolrQuery isNeg hasParams -> ByteString
+
+-- | Compile a <a>SolrFilterQuery</a> to a lazy <a>ByteString</a>.
+compileSolrFilterQuery :: SolrFilterQuery isNeg hasParams -> ByteString
+instance Data.Semigroup.Semigroup (Solr.Query.SolrFilterQuery 'GHC.Types.False 'GHC.Types.False)
+instance GHC.Base.Monoid (Solr.Query.SolrFilterQuery 'GHC.Types.False 'GHC.Types.False)
 instance Data.String.IsString (Solr.Query.SolrExpr 'Solr.Type.TWord)
 instance GHC.Exts.IsList (Solr.Query.SolrExpr 'Solr.Type.TPhrase)
 instance Solr.Class.SolrExprSYM Solr.Query.SolrExpr
 instance Data.Semigroup.Semigroup (Solr.Query.SolrQuery 'GHC.Types.False 'GHC.Types.False)
 instance GHC.Base.Monoid (Solr.Query.SolrQuery 'GHC.Types.False 'GHC.Types.False)
 instance Solr.Class.SolrQuerySYM Solr.Query.SolrExpr Solr.Query.SolrQuery
+instance Solr.Class.SolrQuerySYM Solr.Query.SolrExpr Solr.Query.SolrFilterQuery
+instance Solr.Query.ParamDefaultField Solr.Query.SolrQuery
+instance Solr.Query.ParamDefaultField Solr.Query.SolrFilterQuery
+instance Solr.Query.ParamOp Solr.Query.SolrQuery
+instance Solr.Query.ParamOp Solr.Query.SolrFilterQuery
 
 
 -- | This module is an alternative to <a>Solr.Query</a> that does not
