@@ -43,6 +43,9 @@ module Solr.Query
   , lte
   , (^:)
   -- * Local parameters
+  , ParamKey
+  , Param(..)
+  , (.=)
   , paramDefaultField
   , paramOp
   -- * Query compilation

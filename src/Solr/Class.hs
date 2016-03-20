@@ -430,10 +430,10 @@ class SolrExprSYM expr => SolrQuerySYM expr query | query -> expr where
 
 -- | A parameter is built from a key and a value, whose type depends on the key.
 data Param query where
-  Param :: ParamKey query a -> a -> Param query
+  Param :: ParamKey query val -> val -> Param query
 
--- | Smart constructor for 'Param'.
-(.=) :: ParamKey query a -> a -> Param query
+-- | Infix constructor for 'Param'.
+(.=) :: ParamKey query val -> val -> Param query
 (.=) = Param
 
 

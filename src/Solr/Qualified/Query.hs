@@ -12,4 +12,4 @@ module Solr.Qualified.Query
   ) where
 
 import Solr.Qualified.Class (fuzz, boost, field, and, or, not, score)
-import Solr.Query           hiding ((~:), (^:), (=:), (&&:), (||:), (-:), (^=:))
+import Solr.Query           hiding ((~:), (^:), (=:), (&&:), (||:), (-:), (^=:), (.=))

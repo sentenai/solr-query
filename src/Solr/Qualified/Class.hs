@@ -32,7 +32,7 @@ module Solr.Qualified.Class
   , module Solr.Class
   ) where
 
-import Solr.Class hiding ((~:), (^:), (=:), (&&:), (||:), (-:), (^=:))
+import Solr.Class hiding ((~:), (^:), (=:), (&&:), (||:), (-:), (^=:), (.=))
 import Solr.Type
 
 import qualified Solr.Class as Solr
