@@ -3,7 +3,7 @@
 -- see: https://github.com/sol/hpack
 
 name:           solr-query
-version:        0.3.0.0
+version:        0.3.1.0
 homepage:       https://github.com/Sentenai/solr-query#readme
 bug-reports:    https://github.com/Sentenai/solr-query/issues
 author:         Mitchell Rosen

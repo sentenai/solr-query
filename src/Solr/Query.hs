@@ -52,6 +52,7 @@ module Solr.Query
   , ParamDefaultField(..)
   , ParamOp(..)
   , paramCache
+  , paramCost
   -- * Query compilation
   , compileSolrQuery
   , compileSolrFilterQuery
@@ -189,6 +190,7 @@ instance SolrQuerySYM SolrExpr SolrFilterQuery where
     SolrFilterQueryDefaultField :: ParamKey SolrFilterQuery Text
     SolrFilterQueryOp           :: ParamKey SolrFilterQuery Text
     SolrFilterQueryCache        :: ParamKey SolrFilterQuery Bool
+    SolrFilterQueryCost         :: ParamKey SolrFilterQuery Int
 
   defaultField e = FQuery (defaultField e)
 
@@ -216,6 +218,7 @@ instance SolrQuerySYM SolrExpr SolrFilterQuery where
         SolrFilterQueryDefaultField -> "df=" <> T.encodeUtf8Builder v
         SolrFilterQueryOp -> "q.op=" <> T.encodeUtf8Builder v
         SolrFilterQueryCache -> "cache=" <> if v then "true" else "false"
+        SolrFilterQueryCost -> "cost=" <> bshow v
 
 -- | The class of queries that support the @\'df\'@ local parameter.
 class ParamDefaultField query where
@@ -277,6 +280,18 @@ instance ParamOp SolrFilterQuery where
 -- @
 paramCache :: ParamKey SolrFilterQuery Bool
 paramCache = SolrFilterQueryCache
+
+-- | The @\'cost\'@ local parameter.
+--
+-- Example:
+--
+-- @
+-- -- {!cost=5}foo:bar
+-- query :: 'SolrFilterQuery' 'False 'True
+-- query = 'params' ['paramCost' '.=' 5] ("foo" '=:' 'word' "bar")
+-- @
+paramCost :: ParamKey SolrFilterQuery Int
+paramCost = SolrFilterQueryCost
 
 
 -- | Compile a 'SolrQuery' to a lazy 'ByteString'.
