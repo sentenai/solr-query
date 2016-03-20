@@ -156,13 +156,6 @@ class SolrExprSYM (expr :: SolrType -> *) where
   -- | The @\'~\'@ operator, which fuzzes its argument (either a word or phrase)
   -- by a numeric amount.
   --
-  -- This will have one of the following two types:
-  --
-  -- @
-  -- (~:) :: 'Solr.Query.SolrExpr' 'TWord'   -> Int -> 'Solr.Query.SolrExpr' 'TFuzzyWord'   -- Int must be 0, 1, or 2
-  -- (~:) :: 'Solr.Query.SolrExpr' 'TPhrase' -> Int -> 'Solr.Query.SolrExpr' 'TFuzzyPhrase' -- Int must be positive
-  -- @
-  --
   -- Example:
   --
   -- @
@@ -174,17 +167,10 @@ class SolrExprSYM (expr :: SolrType -> *) where
   -- query :: 'Solr.Query.SolrQuery' 'False 'False
   -- query = "foo" '=:' 'phrase' ["bar", "baz", "qux"] '~:' 10
   -- @
-  (~:) :: FuzzableType a => expr a -> Int -> expr (TFuzzed a)
+  (~:) :: FuzzableType a => expr a -> Int -> expr 'TFuzzed
   infix 6 ~:
 
   -- | A range expression.
-  --
-  -- This will have one of the following two types:
-  --
-  -- @
-  -- to :: 'Boundary' ('Solr.Query.SolrExpr' 'TNum')  -> 'Boundary' ('Solr.Query.SolrExpr' 'TNum')  -> 'Solr.Query.SolrExpr' 'TRange'
-  -- to :: 'Boundary' ('Solr.Query.SolrExpr' 'TWord') -> 'Boundary' ('Solr.Query.SolrExpr' 'TWord') -> 'Solr.Query.SolrExpr' 'TRange'
-  -- @
   --
   -- Example:
   --
@@ -198,13 +184,6 @@ class SolrExprSYM (expr :: SolrType -> *) where
 
   -- | The @\'^\'@ operator, which boosts its argument.
   --
-  -- This will have one of the following two types:
-  --
-  -- @
-  -- (^:) :: 'Solr.Query.SolrExpr' 'TWord'   -> Float -> 'Solr.Query.SolrExpr' 'TBoostedWord'
-  -- (^:) :: 'Solr.Query.SolrExpr' 'TPhrase' -> Float -> 'Solr.Query.SolrExpr' 'TBoostedPhrase'
-  -- @
-  --
   -- Example:
   --
   -- @
@@ -216,7 +195,7 @@ class SolrExprSYM (expr :: SolrType -> *) where
   -- query :: 'Solr.Query.SolrQuery' 'False 'False
   -- query = "foo" '=:' 'phrase' ["bar", "baz"] '^:' 3.5
   -- @
-  (^:) :: BoostableType a => expr a -> Float -> expr (TBoosted a)
+  (^:) :: BoostableType a => expr a -> Float -> expr 'TBoosted
   infix 6 ^:
 
 
@@ -234,7 +213,7 @@ class SolrExprSYM (expr :: SolrType -> *) where
 -- query :: 'Solr.Query.SolrQuery' 'False 'False
 -- query = "foo" '=:' 'fuzzy' "bar"
 -- @
-fuzzy :: SolrExprSYM expr => expr 'TWord -> expr 'TFuzzyWord
+fuzzy :: SolrExprSYM expr => expr 'TWord -> expr 'TFuzzed
 fuzzy e = e ~: 2
 
 -- | Short-hand for a greater-than range query.
