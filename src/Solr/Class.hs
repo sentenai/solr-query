@@ -38,31 +38,16 @@ import Data.Text (Text)
 
 -- | Solr expression.
 class SolrExprSYM (expr :: SolrType -> *) where
-  -- | An @int@ expression.
-  --
-  -- Note that sometimes you may use the 'Num' instance for
-  -- 'Solr.Query.SolrExpr' 'TInt', but usually an explicit type signature
-  -- will be required (at the interpretation site or earlier).
+  -- | A @num@ expression.
   --
   -- Example:
   --
   -- @
   -- -- foo:5
   -- query :: 'Solr.Query.SolrQuery' 'False 'False
-  -- query = "foo" '=:' 'int' 5
+  -- query = "foo" '=:' 'num' 5
   -- @
-  int :: Int -> expr 'TInt
-
-  -- | A @float@ expression.
-  --
-  -- Example:
-  --
-  -- @
-  -- -- foo:5.5
-  -- query :: 'Solr.Query.SolrQuery' 'False 'False
-  -- query = "foo" '=:' 'float' 5.5
-  -- @
-  float :: Float -> expr 'TFloat
+  num :: Float -> expr 'TNum
 
   -- | A @true@ expression.
   --
@@ -197,8 +182,8 @@ class SolrExprSYM (expr :: SolrType -> *) where
   -- This will have one of the following two types:
   --
   -- @
+  -- to :: 'Boundary' ('Solr.Query.SolrExpr' 'TNum')  -> 'Boundary' ('Solr.Query.SolrExpr' 'TNum')  -> 'Solr.Query.SolrExpr' 'TRange'
   -- to :: 'Boundary' ('Solr.Query.SolrExpr' 'TWord') -> 'Boundary' ('Solr.Query.SolrExpr' 'TWord') -> 'Solr.Query.SolrExpr' 'TRange'
-  -- to :: 'Boundary' ('Solr.Query.SolrExpr' 'TInt')  -> 'Boundary' ('Solr.Query.SolrExpr' 'TInt')  -> 'Solr.Query.SolrExpr' 'TRange'
   -- @
   --
   -- Example:
@@ -206,7 +191,7 @@ class SolrExprSYM (expr :: SolrType -> *) where
   -- @
   -- -- foo:[5 TO 10}
   -- query :: 'Solr.Query.SolrQuery' 'False 'False
-  -- query = "foo" '=:' 'incl' ('int' 5) \`to\` 'excl' ('int' 10)
+  -- query = "foo" '=:' 'incl' ('num' 5) \`to\` 'excl' ('num' 10)
   -- @
   to :: PrimType a => Boundary (expr a) -> Boundary (expr a) -> expr 'TRange
   infix 6 `to`
@@ -264,7 +249,7 @@ fuzzy e = e ~: 2
 -- -- foo:>5
 -- -- foo:{5 TO *]
 -- query :: 'Solr.Query.SolrQuery' 'False 'False
--- query = "foo" '=:' 'gt' ('int' 5)
+-- query = "foo" '=:' 'gt' ('num' 5)
 -- @
 gt :: (SolrExprSYM expr, PrimType a) => expr a -> expr 'TRange
 gt e = excl e `to` star
@@ -281,7 +266,7 @@ gt e = excl e `to` star
 -- -- foo:>=5
 -- -- foo:[5 TO *]
 -- query :: 'Solr.Query.SolrQuery' 'False 'False
--- query = "foo" '=:' 'gte' ('int' 5)
+-- query = "foo" '=:' 'gte' ('num' 5)
 -- @
 gte :: (SolrExprSYM expr, PrimType a) => expr a -> expr 'TRange
 gte e = incl e `to` star
@@ -298,7 +283,7 @@ gte e = incl e `to` star
 -- -- foo:<5
 -- -- foo:[* TO 5}
 -- query :: 'Solr.Query.SolrQuery' 'False 'False
--- query = "foo" '=:' 'lt' ('int' 5)
+-- query = "foo" '=:' 'lt' ('num' 5)
 -- @
 lt :: (SolrExprSYM expr, PrimType a) => expr a -> expr 'TRange
 lt e = star `to` excl e
@@ -315,7 +300,7 @@ lt e = star `to` excl e
 -- -- foo:<=5
 -- -- foo:[* TO 5]
 -- query :: 'Solr.Query.SolrQuery' 'False 'False
--- query = "foo" '=:' 'lte' ('int' 5)
+-- query = "foo" '=:' 'lte' ('num' 5)
 -- @
 lte :: (SolrExprSYM expr, PrimType a) => expr a -> expr 'TRange
 lte e = star `to` incl e
@@ -470,6 +455,6 @@ excl :: SolrExprSYM expr => expr a -> Boundary (expr a)
 excl = Exclusive
 
 -- | @\'*\'@ operator, signifying the minimum or maximun bound of a range. A
--- @[* TO *]@ query is allowed, but will require a type annotation.
+-- @[* TO *]@ query will require a type annotation.
 star :: SolrExprSYM expr => Boundary (expr a)
 star = Star

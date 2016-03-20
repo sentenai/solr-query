@@ -27,8 +27,7 @@ module Solr.Query
   , SolrExpr
   -- * Expression construction
   -- $note-simplicity
-  , int
-  , float
+  , num
   , true
   , false
   , word
@@ -80,9 +79,7 @@ instance IsList (SolrExpr 'TPhrase) where
 
 
 instance SolrExprSYM SolrExpr where
-  int n = Expr (bshow n)
-
-  float n = Expr (bshow n)
+  num n = Expr (bshow n)
 
   true = Expr "true"
 
