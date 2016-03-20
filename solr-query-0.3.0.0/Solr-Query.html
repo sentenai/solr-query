@@ -106,7 +106,7 @@ query = &quot;foo&quot; <code><a href="Solr-Query.html#v:-61-:">=:</a></code> <c
 query :: <code><a href="Solr-Query.html#v:SolrQuery">SolrQuery</a></code> 'False 'False
 query = &quot;foo&quot; <code><a href="Solr-Query.html#v:-61-:">=:</a></code> <code><a href="Solr-Query.html#v:phrase">phrase</a></code> [&quot;bar&quot;, &quot;baz&quot;, &quot;qux&quot;] <code><a href="Solr-Query.html#v:-126-:">~:</a></code> 10
 </pre></div></div><div class="top"><p class="src"><a name="v:fuzzy" class="def">fuzzy</a> :: <a href="Solr-Class.html#t:SolrExprSYM">SolrExprSYM</a> expr =&gt; expr <a href="Solr-Type.html#v:TWord">TWord</a> -&gt; expr <a href="Solr-Type.html#v:TFuzzed">TFuzzed</a> <a href="src/Solr-Class.html#fuzzy" class="link">Source</a></p><div class="doc"><p>Short-hand for fuzzing a word by 2. This is the default behavior of a
- Solr <code>'~'</code> operator without an integer added.</p><pre><code><a href="Solr-Query.html#v:fuzzy">fuzzy</a></code> e = <code>fuzz</code> e 2
+ Solr <code>'~'</code> operator without an integer added.</p><pre><code><a href="Solr-Query.html#v:fuzzy">fuzzy</a></code> e = e <code><a href="Solr-Query.html#v:-126-:">~:</a></code> 2
 </pre><p>Example:</p><pre>-- foo:bar~
 query :: <code><a href="Solr-Query.html#v:SolrQuery">SolrQuery</a></code> 'False 'False
 query = &quot;foo&quot; <code><a href="Solr-Query.html#v:-61-:">=:</a></code> <code><a href="Solr-Query.html#v:fuzzy">fuzzy</a></code> &quot;bar&quot;

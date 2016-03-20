@@ -311,7 +311,7 @@ params :: SolrQuerySYM expr query => [Param query] -> query isNeg False -> query
 --   Solr <tt>'~'</tt> operator without an integer added.
 --   
 --   <pre>
---   <a>fuzzy</a> e = <tt>fuzz</tt> e 2
+--   <a>fuzzy</a> e = e <a>~:</a> 2
 --   </pre>
 --   
 --   Example:
@@ -719,7 +719,7 @@ phrase :: SolrExprSYM expr => [expr TWord] -> expr TPhrase
 --   Solr <tt>'~'</tt> operator without an integer added.
 --   
 --   <pre>
---   <a>fuzzy</a> e = <tt>fuzz</tt> e 2
+--   <a>fuzzy</a> e = e <a>~:</a> 2
 --   </pre>
 --   
 --   Example:
