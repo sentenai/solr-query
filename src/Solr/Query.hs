@@ -1,10 +1,12 @@
-{-# LANGUAGE DataKinds             #-}
-{-# LANGUAGE FlexibleInstances     #-}
-{-# LANGUAGE GADTs                 #-}
-{-# LANGUAGE KindSignatures        #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE OverloadedStrings     #-}
-{-# LANGUAGE TypeFamilies          #-}
+{-# LANGUAGE DataKinds                  #-}
+{-# LANGUAGE FlexibleInstances          #-}
+{-# LANGUAGE GADTs                      #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE KindSignatures             #-}
+{-# LANGUAGE MultiParamTypeClasses      #-}
+{-# LANGUAGE OverloadedStrings          #-}
+{-# LANGUAGE StandaloneDeriving         #-}
+{-# LANGUAGE TypeFamilies               #-}
 
 -- | Solr query construction and compilation. You may prefer to import
 -- "Solr.Qualified.Query" instead, which does not export any operators.
@@ -13,6 +15,7 @@ module Solr.Query
   (
   -- * Query type
     SolrQuery
+  , SolrFilterQuery
   -- * Query construction
   -- $note-simplicity
   , defaultField
@@ -46,10 +49,12 @@ module Solr.Query
   , ParamKey
   , Param(..)
   , (.=)
-  , paramDefaultField
-  , paramOp
+  , ParamDefaultField(..)
+  , ParamOp(..)
+  , paramCache
   -- * Query compilation
   , compileSolrQuery
+  , compileSolrFilterQuery
   ) where
 
 import Solr.Class
@@ -123,7 +128,7 @@ instance SolrExprSYM SolrExpr where
 -- and basically suffers from type-level boolean blindness (a \"Could not match
 -- True with False\" type error is not very helpful). So, this might change
 -- eventually.
-data SolrQuery (isNeg :: Bool) (hasParams :: Bool) = Query { unQuery :: Builder }
+newtype SolrQuery (isNeg :: Bool) (hasParams :: Bool) = Query { unQuery :: Builder }
 
 -- | Appending Solr queries simply puts a space between them. To Solr, this is
 -- equivalent to combining them with \'OR\'. However, this behavior can be
@@ -170,38 +175,108 @@ instance SolrQuerySYM SolrExpr SolrQuery where
         SolrQueryOp -> "q.op=" <> T.encodeUtf8Builder v
 
 
--- | The @\'df\'@ local parameter.
---
--- Example:
---
--- @
--- -- {!df=foo}bar
--- query :: 'SolrQuery' 'False 'True
--- query = 'params' ['paramDefaultField' '.=' "foo"] ('defaultField' ('word' "bar"))
--- @
-paramDefaultField :: ParamKey SolrQuery Text
-paramDefaultField = SolrQueryDefaultField
+-- | A Solr filter query. This is like 'SolrQuery', but with different local
+-- parameters available. All functions polymorphic over 'SolrQuerySYM' will work
+-- with both.
+newtype SolrFilterQuery (isNeg :: Bool) (hasParams :: Bool)
+  = FQuery { unFQuery :: SolrQuery isNeg hasParams }
 
--- | The @\'op\'@ local parameter.
---
--- Stringly typed to avoid a clunky sum type like
---
--- @
--- data Val = And | Or | ...
--- @
---
--- which seems to have little value in cases like this. Instead, just pass
--- @\"AND\"@, @\"OR\"@, ...
+deriving instance Semigroup (SolrFilterQuery 'False 'False)
+deriving instance Monoid (SolrFilterQuery 'False 'False)
+
+instance SolrQuerySYM SolrExpr SolrFilterQuery where
+  data ParamKey SolrFilterQuery a where
+    SolrFilterQueryDefaultField :: ParamKey SolrFilterQuery Text
+    SolrFilterQueryOp           :: ParamKey SolrFilterQuery Text
+    SolrFilterQueryCache        :: ParamKey SolrFilterQuery Bool
+
+  defaultField e = FQuery (defaultField e)
+
+  f =: e = FQuery (f =: e)
+
+  q1 &&: q2 = FQuery (unFQuery q1 &&: unFQuery q2)
+
+  q1 ||: q2 = FQuery (unFQuery q1 ||: unFQuery q2)
+
+  q1 -: q2 = FQuery (unFQuery q1 -: unFQuery q2)
+
+  q ^=: n = FQuery (unFQuery q ^=: n)
+
+  neg q = FQuery (neg (unFQuery q))
+
+  -- Hm, for now it seems we have to duplicate this logic from SolrQuery.
+  params ps q = FQuery (Query (compileParams ps <> unQuery (unFQuery q)))
+   where
+    compileParams [] = ""
+    compileParams ps' = "{!" <> spaces (map compileParam ps') <> "}"
+
+    compileParam :: Param SolrFilterQuery -> Builder
+    compileParam (Param k v) =
+      case k of
+        SolrFilterQueryDefaultField -> "df=" <> T.encodeUtf8Builder v
+        SolrFilterQueryOp -> "q.op=" <> T.encodeUtf8Builder v
+        SolrFilterQueryCache -> "cache=" <> if v then "true" else "false"
+
+-- | The class of queries that support the @\'df\'@ local parameter.
+class ParamDefaultField query where
+  -- | The @\'df\'@ local parameter.
+  --
+  -- Example:
+  --
+  -- @
+  -- -- {!df=foo}bar
+  -- query :: 'SolrQuery' 'False 'True
+  -- query = 'params' ['paramDefaultField' '.=' "foo"] ('defaultField' ('word' "bar"))
+  -- @
+  paramDefaultField :: ParamKey query Text
+
+instance ParamDefaultField SolrQuery where
+  paramDefaultField = SolrQueryDefaultField
+
+instance ParamDefaultField SolrFilterQuery where
+  paramDefaultField = SolrFilterQueryDefaultField
+
+
+-- | The class of queries that support the @\'op\'@ local parameter.
+class ParamOp query where
+  -- | The @\'op\'@ local parameter.
+  --
+  -- Stringly typed to avoid a clunky sum type like
+  --
+  -- @
+  -- data Val = And | Or | ...
+  -- @
+  --
+  -- which seems to have little value in cases like this. Instead, just pass
+  -- @\"AND\"@, @\"OR\"@, ...
+  --
+  -- Example:
+  --
+  -- @
+  -- -- {!q.op=AND}foo bar
+  -- query :: 'SolrQuery' 'False 'True
+  -- query = 'params' ['paramOp' '.=' \"AND\"] ('defaultField' ('word' "foo") '<>' 'defaultField' ('word' "bar"))
+  -- @
+  paramOp :: ParamKey query Text
+
+instance ParamOp SolrQuery where
+  paramOp = SolrQueryOp
+
+instance ParamOp SolrFilterQuery where
+  paramOp = SolrFilterQueryOp
+
+
+-- | The @\'cache\'@ local parameter.
 --
 -- Example:
 --
 -- @
--- -- {!q.op=AND}foo bar
--- query :: 'SolrQuery' 'False 'True
--- query = 'params' ['paramOp' '.=' \"AND\"] ('defaultField' ('word' "foo") '<>' 'defaultField' ('word' "bar"))
+-- -- {!cache=false}foo:bar
+-- query :: 'SolrFilterQuery' 'False 'True
+-- query = 'params' ['paramCache' '.=' False] ("foo" '=:' 'word' "bar")
 -- @
-paramOp :: ParamKey SolrQuery Text
-paramOp = SolrQueryOp
+paramCache :: ParamKey SolrFilterQuery Bool
+paramCache = SolrFilterQueryCache
 
 
 -- | Compile a 'SolrQuery' to a lazy 'ByteString'.
@@ -209,13 +284,17 @@ paramOp = SolrQueryOp
 -- Example:
 --
 -- @
--- λ let ps = ['paramDefaultField' "body"]
+-- λ let ps = ['paramDefaultField' '.=' "body"]
 -- λ let q = "foo" =: 'phrase' ["bar", "baz"] '~:' 5 '&&:' 'defaultField' ('regex' "wh?at")
 -- λ 'compileSolrQuery' ('params' ps q)
 -- "{!df=body}(foo:\\"bar baz\\"~5 AND \/wh?t\/)"
 -- @
 compileSolrQuery :: SolrQuery isNeg hasParams -> ByteString
 compileSolrQuery = BS.toLazyByteString . unQuery
+
+-- | Compile a 'SolrFilterQuery' to a lazy 'ByteString'.
+compileSolrFilterQuery :: SolrFilterQuery isNeg hasParams -> ByteString
+compileSolrFilterQuery = compileSolrQuery . unFQuery
 
 
 bshow :: Show a => a -> Builder

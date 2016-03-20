@@ -203,7 +203,7 @@ class SolrExprSYM (expr :: SolrType -> *) where
 -- Solr @\'~\'@ operator without an integer added.
 --
 -- @
--- 'fuzzy' e = 'fuzz' e 2
+-- 'fuzzy' e = e '~:' 2
 -- @
 --
 -- Example:
