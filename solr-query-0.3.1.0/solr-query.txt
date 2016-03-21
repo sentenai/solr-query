@@ -52,7 +52,7 @@ class SolrExprSYM (expr :: SolrType -> *)
 --   
 --   <pre>
 --   -- foo:5
---   query :: <a>SolrQuery</a> 'False 'False
+--   query :: <a>SolrQuery</a>
 --   query = "foo" <a>=:</a> <a>num</a> 5
 --   </pre>
 num :: SolrExprSYM expr => Float -> expr TNum
@@ -63,7 +63,7 @@ num :: SolrExprSYM expr => Float -> expr TNum
 --   
 --   <pre>
 --   -- foo:true
---   query :: <a>SolrQuery</a> 'False 'False
+--   query :: <a>SolrQuery</a>
 --   query = "foo" <a>=:</a> <a>true</a>
 --   </pre>
 true :: SolrExprSYM expr => expr TBool
@@ -74,7 +74,7 @@ true :: SolrExprSYM expr => expr TBool
 --   
 --   <pre>
 --   -- foo:false
---   query :: <a>SolrQuery</a> 'False 'False
+--   query :: <a>SolrQuery</a>
 --   query = "foo" <a>=:</a> <a>false</a>
 --   </pre>
 false :: SolrExprSYM expr => expr TBool
@@ -91,11 +91,11 @@ false :: SolrExprSYM expr => expr TBool
 --   
 --   <pre>
 --   -- foo:bar
---   query :: <a>SolrQuery</a> 'False 'False
+--   query :: <a>SolrQuery</a>
 --   query = "foo" <a>=:</a> <a>word</a> "bar"
 --   
 --   -- foo:bar
---   query :: <a>SolrQuery</a> 'False 'False
+--   query :: <a>SolrQuery</a>
 --   query = "foo" <a>=:</a> ("bar" :: <a>SolrExpr</a> <a>TWord</a>)
 --   </pre>
 word :: SolrExprSYM expr => Text -> expr TWord
@@ -109,7 +109,7 @@ word :: SolrExprSYM expr => Text -> expr TWord
 --   
 --   <pre>
 --   -- foo:b?r
---   query :: <a>SolrQuery</a> 'False 'False
+--   query :: <a>SolrQuery</a>
 --   query = "foo" <a>=:</a> <a>wild</a> "b?r"
 --   </pre>
 wild :: SolrExprSYM expr => Text -> expr TWild
@@ -122,7 +122,7 @@ wild :: SolrExprSYM expr => Text -> expr TWild
 --   
 --   <pre>
 --   -- foo:/[mb]oat/
---   query :: <a>SolrQuery</a> 'False 'False
+--   query :: <a>SolrQuery</a>
 --   query = "foo" <a>=:</a> <a>regex</a> "[mb]oat"
 --   </pre>
 regex :: SolrExprSYM expr => Text -> expr TRegex
@@ -140,15 +140,15 @@ regex :: SolrExprSYM expr => Text -> expr TRegex
 --   
 --   <pre>
 --   -- foo:"bar baz"
---   query :: <a>SolrQuery</a> 'False 'False
+--   query :: <a>SolrQuery</a>
 --   query = "foo" <a>=:</a> <a>phrase</a> ["bar", "baz"] -- ok
 --   
 --   -- foo:"bar b?z" (an invalid Solr query)
---   query :: <a>SolrQuery</a> 'False 'False
+--   query :: <a>SolrQuery</a>
 --   query = "foo" <a>=:</a> <a>phrase</a> ["bar", <a>wild</a> "b?z"] -- type error
 --   
 --   -- foo:"bar b?z" (an invalid Solr query)
---   query :: <a>SolrQuery</a> 'False 'False
+--   query :: <a>SolrQuery</a>
 --   query = "foo" <a>=:</a> <a>phrase</a> ["bar", "b?z"] -- breaks <a>word</a> contract
 --   </pre>
 --   
@@ -156,7 +156,7 @@ regex :: SolrExprSYM expr => Text -> expr TRegex
 --   
 --   <pre>
 --   -- foo:"bar baz"
---   query :: <a>SolrQuery</a> 'False 'False
+--   query :: <a>SolrQuery</a>
 --   query = "foo" <a>=:</a> (["bar", "baz"] :: <a>SolrExpr</a> <a>TPhrase</a>)
 --   </pre>
 phrase :: SolrExprSYM expr => [expr TWord] -> expr TPhrase
@@ -168,11 +168,11 @@ phrase :: SolrExprSYM expr => [expr TWord] -> expr TPhrase
 --   
 --   <pre>
 --   -- foo:bar~1
---   query :: <a>SolrQuery</a> 'False 'False
+--   query :: <a>SolrQuery</a>
 --   query = "foo" <a>=:</a> <a>word</a> "bar" <a>~:</a> 1
 --   
 --   -- foo:"bar baz qux"~10
---   query :: <a>SolrQuery</a> 'False 'False
+--   query :: <a>SolrQuery</a>
 --   query = "foo" <a>=:</a> <a>phrase</a> ["bar", "baz", "qux"] <a>~:</a> 10
 --   </pre>
 (~:) :: (SolrExprSYM expr, FuzzableType a) => expr a -> Int -> expr TFuzzed
@@ -183,7 +183,7 @@ phrase :: SolrExprSYM expr => [expr TWord] -> expr TPhrase
 --   
 --   <pre>
 --   -- foo:[5 TO 10}
---   query :: <a>SolrQuery</a> 'False 'False
+--   query :: <a>SolrQuery</a>
 --   query = "foo" <a>=:</a> <a>incl</a> (<a>num</a> 5) `to` <a>excl</a> (<a>num</a> 10)
 --   </pre>
 to :: (SolrExprSYM expr, PrimType a) => Boundary (expr a) -> Boundary (expr a) -> expr TRange
@@ -194,11 +194,11 @@ to :: (SolrExprSYM expr, PrimType a) => Boundary (expr a) -> Boundary (expr a) -
 --   
 --   <pre>
 --   -- foo:bar^3.5
---   query :: <a>SolrQuery</a> 'False 'False
+--   query :: <a>SolrQuery</a>
 --   query = "foo" <a>=:</a> <a>word</a> "bar" <a>^:</a> 3.5
 --   
 --   -- foo:"bar baz"^3.5
---   query :: <a>SolrQuery</a> 'False 'False
+--   query :: <a>SolrQuery</a>
 --   query = "foo" <a>=:</a> <a>phrase</a> ["bar", "baz"] <a>^:</a> 3.5
 --   </pre>
 (^:) :: (SolrExprSYM expr, BoostableType a) => expr a -> Float -> expr TBoosted
@@ -212,10 +212,10 @@ class SolrExprSYM expr => SolrQuerySYM expr query | query -> expr where data fam
 --   
 --   <pre>
 --   -- foo
---   query :: <a>SolrQuery</a> 'False 'False
+--   query :: <a>SolrQuery</a>
 --   query = <a>defaultField</a> (<a>word</a> "foo")
 --   </pre>
-defaultField :: SolrQuerySYM expr query => expr a -> query False False
+defaultField :: SolrQuerySYM expr query => expr a -> query
 
 -- | A field query.
 --   
@@ -223,10 +223,10 @@ defaultField :: SolrQuerySYM expr query => expr a -> query False False
 --   
 --   <pre>
 --   -- foo:bar
---   query :: <a>SolrQuery</a> 'False 'False
+--   query :: <a>SolrQuery</a>
 --   query = "foo" <a>=:</a> <a>word</a> "bar"
 --   </pre>
-(=:) :: SolrQuerySYM expr query => Text -> expr a -> query False False
+(=:) :: SolrQuerySYM expr query => Text -> expr a -> query
 
 -- | An <tt>AND</tt> query.
 --   
@@ -234,11 +234,11 @@ defaultField :: SolrQuerySYM expr query => expr a -> query False False
 --   
 --   <pre>
 --   -- foo:bar AND baz:qux
---   query :: <a>SolrQuery</a> 'False 'False
+--   query :: <a>SolrQuery</a>
 --   query = "foo" <a>=:</a> <a>word</a> "bar"
 --       <a>&amp;&amp;:</a> "baz" <a>=:</a> <a>word</a> "qux"
 --   </pre>
-(&&:) :: SolrQuerySYM expr query => query False False -> query False False -> query False False
+(&&:) :: SolrQuerySYM expr query => query -> query -> query
 
 -- | An <tt>OR</tt> query.
 --   
@@ -246,11 +246,11 @@ defaultField :: SolrQuerySYM expr query => expr a -> query False False
 --   
 --   <pre>
 --   -- foo:bar OR baz:qux
---   query :: <a>SolrQuery</a> 'False 'False
+--   query :: <a>SolrQuery</a>
 --   query = "foo" <a>=:</a> <a>word</a> "bar"
 --       <a>||:</a> "baz" <a>=:</a> <a>word</a> "qux"
 --   </pre>
-(||:) :: SolrQuerySYM expr query => query False False -> query False False -> query False False
+(||:) :: SolrQuerySYM expr query => query -> query -> query
 
 -- | A <tt>NOT</tt>, <tt>'!'</tt>, or <tt>'-'</tt> query.
 --   
@@ -258,11 +258,11 @@ defaultField :: SolrQuerySYM expr query => expr a -> query False False
 --   
 --   <pre>
 --   -- foo:bar NOT baz:qux
---   query :: <a>SolrQuery</a> 'False 'False
+--   query :: <a>SolrQuery</a>
 --   query = "foo" <a>=:</a> <a>word</a> "bar"
 --        <a>-:</a> "baz" <a>=:</a> <a>word</a> "qux"
 --   </pre>
-(-:) :: SolrQuerySYM expr query => query False False -> query False False -> query False False
+(-:) :: SolrQuerySYM expr query => query -> query -> query
 
 -- | The <tt>'^='</tt> constant score operator.
 --   
@@ -274,38 +274,32 @@ defaultField :: SolrQuerySYM expr query => expr a -> query False False
 --   
 --   <pre>
 --   -- (foo:bar)^=3.5
---   query :: <a>SolrQuery</a> 'False 'False
+--   query :: <a>SolrQuery</a>
 --   query = "foo" <a>=:</a> <a>word</a> "bar" <a>^=:</a> 3.5
 --   </pre>
-(^=:) :: SolrQuerySYM expr query => query False False -> Float -> query False False
+(^=:) :: SolrQuerySYM expr query => query -> Float -> query
 
--- | Negate a top-level query.
---   
---   Only a top level query can be negated up to one time, hence the
---   boolean tag that tracks whether or not a query has been negated.
+-- | Negate a query.
 --   
 --   Example:
 --   
 --   <pre>
 --   -- -(foo:bar)
---   query :: <a>SolrQuery</a> 'True 'False
+--   query :: <a>SolrQuery</a>
 --   query = <a>neg</a> ("foo" <a>=:</a> <a>word</a> "bar")
 --   </pre>
-neg :: SolrQuerySYM expr query => query False False -> query True False
+neg :: SolrQuerySYM expr query => query -> query
 
 -- | Add local parameters to a query.
---   
---   Only a top level query can have up to one set of local parameters,
---   hence the boolean tag that tracks whether or not they've been added.
 --   
 --   Example:
 --   
 --   <pre>
 --   -- {!df=foo}bar
---   query :: <a>SolrQuery</a> 'False 'True
+--   query :: <a>SolrQuery</a>
 --   query = <a>params</a> [<a>paramDefaultField</a> <a>.=</a> "foo"] (<a>defaultField</a> (<a>word</a> "bar"))
 --   </pre>
-params :: SolrQuerySYM expr query => [Param query] -> query isNeg False -> query isNeg True
+params :: SolrQuerySYM expr query => [Param query] -> query -> query
 
 -- | Short-hand for fuzzing a word by 2. This is the default behavior of a
 --   Solr <tt>'~'</tt> operator without an integer added.
@@ -318,7 +312,7 @@ params :: SolrQuerySYM expr query => [Param query] -> query isNeg False -> query
 --   
 --   <pre>
 --   -- foo:bar~
---   query :: <a>SolrQuery</a> 'False 'False
+--   query :: <a>SolrQuery</a>
 --   query = "foo" <a>=:</a> <a>fuzzy</a> "bar"
 --   </pre>
 fuzzy :: SolrExprSYM expr => expr TWord -> expr TFuzzed
@@ -334,7 +328,7 @@ fuzzy :: SolrExprSYM expr => expr TWord -> expr TFuzzed
 --   <pre>
 --   -- foo:&gt;5
 --   -- foo:{5 TO *]
---   query :: <a>SolrQuery</a> 'False 'False
+--   query :: <a>SolrQuery</a>
 --   query = "foo" <a>=:</a> <a>gt</a> (<a>num</a> 5)
 --   </pre>
 gt :: (SolrExprSYM expr, PrimType a) => expr a -> expr TRange
@@ -350,7 +344,7 @@ gt :: (SolrExprSYM expr, PrimType a) => expr a -> expr TRange
 --   <pre>
 --   -- foo:&gt;=5
 --   -- foo:[5 TO *]
---   query :: <a>SolrQuery</a> 'False 'False
+--   query :: <a>SolrQuery</a>
 --   query = "foo" <a>=:</a> <a>gte</a> (<a>num</a> 5)
 --   </pre>
 gte :: (SolrExprSYM expr, PrimType a) => expr a -> expr TRange
@@ -366,7 +360,7 @@ gte :: (SolrExprSYM expr, PrimType a) => expr a -> expr TRange
 --   <pre>
 --   -- foo:&lt;5
 --   -- foo:[* TO 5}
---   query :: <a>SolrQuery</a> 'False 'False
+--   query :: <a>SolrQuery</a>
 --   query = "foo" <a>=:</a> <a>lt</a> (<a>num</a> 5)
 --   </pre>
 lt :: (SolrExprSYM expr, PrimType a) => expr a -> expr TRange
@@ -382,7 +376,7 @@ lt :: (SolrExprSYM expr, PrimType a) => expr a -> expr TRange
 --   <pre>
 --   -- foo:&lt;=5
 --   -- foo:[* TO 5]
---   query :: <a>SolrQuery</a> 'False 'False
+--   query :: <a>SolrQuery</a>
 --   query = "foo" <a>=:</a> <a>lte</a> (<a>num</a> 5)
 --   </pre>
 lte :: (SolrExprSYM expr, PrimType a) => expr a -> expr TRange
@@ -443,19 +437,19 @@ fuzz :: (SolrExprSYM expr, FuzzableType a) => expr a -> Int -> expr TFuzzed
 boost :: (SolrExprSYM expr, BoostableType a) => expr a -> Float -> expr TBoosted
 
 -- | Named version of (<a>=:</a>).
-field :: SolrQuerySYM expr query => Text -> expr a -> query False False
+field :: SolrQuerySYM expr query => Text -> expr a -> query
 
 -- | Named version of (<a>&amp;&amp;:</a>).
-and :: SolrQuerySYM expr query => query False False -> query False False -> query False False
+and :: SolrQuerySYM expr query => query -> query -> query
 
 -- | Named version of (<a>||:</a>).
-or :: SolrQuerySYM expr query => query False False -> query False False -> query False False
+or :: SolrQuerySYM expr query => query -> query -> query
 
 -- | Named version of (<a>-:</a>).
-not :: SolrQuerySYM expr query => query False False -> query False False -> query False False
+not :: SolrQuerySYM expr query => query -> query -> query
 
 -- | Named version of (<a>^=:</a>).
-score :: SolrQuerySYM expr query => query False False -> Float -> query False False
+score :: SolrQuerySYM expr query => query -> Float -> query
 
 
 -- | Solr query construction and compilation. You may prefer to import
@@ -464,21 +458,12 @@ score :: SolrQuerySYM expr query => query False False -> Float -> query False Fa
 module Solr.Query
 
 -- | A Solr query.
---   
---   The two boolean phantom types track whether or not this query has been
---   negated, and whether or not this query has local parameters.
---   
---   While this approach allows fewer bad queries to typecheck, it is not
---   extensible, leaks abstraction, makes documentation more difficult to
---   read, and basically suffers from type-level boolean blindness (a
---   "Could not match True with False" type error is not very helpful). So,
---   this might change eventually.
-data SolrQuery (isNeg :: Bool) (hasParams :: Bool)
+data SolrQuery
 
 -- | A Solr filter query. This is like <a>SolrQuery</a>, but with different
 --   local parameters available. All functions polymorphic over
 --   <a>SolrQuerySYM</a> will work with both.
-data SolrFilterQuery (isNeg :: Bool) (hasParams :: Bool)
+data SolrFilterQuery
 
 -- | A default field query.
 --   
@@ -486,10 +471,10 @@ data SolrFilterQuery (isNeg :: Bool) (hasParams :: Bool)
 --   
 --   <pre>
 --   -- foo
---   query :: <a>SolrQuery</a> 'False 'False
+--   query :: <a>SolrQuery</a>
 --   query = <a>defaultField</a> (<a>word</a> "foo")
 --   </pre>
-defaultField :: SolrQuerySYM expr query => expr a -> query False False
+defaultField :: SolrQuerySYM expr query => expr a -> query
 
 -- | A field query.
 --   
@@ -497,10 +482,10 @@ defaultField :: SolrQuerySYM expr query => expr a -> query False False
 --   
 --   <pre>
 --   -- foo:bar
---   query :: <a>SolrQuery</a> 'False 'False
+--   query :: <a>SolrQuery</a>
 --   query = "foo" <a>=:</a> <a>word</a> "bar"
 --   </pre>
-(=:) :: SolrQuerySYM expr query => Text -> expr a -> query False False
+(=:) :: SolrQuerySYM expr query => Text -> expr a -> query
 
 -- | An <tt>AND</tt> query.
 --   
@@ -508,11 +493,11 @@ defaultField :: SolrQuerySYM expr query => expr a -> query False False
 --   
 --   <pre>
 --   -- foo:bar AND baz:qux
---   query :: <a>SolrQuery</a> 'False 'False
+--   query :: <a>SolrQuery</a>
 --   query = "foo" <a>=:</a> <a>word</a> "bar"
 --       <a>&amp;&amp;:</a> "baz" <a>=:</a> <a>word</a> "qux"
 --   </pre>
-(&&:) :: SolrQuerySYM expr query => query False False -> query False False -> query False False
+(&&:) :: SolrQuerySYM expr query => query -> query -> query
 
 -- | An <tt>OR</tt> query.
 --   
@@ -520,11 +505,11 @@ defaultField :: SolrQuerySYM expr query => expr a -> query False False
 --   
 --   <pre>
 --   -- foo:bar OR baz:qux
---   query :: <a>SolrQuery</a> 'False 'False
+--   query :: <a>SolrQuery</a>
 --   query = "foo" <a>=:</a> <a>word</a> "bar"
 --       <a>||:</a> "baz" <a>=:</a> <a>word</a> "qux"
 --   </pre>
-(||:) :: SolrQuerySYM expr query => query False False -> query False False -> query False False
+(||:) :: SolrQuerySYM expr query => query -> query -> query
 
 -- | A <tt>NOT</tt>, <tt>'!'</tt>, or <tt>'-'</tt> query.
 --   
@@ -532,11 +517,11 @@ defaultField :: SolrQuerySYM expr query => expr a -> query False False
 --   
 --   <pre>
 --   -- foo:bar NOT baz:qux
---   query :: <a>SolrQuery</a> 'False 'False
+--   query :: <a>SolrQuery</a>
 --   query = "foo" <a>=:</a> <a>word</a> "bar"
 --        <a>-:</a> "baz" <a>=:</a> <a>word</a> "qux"
 --   </pre>
-(-:) :: SolrQuerySYM expr query => query False False -> query False False -> query False False
+(-:) :: SolrQuerySYM expr query => query -> query -> query
 
 -- | The <tt>'^='</tt> constant score operator.
 --   
@@ -548,38 +533,32 @@ defaultField :: SolrQuerySYM expr query => expr a -> query False False
 --   
 --   <pre>
 --   -- (foo:bar)^=3.5
---   query :: <a>SolrQuery</a> 'False 'False
+--   query :: <a>SolrQuery</a>
 --   query = "foo" <a>=:</a> <a>word</a> "bar" <a>^=:</a> 3.5
 --   </pre>
-(^=:) :: SolrQuerySYM expr query => query False False -> Float -> query False False
+(^=:) :: SolrQuerySYM expr query => query -> Float -> query
 
--- | Negate a top-level query.
---   
---   Only a top level query can be negated up to one time, hence the
---   boolean tag that tracks whether or not a query has been negated.
+-- | Negate a query.
 --   
 --   Example:
 --   
 --   <pre>
 --   -- -(foo:bar)
---   query :: <a>SolrQuery</a> 'True 'False
+--   query :: <a>SolrQuery</a>
 --   query = <a>neg</a> ("foo" <a>=:</a> <a>word</a> "bar")
 --   </pre>
-neg :: SolrQuerySYM expr query => query False False -> query True False
+neg :: SolrQuerySYM expr query => query -> query
 
 -- | Add local parameters to a query.
---   
---   Only a top level query can have up to one set of local parameters,
---   hence the boolean tag that tracks whether or not they've been added.
 --   
 --   Example:
 --   
 --   <pre>
 --   -- {!df=foo}bar
---   query :: <a>SolrQuery</a> 'False 'True
+--   query :: <a>SolrQuery</a>
 --   query = <a>params</a> [<a>paramDefaultField</a> <a>.=</a> "foo"] (<a>defaultField</a> (<a>word</a> "bar"))
 --   </pre>
-params :: SolrQuerySYM expr query => [Param query] -> query isNeg False -> query isNeg True
+params :: SolrQuerySYM expr query => [Param query] -> query -> query
 
 -- | A Solr expression.
 data SolrExpr (t :: SolrType)
@@ -590,7 +569,7 @@ data SolrExpr (t :: SolrType)
 --   
 --   <pre>
 --   -- foo:5
---   query :: <a>SolrQuery</a> 'False 'False
+--   query :: <a>SolrQuery</a>
 --   query = "foo" <a>=:</a> <a>num</a> 5
 --   </pre>
 num :: SolrExprSYM expr => Float -> expr TNum
@@ -601,7 +580,7 @@ num :: SolrExprSYM expr => Float -> expr TNum
 --   
 --   <pre>
 --   -- foo:true
---   query :: <a>SolrQuery</a> 'False 'False
+--   query :: <a>SolrQuery</a>
 --   query = "foo" <a>=:</a> <a>true</a>
 --   </pre>
 true :: SolrExprSYM expr => expr TBool
@@ -612,7 +591,7 @@ true :: SolrExprSYM expr => expr TBool
 --   
 --   <pre>
 --   -- foo:false
---   query :: <a>SolrQuery</a> 'False 'False
+--   query :: <a>SolrQuery</a>
 --   query = "foo" <a>=:</a> <a>false</a>
 --   </pre>
 false :: SolrExprSYM expr => expr TBool
@@ -629,11 +608,11 @@ false :: SolrExprSYM expr => expr TBool
 --   
 --   <pre>
 --   -- foo:bar
---   query :: <a>SolrQuery</a> 'False 'False
+--   query :: <a>SolrQuery</a>
 --   query = "foo" <a>=:</a> <a>word</a> "bar"
 --   
 --   -- foo:bar
---   query :: <a>SolrQuery</a> 'False 'False
+--   query :: <a>SolrQuery</a>
 --   query = "foo" <a>=:</a> ("bar" :: <a>SolrExpr</a> <a>TWord</a>)
 --   </pre>
 word :: SolrExprSYM expr => Text -> expr TWord
@@ -647,7 +626,7 @@ word :: SolrExprSYM expr => Text -> expr TWord
 --   
 --   <pre>
 --   -- foo:b?r
---   query :: <a>SolrQuery</a> 'False 'False
+--   query :: <a>SolrQuery</a>
 --   query = "foo" <a>=:</a> <a>wild</a> "b?r"
 --   </pre>
 wild :: SolrExprSYM expr => Text -> expr TWild
@@ -660,7 +639,7 @@ wild :: SolrExprSYM expr => Text -> expr TWild
 --   
 --   <pre>
 --   -- foo:/[mb]oat/
---   query :: <a>SolrQuery</a> 'False 'False
+--   query :: <a>SolrQuery</a>
 --   query = "foo" <a>=:</a> <a>regex</a> "[mb]oat"
 --   </pre>
 regex :: SolrExprSYM expr => Text -> expr TRegex
@@ -678,15 +657,15 @@ regex :: SolrExprSYM expr => Text -> expr TRegex
 --   
 --   <pre>
 --   -- foo:"bar baz"
---   query :: <a>SolrQuery</a> 'False 'False
+--   query :: <a>SolrQuery</a>
 --   query = "foo" <a>=:</a> <a>phrase</a> ["bar", "baz"] -- ok
 --   
 --   -- foo:"bar b?z" (an invalid Solr query)
---   query :: <a>SolrQuery</a> 'False 'False
+--   query :: <a>SolrQuery</a>
 --   query = "foo" <a>=:</a> <a>phrase</a> ["bar", <a>wild</a> "b?z"] -- type error
 --   
 --   -- foo:"bar b?z" (an invalid Solr query)
---   query :: <a>SolrQuery</a> 'False 'False
+--   query :: <a>SolrQuery</a>
 --   query = "foo" <a>=:</a> <a>phrase</a> ["bar", "b?z"] -- breaks <a>word</a> contract
 --   </pre>
 --   
@@ -694,7 +673,7 @@ regex :: SolrExprSYM expr => Text -> expr TRegex
 --   
 --   <pre>
 --   -- foo:"bar baz"
---   query :: <a>SolrQuery</a> 'False 'False
+--   query :: <a>SolrQuery</a>
 --   query = "foo" <a>=:</a> (["bar", "baz"] :: <a>SolrExpr</a> <a>TPhrase</a>)
 --   </pre>
 phrase :: SolrExprSYM expr => [expr TWord] -> expr TPhrase
@@ -706,11 +685,11 @@ phrase :: SolrExprSYM expr => [expr TWord] -> expr TPhrase
 --   
 --   <pre>
 --   -- foo:bar~1
---   query :: <a>SolrQuery</a> 'False 'False
+--   query :: <a>SolrQuery</a>
 --   query = "foo" <a>=:</a> <a>word</a> "bar" <a>~:</a> 1
 --   
 --   -- foo:"bar baz qux"~10
---   query :: <a>SolrQuery</a> 'False 'False
+--   query :: <a>SolrQuery</a>
 --   query = "foo" <a>=:</a> <a>phrase</a> ["bar", "baz", "qux"] <a>~:</a> 10
 --   </pre>
 (~:) :: (SolrExprSYM expr, FuzzableType a) => expr a -> Int -> expr TFuzzed
@@ -726,7 +705,7 @@ phrase :: SolrExprSYM expr => [expr TWord] -> expr TPhrase
 --   
 --   <pre>
 --   -- foo:bar~
---   query :: <a>SolrQuery</a> 'False 'False
+--   query :: <a>SolrQuery</a>
 --   query = "foo" <a>=:</a> <a>fuzzy</a> "bar"
 --   </pre>
 fuzzy :: SolrExprSYM expr => expr TWord -> expr TFuzzed
@@ -737,7 +716,7 @@ fuzzy :: SolrExprSYM expr => expr TWord -> expr TFuzzed
 --   
 --   <pre>
 --   -- foo:[5 TO 10}
---   query :: <a>SolrQuery</a> 'False 'False
+--   query :: <a>SolrQuery</a>
 --   query = "foo" <a>=:</a> <a>incl</a> (<a>num</a> 5) `to` <a>excl</a> (<a>num</a> 10)
 --   </pre>
 to :: (SolrExprSYM expr, PrimType a) => Boundary (expr a) -> Boundary (expr a) -> expr TRange
@@ -753,7 +732,7 @@ to :: (SolrExprSYM expr, PrimType a) => Boundary (expr a) -> Boundary (expr a) -
 --   <pre>
 --   -- foo:&gt;5
 --   -- foo:{5 TO *]
---   query :: <a>SolrQuery</a> 'False 'False
+--   query :: <a>SolrQuery</a>
 --   query = "foo" <a>=:</a> <a>gt</a> (<a>num</a> 5)
 --   </pre>
 gt :: (SolrExprSYM expr, PrimType a) => expr a -> expr TRange
@@ -769,7 +748,7 @@ gt :: (SolrExprSYM expr, PrimType a) => expr a -> expr TRange
 --   <pre>
 --   -- foo:&gt;=5
 --   -- foo:[5 TO *]
---   query :: <a>SolrQuery</a> 'False 'False
+--   query :: <a>SolrQuery</a>
 --   query = "foo" <a>=:</a> <a>gte</a> (<a>num</a> 5)
 --   </pre>
 gte :: (SolrExprSYM expr, PrimType a) => expr a -> expr TRange
@@ -785,7 +764,7 @@ gte :: (SolrExprSYM expr, PrimType a) => expr a -> expr TRange
 --   <pre>
 --   -- foo:&lt;5
 --   -- foo:[* TO 5}
---   query :: <a>SolrQuery</a> 'False 'False
+--   query :: <a>SolrQuery</a>
 --   query = "foo" <a>=:</a> <a>lt</a> (<a>num</a> 5)
 --   </pre>
 lt :: (SolrExprSYM expr, PrimType a) => expr a -> expr TRange
@@ -801,7 +780,7 @@ lt :: (SolrExprSYM expr, PrimType a) => expr a -> expr TRange
 --   <pre>
 --   -- foo:&lt;=5
 --   -- foo:[* TO 5]
---   query :: <a>SolrQuery</a> 'False 'False
+--   query :: <a>SolrQuery</a>
 --   query = "foo" <a>=:</a> <a>lte</a> (<a>num</a> 5)
 --   </pre>
 lte :: (SolrExprSYM expr, PrimType a) => expr a -> expr TRange
@@ -812,11 +791,11 @@ lte :: (SolrExprSYM expr, PrimType a) => expr a -> expr TRange
 --   
 --   <pre>
 --   -- foo:bar^3.5
---   query :: <a>SolrQuery</a> 'False 'False
+--   query :: <a>SolrQuery</a>
 --   query = "foo" <a>=:</a> <a>word</a> "bar" <a>^:</a> 3.5
 --   
 --   -- foo:"bar baz"^3.5
---   query :: <a>SolrQuery</a> 'False 'False
+--   query :: <a>SolrQuery</a>
 --   query = "foo" <a>=:</a> <a>phrase</a> ["bar", "baz"] <a>^:</a> 3.5
 --   </pre>
 (^:) :: (SolrExprSYM expr, BoostableType a) => expr a -> Float -> expr TBoosted
@@ -838,7 +817,7 @@ class ParamDefaultField query
 --   
 --   <pre>
 --   -- {!df=foo}bar
---   query :: <a>SolrQuery</a> 'False 'True
+--   query :: <a>SolrQuery</a>
 --   query = <a>params</a> [<a>paramDefaultField</a> <a>.=</a> "foo"] (<a>defaultField</a> (<a>word</a> "bar"))
 --   </pre>
 paramDefaultField :: ParamDefaultField query => ParamKey query Text
@@ -861,7 +840,7 @@ class ParamOp query
 --   
 --   <pre>
 --   -- {!q.op=AND}foo bar
---   query :: <a>SolrQuery</a> 'False 'True
+--   query :: <a>SolrQuery</a>
 --   query = <a>params</a> [<a>paramOp</a> <a>.=</a> "AND"] (<a>defaultField</a> (<a>word</a> "foo") <a>&lt;&gt;</a> <a>defaultField</a> (<a>word</a> "bar"))
 --   </pre>
 paramOp :: ParamOp query => ParamKey query Text
@@ -872,7 +851,7 @@ paramOp :: ParamOp query => ParamKey query Text
 --   
 --   <pre>
 --   -- {!cache=false}foo:bar
---   query :: <a>SolrFilterQuery</a> 'False 'True
+--   query :: <a>SolrFilterQuery</a>
 --   query = <a>params</a> [<a>paramCache</a> <a>.=</a> False] ("foo" <a>=:</a> <a>word</a> "bar")
 --   </pre>
 paramCache :: ParamKey SolrFilterQuery Bool
@@ -883,7 +862,7 @@ paramCache :: ParamKey SolrFilterQuery Bool
 --   
 --   <pre>
 --   -- {!cost=5}foo:bar
---   query :: <a>SolrFilterQuery</a> 'False 'True
+--   query :: <a>SolrFilterQuery</a>
 --   query = <a>params</a> [<a>paramCost</a> <a>.=</a> 5] ("foo" <a>=:</a> <a>word</a> "bar")
 --   </pre>
 paramCost :: ParamKey SolrFilterQuery Int
@@ -896,19 +875,19 @@ paramCost :: ParamKey SolrFilterQuery Int
 --   λ let ps = [<a>paramDefaultField</a> <a>.=</a> "body"]
 --   λ let q = "foo" =: <a>phrase</a> ["bar", "baz"] <a>~:</a> 5 <a>&amp;&amp;:</a> <a>defaultField</a> (<a>regex</a> "wh?at")
 --   λ <a>compileSolrQuery</a> (<a>params</a> ps q)
---   "{!df=body}(foo:\"bar baz\"~5 AND /wh?t/)"
+--   "{!df=body }(foo:\"bar baz\"~5 AND /wh?t/)"
 --   </pre>
-compileSolrQuery :: SolrQuery isNeg hasParams -> ByteString
+compileSolrQuery :: SolrQuery -> ByteString
 
 -- | Compile a <a>SolrFilterQuery</a> to a lazy <a>ByteString</a>.
-compileSolrFilterQuery :: SolrFilterQuery isNeg hasParams -> ByteString
-instance Data.Semigroup.Semigroup (Solr.Query.SolrFilterQuery 'GHC.Types.False 'GHC.Types.False)
-instance GHC.Base.Monoid (Solr.Query.SolrFilterQuery 'GHC.Types.False 'GHC.Types.False)
+compileSolrFilterQuery :: SolrFilterQuery -> ByteString
+instance Data.Semigroup.Semigroup Solr.Query.SolrFilterQuery
+instance GHC.Base.Monoid Solr.Query.SolrFilterQuery
 instance Data.String.IsString (Solr.Query.SolrExpr 'Solr.Type.TWord)
 instance GHC.Exts.IsList (Solr.Query.SolrExpr 'Solr.Type.TPhrase)
 instance Solr.Class.SolrExprSYM Solr.Query.SolrExpr
-instance Data.Semigroup.Semigroup (Solr.Query.SolrQuery 'GHC.Types.False 'GHC.Types.False)
-instance GHC.Base.Monoid (Solr.Query.SolrQuery 'GHC.Types.False 'GHC.Types.False)
+instance Data.Semigroup.Semigroup Solr.Query.SolrQuery
+instance GHC.Base.Monoid Solr.Query.SolrQuery
 instance Solr.Class.SolrQuerySYM Solr.Query.SolrExpr Solr.Query.SolrQuery
 instance Solr.Class.SolrQuerySYM Solr.Query.SolrExpr Solr.Query.SolrFilterQuery
 instance Solr.Query.ParamDefaultField Solr.Query.SolrQuery
