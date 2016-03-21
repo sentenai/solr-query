@@ -50,25 +50,25 @@ boost :: (SolrExprSYM expr, BoostableType a) => expr a -> Float -> expr 'TBooste
 boost = (Solr.^:)
 
 -- | Named version of ('Solr.Class.=:').
-field :: SolrQuerySYM expr query => Text -> expr a -> query 'False 'False
+field :: SolrQuerySYM expr query => Text -> expr a -> query
 field = (Solr.=:)
 
 -- | Named version of ('Solr.Class.&&:').
-and :: SolrQuerySYM expr query => query 'False 'False -> query 'False 'False -> query 'False 'False
+and :: SolrQuerySYM expr query => query -> query -> query
 and = (Solr.&&:)
 infixr 3 `and`
 
 -- | Named version of ('Solr.Class.||:').
-or :: SolrQuerySYM expr query => query 'False 'False -> query 'False 'False -> query 'False 'False
+or :: SolrQuerySYM expr query => query -> query -> query
 or = (Solr.||:)
 infixr 2 `or`
 
 -- | Named version of ('Solr.Class.-:').
-not :: SolrQuerySYM expr query => query 'False 'False -> query 'False 'False -> query 'False 'False
+not :: SolrQuerySYM expr query => query -> query -> query
 not = (Solr.-:)
 infixr 1 `not`
 
 -- | Named version of ('Solr.Class.^=:').
-score :: SolrQuerySYM expr query => query 'False 'False -> Float -> query 'False 'False
+score :: SolrQuerySYM expr query => query -> Float -> query
 score = (Solr.^=:)
 infixr 4 `score`
