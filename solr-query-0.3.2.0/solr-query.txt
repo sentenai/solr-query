@@ -6,21 +6,18 @@
 @version 0.3.2.0
 
 module Solr.Type
-
--- | A Solr type.
-data SolrType
-TNum :: SolrType
-TBool :: SolrType
-TWord :: SolrType
-TWild :: SolrType
-TRegex :: SolrType
-TPhrase :: SolrType
-TFuzzed :: SolrType
-TBoosted :: SolrType
-TRange :: SolrType
+data TNum
+data TBool
+data TWord
+data TWild
+data TRegex
+data TPhrase
+data TFuzzed
+data TBoosted
+data TRange
 
 -- | A Solr type singleton.
-data SSolrType :: SolrType -> *
+data SSolrType ty
 STNum :: SSolrType TNum
 STBool :: SSolrType TBool
 STWord :: SSolrType TWord
@@ -30,21 +27,27 @@ STPhrase :: SSolrType TPhrase
 STFuzzed :: SSolrType TFuzzed
 STBoosted :: SSolrType TBoosted
 STRange :: SSolrType TRange
+class SolrType ty
+solrType :: SolrType ty => SSolrType ty
+
+-- | Structures that are tagged with a Solr type.
+class HasSolrType expr
+getSolrType :: HasSolrType expr => expr ty -> SSolrType ty
 
 -- | Types that can be fuzzed by a <tt>'~'</tt> operator.
-class FuzzableType (a :: SolrType)
 
 -- | Types that can be boosted by a <tt>'^'</tt> operator.
-class BoostableType (a :: SolrType)
 
 -- | Types that can appear in a range expression.
-class PrimType (a :: SolrType)
-instance Solr.Type.FuzzableType 'Solr.Type.TWord
-instance Solr.Type.FuzzableType 'Solr.Type.TPhrase
-instance Solr.Type.BoostableType 'Solr.Type.TWord
-instance Solr.Type.BoostableType 'Solr.Type.TPhrase
-instance Solr.Type.PrimType 'Solr.Type.TNum
-instance Solr.Type.PrimType 'Solr.Type.TWord
+instance Solr.Type.SolrType Solr.Type.TNum
+instance Solr.Type.SolrType Solr.Type.TBool
+instance Solr.Type.SolrType Solr.Type.TWord
+instance Solr.Type.SolrType Solr.Type.TWild
+instance Solr.Type.SolrType Solr.Type.TRegex
+instance Solr.Type.SolrType Solr.Type.TPhrase
+instance Solr.Type.SolrType Solr.Type.TFuzzed
+instance Solr.Type.SolrType Solr.Type.TBoosted
+instance Solr.Type.SolrType Solr.Type.TRange
 
 
 -- | This module defines the finally tagless Solr DSL. This style admits
@@ -56,7 +59,7 @@ instance Solr.Type.PrimType 'Solr.Type.TWord
 module Solr.Class
 
 -- | Solr expression.
-class SolrExprSYM (expr :: SolrType -> *)
+class SolrExprSYM expr
 
 -- | A <tt>num</tt> expression.
 --   
@@ -641,7 +644,7 @@ neg :: SolrQuerySYM expr query => query -> query
 params :: SolrQuerySYM expr query => [Param query] -> query -> query
 
 -- | A Solr expression.
-data SolrExpr (t :: SolrType)
+data SolrExpr t
 
 -- | A <tt>num</tt> expression.
 --   
@@ -970,8 +973,8 @@ compileSolrQuery :: SolrQuery -> ByteString
 compileSolrFilterQuery :: SolrFilterQuery -> ByteString
 instance Data.Semigroup.Semigroup Solr.Query.SolrFilterQuery
 instance GHC.Base.Monoid Solr.Query.SolrFilterQuery
-instance Data.String.IsString (Solr.Query.SolrExpr 'Solr.Type.TWord)
-instance GHC.Exts.IsList (Solr.Query.SolrExpr 'Solr.Type.TPhrase)
+instance Data.String.IsString (Solr.Query.SolrExpr Solr.Type.TWord)
+instance GHC.Exts.IsList (Solr.Query.SolrExpr Solr.Type.TPhrase)
 instance Solr.Class.SolrExprSYM Solr.Query.SolrExpr
 instance Data.Semigroup.Semigroup Solr.Query.SolrQuery
 instance GHC.Base.Monoid Solr.Query.SolrQuery
@@ -1012,7 +1015,7 @@ QNeg :: SolrQueryI -> SolrQueryI
 QParams :: [Param SolrQueryI] -> SolrQueryI -> SolrQueryI
 
 -- | A Solr expression.
-data SolrExprI :: SolrType -> *
+data SolrExprI ty
 ENum :: Float -> SolrExprI TNum
 ETrue :: SolrExprI TBool
 EFalse :: SolrExprI TBool
@@ -1054,6 +1057,8 @@ UEPhrase :: [USolrExprI] -> USolrExprI
 UEFuzz :: USolrExprI -> Int -> USolrExprI
 UETo :: (Boundary USolrExprI) -> (Boundary USolrExprI) -> USolrExprI
 UEBoost :: USolrExprI -> Float -> USolrExprI
+typeCheckSolrExpr :: USolrExprI -> r -> (forall ty. SolrExprI ty -> r) -> r
+instance Solr.Type.HasSolrType Solr.Query.Initial.SolrExprI
 instance Solr.Class.SolrExprSYM Solr.Query.Initial.SolrExprI
 instance Solr.Class.SolrQuerySYM Solr.Query.Initial.SolrExprI Solr.Query.Initial.SolrQueryI
 instance Solr.Param.HasParamDefaultField Solr.Query.Initial.SolrQueryI
