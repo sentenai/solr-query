@@ -76,13 +76,13 @@ import qualified Data.ByteString.Lazy.Char8 as BS
 
 
 -- | A Solr expression.
-newtype SolrExpr (t :: SolrType) = Expr { unExpr :: Builder }
+newtype SolrExpr t = Expr { unExpr :: Builder }
 
-instance IsString (SolrExpr 'TWord) where
+instance IsString (SolrExpr TWord) where
   fromString s = word (T.pack s)
 
-instance IsList (SolrExpr 'TPhrase) where
-  type Item (SolrExpr 'TPhrase) = SolrExpr 'TWord
+instance IsList (SolrExpr TPhrase) where
+  type Item (SolrExpr TPhrase) = SolrExpr TWord
 
   fromList = phrase
   toList = map (Expr . BS.lazyByteString) . BS.words . BS.toLazyByteString . unExpr
