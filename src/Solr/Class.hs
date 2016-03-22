@@ -6,10 +6,11 @@
 {-# LANGUAGE TypeFamilies           #-}
 
 -- | This module defines the finally tagless Solr DSL. This style admits
--- multiple interpreters, one of which (lazy 'Data.ByteString.Lazy.ByteString's)
--- is provided by this library in the "Solr.Query" module.
+-- multiple interpreters, two of which (lazy 'Data.ByteString.Lazy.ByteString's
+-- and an initial encoding) are provided by this library, in the "Solr.Query"
+-- and "Solr.Query.Initial" modules, respectively.
 --
--- Users should instead import either "Solr.Query" or "Solr.Qualified.Query".
+-- Ordinary users should not normally have to import this module.
 
 module Solr.Class
   (

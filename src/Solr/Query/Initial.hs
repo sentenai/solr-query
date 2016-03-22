@@ -21,7 +21,7 @@ module Solr.Query.Initial
   , USolrQueryI(..)
   , USolrExprI(..)
   -- * Type checking
-  , typeCheckSolrExpr
+  , typeCheckSolrQuery
   ) where
 
 import Solr.Class
@@ -120,17 +120,6 @@ data USolrExprI
   | UETo (Boundary USolrExprI) (Boundary USolrExprI)
   | UEBoost USolrExprI Float
 
--- | An untyped Solr query.
-data USolrQueryI
-  = UQDefaultField USolrExprI
-  | UQField Text USolrExprI
-  | UQAnd USolrQueryI USolrQueryI USolrQueryI
-  | UQOr USolrQueryI USolrQueryI USolrQueryI
-  | UQNot USolrQueryI USolrQueryI USolrQueryI
-  | UQScore USolrQueryI Float
-  | UQNeg USolrQueryI
-  | UQParams {- [Param SolrQueryI] TODO figure this out -} USolrQueryI
-
 typeCheckSolrExpr :: USolrExprI -> r -> (forall ty. SolrExprI ty -> r) -> r
 typeCheckSolrExpr u0 die k =
   case u0 of
@@ -221,3 +210,45 @@ noStar con1 con2 u1 u2 die k =
             (STNum,  STNum)  -> k (ETo (con1 e1) (con2 e2))
             (STWord, STWord) -> k (ETo (con1 e1) (con2 e2))
             _ -> die))
+
+
+-- | An untyped Solr query.
+data USolrQueryI
+  = UQDefaultField USolrExprI
+  | UQField Text USolrExprI
+  | UQAnd USolrQueryI USolrQueryI
+  | UQOr USolrQueryI USolrQueryI
+  | UQNot USolrQueryI USolrQueryI
+  | UQScore USolrQueryI Float
+  | UQNeg USolrQueryI
+  -- TODO: Figure this out
+  -- UQParams [Param SolrQueryI] USolrQueryI
+
+typeCheckSolrQuery :: USolrQueryI -> r -> (SolrQueryI -> r) -> r
+typeCheckSolrQuery u0 die k =
+  case u0 of
+    UQDefaultField u ->
+      typeCheckSolrExpr u die
+        (\e -> k (QDefaultField e))
+
+    UQField s u ->
+      typeCheckSolrExpr u die
+        (\e -> k (QField s e))
+
+    UQAnd u1 u2 -> binop QAnd u1 u2
+    UQOr  u1 u2 -> binop QOr  u1 u2
+    UQNot u1 u2 -> binop QNot u1 u2
+
+    UQScore u n ->
+      typeCheckSolrQuery u die
+        (\q -> k (QScore q n))
+
+    UQNeg u ->
+      typeCheckSolrQuery u die
+        (\q -> k (QNeg q))
+ where
+  binop con u1 u2 =
+    typeCheckSolrQuery u1 die
+      (\q1 ->
+        typeCheckSolrQuery u2 die
+          (\q2 -> k (con q1 q2)))
