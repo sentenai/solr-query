@@ -1,4 +1,5 @@
 {-# LANGUAGE DataKinds      #-}
+{-# LANGUAGE GADTs          #-}
 {-# LANGUAGE KindSignatures #-}
 {-# LANGUAGE TypeFamilies   #-}
 
@@ -16,6 +17,18 @@ data SolrType
   | TFuzzed
   | TBoosted
   | TRange
+
+-- | A Solr type singleton.
+data SSolrType :: SolrType -> * where
+  STNum     :: SSolrType 'TNum
+  STBool    :: SSolrType 'TBool
+  STWord    :: SSolrType 'TWord
+  STWild    :: SSolrType 'TWild
+  STRegex   :: SSolrType 'TRegex
+  STPhrase  :: SSolrType 'TPhrase
+  STFuzzed  :: SSolrType 'TFuzzed
+  STBoosted :: SSolrType 'TBoosted
+  STRange   :: SSolrType 'TRange
 
 
 -- | Types that can be fuzzed by a @\'~\'@ operator.

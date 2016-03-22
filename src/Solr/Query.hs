@@ -49,16 +49,17 @@ module Solr.Query
   , ParamKey
   , Param(..)
   , (.=)
-  , ParamDefaultField(..)
-  , ParamOp(..)
-  , paramCache
-  , paramCost
+  , HasParamDefaultField(..)
+  , HasParamOp(..)
+  , HasParamCache(..)
+  , HasParamCost(..)
   -- * Query compilation
   , compileSolrQuery
   , compileSolrFilterQuery
   ) where
 
 import Solr.Class
+import Solr.Param
 import Solr.Type
 
 import Data.ByteString.Builder    (Builder)
@@ -85,7 +86,6 @@ instance IsList (SolrExpr 'TPhrase) where
 
   fromList = phrase
   toList = map (Expr . BS.lazyByteString) . BS.words . BS.toLazyByteString . unExpr
-
 
 instance SolrExprSYM SolrExpr where
   num n = Expr (bshow n)
@@ -172,6 +172,12 @@ instance SolrQuerySYM SolrExpr SolrQuery where
         SolrQueryDefaultField -> "df=" <> T.encodeUtf8Builder v
         SolrQueryOp -> "q.op=" <> T.encodeUtf8Builder v
 
+instance HasParamDefaultField SolrQuery where
+  paramDefaultField = SolrQueryDefaultField
+
+instance HasParamOp SolrQuery where
+  paramOp = SolrQueryOp
+
 
 -- | A Solr filter query. This is like 'SolrQuery', but with different local
 -- parameters available. All functions polymorphic over 'SolrQuerySYM' will work
@@ -215,79 +221,17 @@ instance SolrQuerySYM SolrExpr SolrFilterQuery where
         SolrFilterQueryCache -> "cache=" <> if v then "true" else "false"
         SolrFilterQueryCost -> "cost=" <> bshow v
 
-
--- | The class of queries that support the @\'df\'@ local parameter.
-class ParamDefaultField query where
-  -- | The @\'df\'@ local parameter.
-  --
-  -- Example:
-  --
-  -- @
-  -- -- {!df=foo}bar
-  -- query :: 'SolrQuery'
-  -- query = 'params' ['paramDefaultField' '.=' "foo"] ('defaultField' ('word' "bar"))
-  -- @
-  paramDefaultField :: ParamKey query Text
-
-instance ParamDefaultField SolrQuery where
-  paramDefaultField = SolrQueryDefaultField
-
-instance ParamDefaultField SolrFilterQuery where
+instance HasParamDefaultField SolrFilterQuery where
   paramDefaultField = SolrFilterQueryDefaultField
 
-
--- | The class of queries that support the @\'op\'@ local parameter.
-class ParamOp query where
-  -- | The @\'op\'@ local parameter.
-  --
-  -- Stringly typed to avoid a clunky sum type like
-  --
-  -- @
-  -- data Val = And | Or | ...
-  -- @
-  --
-  -- which seems to have little value in cases like this. Instead, just pass
-  -- @\"AND\"@, @\"OR\"@, ...
-  --
-  -- Example:
-  --
-  -- @
-  -- -- {!q.op=AND}foo bar
-  -- query :: 'SolrQuery'
-  -- query = 'params' ['paramOp' '.=' \"AND\"] ('defaultField' ('word' "foo") '<>' 'defaultField' ('word' "bar"))
-  -- @
-  paramOp :: ParamKey query Text
-
-instance ParamOp SolrQuery where
-  paramOp = SolrQueryOp
-
-instance ParamOp SolrFilterQuery where
+instance HasParamOp SolrFilterQuery where
   paramOp = SolrFilterQueryOp
 
+instance HasParamCache SolrFilterQuery where
+  paramCache = SolrFilterQueryCache
 
--- | The @\'cache\'@ local parameter.
---
--- Example:
---
--- @
--- -- {!cache=false}foo:bar
--- query :: 'SolrFilterQuery'
--- query = 'params' ['paramCache' '.=' False] ("foo" '=:' 'word' "bar")
--- @
-paramCache :: ParamKey SolrFilterQuery Bool
-paramCache = SolrFilterQueryCache
-
--- | The @\'cost\'@ local parameter.
---
--- Example:
---
--- @
--- -- {!cost=5}foo:bar
--- query :: 'SolrFilterQuery'
--- query = 'params' ['paramCost' '.=' 5] ("foo" '=:' 'word' "bar")
--- @
-paramCost :: ParamKey SolrFilterQuery Int
-paramCost = SolrFilterQueryCost
+instance HasParamCost SolrFilterQuery where
+  paramCost = SolrFilterQueryCost
 
 
 -- | Compile a 'SolrQuery' to a lazy 'ByteString'.
