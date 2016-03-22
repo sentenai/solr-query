@@ -19,6 +19,18 @@ TFuzzed :: SolrType
 TBoosted :: SolrType
 TRange :: SolrType
 
+-- | A Solr type singleton.
+data SSolrType :: SolrType -> *
+STNum :: SSolrType TNum
+STBool :: SSolrType TBool
+STWord :: SSolrType TWord
+STWild :: SSolrType TWild
+STRegex :: SSolrType TRegex
+STPhrase :: SSolrType TPhrase
+STFuzzed :: SSolrType TFuzzed
+STBoosted :: SSolrType TBoosted
+STRange :: SSolrType TRange
+
 -- | Types that can be fuzzed by a <tt>'~'</tt> operator.
 class FuzzableType (a :: SolrType)
 
@@ -407,6 +419,74 @@ excl :: SolrExprSYM expr => expr a -> Boundary (expr a)
 -- | <tt>'*'</tt> operator, signifying the minimum or maximun bound of a
 --   range. A <tt>[* TO *]</tt> query will require a type annotation.
 star :: SolrExprSYM expr => Boundary (expr a)
+
+module Solr.Param
+
+-- | The class of queries that support the <tt>'df'</tt> local parameter.
+class HasParamDefaultField query
+
+-- | The <tt>'df'</tt> local parameter.
+--   
+--   Example:
+--   
+--   <pre>
+--   -- {!df=foo}bar
+--   query :: <a>SolrQuery</a>
+--   query = <a>params</a> [<a>paramDefaultField</a> <a>.=</a> "foo"] (<a>defaultField</a> (<a>word</a> "bar"))
+--   </pre>
+paramDefaultField :: HasParamDefaultField query => ParamKey query Text
+
+-- | The class of queries that support the <tt>'op'</tt> local parameter.
+class HasParamOp query
+
+-- | The <tt>'op'</tt> local parameter.
+--   
+--   Stringly typed to avoid a clunky sum type like
+--   
+--   <pre>
+--   data Val = And | Or | ...
+--   </pre>
+--   
+--   which seems to have little value in cases like this. Instead, just
+--   pass <tt>"AND"</tt>, <tt>"OR"</tt>, ...
+--   
+--   Example:
+--   
+--   <pre>
+--   -- {!q.op=AND}foo bar
+--   query :: <a>SolrQuery</a>
+--   query = <a>params</a> [<a>paramOp</a> <a>.=</a> "AND"] (<a>defaultField</a> (<a>word</a> "foo") <a>&lt;&gt;</a> <a>defaultField</a> (<a>word</a> "bar"))
+--   </pre>
+paramOp :: HasParamOp query => ParamKey query Text
+
+-- | The class of queries that support the <tt>'cache'</tt> local
+--   parameter.
+class HasParamCache query
+
+-- | The <tt>'cache'</tt> local parameter.
+--   
+--   Example:
+--   
+--   <pre>
+--   -- {!cache=false}foo:bar
+--   query :: <a>SolrFilterQuery</a>
+--   query = <a>params</a> [<a>paramCache</a> <a>.=</a> False] ("foo" <a>=:</a> <a>word</a> "bar")
+--   </pre>
+paramCache :: HasParamCache query => ParamKey query Bool
+
+-- | The class of queries that support the <tt>'cost'</tt> local parameter.
+class HasParamCost query
+
+-- | The <tt>'cost'</tt> local parameter.
+--   
+--   Example:
+--   
+--   <pre>
+--   -- {!cost=5}foo:bar
+--   query :: <a>SolrFilterQuery</a>
+--   query = <a>params</a> [<a>paramCost</a> <a>.=</a> 5] ("foo" <a>=:</a> <a>word</a> "bar")
+--   </pre>
+paramCost :: HasParamCost query => ParamKey query Int
 
 
 -- | This module is an alternative to <a>Solr.Class</a> that does not
@@ -809,7 +889,7 @@ Param :: ParamKey query val -> val -> Param query
 (.=) :: ParamKey query val -> val -> Param query
 
 -- | The class of queries that support the <tt>'df'</tt> local parameter.
-class ParamDefaultField query
+class HasParamDefaultField query
 
 -- | The <tt>'df'</tt> local parameter.
 --   
@@ -820,10 +900,10 @@ class ParamDefaultField query
 --   query :: <a>SolrQuery</a>
 --   query = <a>params</a> [<a>paramDefaultField</a> <a>.=</a> "foo"] (<a>defaultField</a> (<a>word</a> "bar"))
 --   </pre>
-paramDefaultField :: ParamDefaultField query => ParamKey query Text
+paramDefaultField :: HasParamDefaultField query => ParamKey query Text
 
 -- | The class of queries that support the <tt>'op'</tt> local parameter.
-class ParamOp query
+class HasParamOp query
 
 -- | The <tt>'op'</tt> local parameter.
 --   
@@ -843,7 +923,11 @@ class ParamOp query
 --   query :: <a>SolrQuery</a>
 --   query = <a>params</a> [<a>paramOp</a> <a>.=</a> "AND"] (<a>defaultField</a> (<a>word</a> "foo") <a>&lt;&gt;</a> <a>defaultField</a> (<a>word</a> "bar"))
 --   </pre>
-paramOp :: ParamOp query => ParamKey query Text
+paramOp :: HasParamOp query => ParamKey query Text
+
+-- | The class of queries that support the <tt>'cache'</tt> local
+--   parameter.
+class HasParamCache query
 
 -- | The <tt>'cache'</tt> local parameter.
 --   
@@ -854,7 +938,10 @@ paramOp :: ParamOp query => ParamKey query Text
 --   query :: <a>SolrFilterQuery</a>
 --   query = <a>params</a> [<a>paramCache</a> <a>.=</a> False] ("foo" <a>=:</a> <a>word</a> "bar")
 --   </pre>
-paramCache :: ParamKey SolrFilterQuery Bool
+paramCache :: HasParamCache query => ParamKey query Bool
+
+-- | The class of queries that support the <tt>'cost'</tt> local parameter.
+class HasParamCost query
 
 -- | The <tt>'cost'</tt> local parameter.
 --   
@@ -865,7 +952,7 @@ paramCache :: ParamKey SolrFilterQuery Bool
 --   query :: <a>SolrFilterQuery</a>
 --   query = <a>params</a> [<a>paramCost</a> <a>.=</a> 5] ("foo" <a>=:</a> <a>word</a> "bar")
 --   </pre>
-paramCost :: ParamKey SolrFilterQuery Int
+paramCost :: HasParamCost query => ParamKey query Int
 
 -- | Compile a <a>SolrQuery</a> to a lazy <a>ByteString</a>.
 --   
@@ -889,11 +976,13 @@ instance Solr.Class.SolrExprSYM Solr.Query.SolrExpr
 instance Data.Semigroup.Semigroup Solr.Query.SolrQuery
 instance GHC.Base.Monoid Solr.Query.SolrQuery
 instance Solr.Class.SolrQuerySYM Solr.Query.SolrExpr Solr.Query.SolrQuery
+instance Solr.Param.HasParamDefaultField Solr.Query.SolrQuery
+instance Solr.Param.HasParamOp Solr.Query.SolrQuery
 instance Solr.Class.SolrQuerySYM Solr.Query.SolrExpr Solr.Query.SolrFilterQuery
-instance Solr.Query.ParamDefaultField Solr.Query.SolrQuery
-instance Solr.Query.ParamDefaultField Solr.Query.SolrFilterQuery
-instance Solr.Query.ParamOp Solr.Query.SolrQuery
-instance Solr.Query.ParamOp Solr.Query.SolrFilterQuery
+instance Solr.Param.HasParamDefaultField Solr.Query.SolrFilterQuery
+instance Solr.Param.HasParamOp Solr.Query.SolrFilterQuery
+instance Solr.Param.HasParamCache Solr.Query.SolrFilterQuery
+instance Solr.Param.HasParamCost Solr.Query.SolrFilterQuery
 
 
 -- | This module is an alternative to <a>Solr.Query</a> that does not
@@ -904,3 +993,68 @@ instance Solr.Query.ParamOp Solr.Query.SolrFilterQuery
 --   import qualified Solr.Qualified.Query as Solr
 --   </pre>
 module Solr.Qualified.Query
+
+
+-- | An initial encoding of a Solr query. This is an alternative
+--   interpretation of the Solr language that is more amenable to parsing
+--   from arbitrary user input.
+module Solr.Query.Initial
+
+-- | A Solr query.
+data SolrQueryI
+QDefaultField :: SolrExprI a -> SolrQueryI
+QField :: Text -> SolrExprI a -> SolrQueryI
+QAnd :: SolrQueryI -> SolrQueryI -> SolrQueryI
+QOr :: SolrQueryI -> SolrQueryI -> SolrQueryI
+QNot :: SolrQueryI -> SolrQueryI -> SolrQueryI
+QScore :: SolrQueryI -> Float -> SolrQueryI
+QNeg :: SolrQueryI -> SolrQueryI
+QParams :: [Param SolrQueryI] -> SolrQueryI -> SolrQueryI
+
+-- | A Solr expression.
+data SolrExprI :: SolrType -> *
+ENum :: Float -> SolrExprI TNum
+ETrue :: SolrExprI TBool
+EFalse :: SolrExprI TBool
+EWord :: Text -> SolrExprI TWord
+EWild :: Text -> SolrExprI TWild
+ERegex :: Text -> SolrExprI TRegex
+EPhrase :: [SolrExprI TWord] -> SolrExprI TPhrase
+EFuzz :: SolrExprI a -> Int -> SolrExprI TFuzzed
+ETo :: Boundary (SolrExprI a) -> Boundary (SolrExprI a) -> SolrExprI TRange
+EBoost :: SolrExprI a -> Float -> SolrExprI TBoosted
+
+-- | Select the <a>SolrQueryI</a> interpreter.
+--   
+--   <pre>
+--   solrQueryI = id
+--   </pre>
+solrQueryI :: SolrQueryI -> SolrQueryI
+
+-- | An untyped Solr query.
+data USolrQueryI
+UQDefaultField :: USolrExprI -> USolrQueryI
+UQField :: Text -> USolrExprI -> USolrQueryI
+UQAnd :: USolrQueryI -> USolrQueryI -> USolrQueryI -> USolrQueryI
+UQOr :: USolrQueryI -> USolrQueryI -> USolrQueryI -> USolrQueryI
+UQNot :: USolrQueryI -> USolrQueryI -> USolrQueryI -> USolrQueryI
+UQScore :: USolrQueryI -> Float -> USolrQueryI
+UQNeg :: USolrQueryI -> USolrQueryI
+UQParams :: USolrQueryI -> USolrQueryI
+
+-- | An untyped Solr expression.
+data USolrExprI
+UENum :: Float -> USolrExprI
+UETrue :: USolrExprI
+UEFalse :: USolrExprI
+UEWord :: Text -> USolrExprI
+UEWild :: Text -> USolrExprI
+UERegex :: Text -> USolrExprI
+UEPhrase :: [USolrExprI] -> USolrExprI
+UEFuzz :: USolrExprI -> Int -> USolrExprI
+UETo :: (Boundary USolrExprI) -> (Boundary USolrExprI) -> USolrExprI
+UEBoost :: USolrExprI -> Float -> USolrExprI
+instance Solr.Class.SolrExprSYM Solr.Query.Initial.SolrExprI
+instance Solr.Class.SolrQuerySYM Solr.Query.Initial.SolrExprI Solr.Query.Initial.SolrQueryI
+instance Solr.Param.HasParamDefaultField Solr.Query.Initial.SolrQueryI
+instance Solr.Param.HasParamOp Solr.Query.Initial.SolrQueryI
