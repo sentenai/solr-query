@@ -51,11 +51,11 @@ instance Solr.Type.SolrType Solr.Type.TRange
 
 
 -- | This module defines the finally tagless Solr DSL. This style admits
---   multiple interpreters, one of which (lazy <a>ByteString</a>s) is
---   provided by this library in the <a>Solr.Query</a> module.
+--   multiple interpreters, two of which (lazy <a>ByteString</a>s and an
+--   initial encoding) are provided by this library, in the
+--   <a>Solr.Query</a> and <a>Solr.Query.Initial</a> modules, respectively.
 --   
---   Users should instead import either <a>Solr.Query</a> or
---   <a>Solr.Qualified.Query</a>.
+--   Ordinary users should not normally have to import this module.
 module Solr.Class
 
 -- | Solr expression.
