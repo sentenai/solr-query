@@ -1038,12 +1038,11 @@ solrQueryI :: SolrQueryI -> SolrQueryI
 data USolrQueryI
 UQDefaultField :: USolrExprI -> USolrQueryI
 UQField :: Text -> USolrExprI -> USolrQueryI
-UQAnd :: USolrQueryI -> USolrQueryI -> USolrQueryI -> USolrQueryI
-UQOr :: USolrQueryI -> USolrQueryI -> USolrQueryI -> USolrQueryI
-UQNot :: USolrQueryI -> USolrQueryI -> USolrQueryI -> USolrQueryI
+UQAnd :: USolrQueryI -> USolrQueryI -> USolrQueryI
+UQOr :: USolrQueryI -> USolrQueryI -> USolrQueryI
+UQNot :: USolrQueryI -> USolrQueryI -> USolrQueryI
 UQScore :: USolrQueryI -> Float -> USolrQueryI
 UQNeg :: USolrQueryI -> USolrQueryI
-UQParams :: USolrQueryI -> USolrQueryI
 
 -- | An untyped Solr expression.
 data USolrExprI
@@ -1057,7 +1056,7 @@ UEPhrase :: [USolrExprI] -> USolrExprI
 UEFuzz :: USolrExprI -> Int -> USolrExprI
 UETo :: (Boundary USolrExprI) -> (Boundary USolrExprI) -> USolrExprI
 UEBoost :: USolrExprI -> Float -> USolrExprI
-typeCheckSolrExpr :: USolrExprI -> r -> (forall ty. SolrExprI ty -> r) -> r
+typeCheckSolrQuery :: USolrQueryI -> r -> (SolrQueryI -> r) -> r
 instance Solr.Type.HasSolrType Solr.Query.Initial.SolrExprI
 instance Solr.Class.SolrExprSYM Solr.Query.Initial.SolrExprI
 instance Solr.Class.SolrQuerySYM Solr.Query.Initial.SolrExprI Solr.Query.Initial.SolrQueryI
