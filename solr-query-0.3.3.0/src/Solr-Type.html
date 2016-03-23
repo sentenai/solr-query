@@ -16,82 +16,61 @@
 <a name="line-7"></a><span class='hs-keyword'>module</span> <span class='hs-conid'>Solr</span><span class='hs-varop'>.</span><span class='hs-conid'>Type</span>
 <a name="line-8"></a>  <span class='hs-layout'>(</span>
 <a name="line-9"></a>  <span class='hs-comment'>-- * Solr types</span>
-<a name="line-10"></a>    <span class='hs-conid'>TNum</span>
-<a name="line-11"></a>  <span class='hs-layout'>,</span> <span class='hs-conid'>TBool</span>
-<a name="line-12"></a>  <span class='hs-layout'>,</span> <span class='hs-conid'>TWord</span>
-<a name="line-13"></a>  <span class='hs-layout'>,</span> <span class='hs-conid'>TWild</span>
-<a name="line-14"></a>  <span class='hs-layout'>,</span> <span class='hs-conid'>TRegex</span>
-<a name="line-15"></a>  <span class='hs-layout'>,</span> <span class='hs-conid'>TPhrase</span>
-<a name="line-16"></a>  <span class='hs-layout'>,</span> <span class='hs-conid'>TFuzzed</span>
-<a name="line-17"></a>  <span class='hs-layout'>,</span> <span class='hs-conid'>TBoosted</span>
-<a name="line-18"></a>  <span class='hs-layout'>,</span> <span class='hs-conid'>TRange</span>
-<a name="line-19"></a>  <span class='hs-layout'>,</span> <span class='hs-conid'>SSolrType</span><span class='hs-layout'>(</span><span class='hs-keyglyph'>..</span><span class='hs-layout'>)</span>
-<a name="line-20"></a>  <span class='hs-layout'>,</span> <span class='hs-conid'>SolrType</span><span class='hs-layout'>(</span><span class='hs-keyglyph'>..</span><span class='hs-layout'>)</span>
-<a name="line-21"></a>  <span class='hs-layout'>,</span> <span class='hs-conid'>HasSolrType</span><span class='hs-layout'>(</span><span class='hs-keyglyph'>..</span><span class='hs-layout'>)</span>
-<a name="line-22"></a>  <span class='hs-layout'>,</span> <span class='hs-conid'>FuzzableType</span>
-<a name="line-23"></a>  <span class='hs-layout'>,</span> <span class='hs-conid'>BoostableType</span>
-<a name="line-24"></a>  <span class='hs-layout'>,</span> <span class='hs-conid'>PrimType</span>
-<a name="line-25"></a>  <span class='hs-layout'>)</span> <span class='hs-keyword'>where</span>
-<a name="line-26"></a>
-<a name="line-27"></a><span class='hs-keyword'>import</span> <span class='hs-conid'>GHC</span><span class='hs-varop'>.</span><span class='hs-conid'>Exts</span> <span class='hs-layout'>(</span><span class='hs-conid'>Constraint</span><span class='hs-layout'>)</span>
-<a name="line-28"></a>
-<a name="line-29"></a>
-<a name="line-30"></a><a name="TNum"></a><span class='hs-keyword'>data</span> <span class='hs-conid'>TNum</span>
-<a name="line-31"></a><a name="TBool"></a><span class='hs-keyword'>data</span> <span class='hs-conid'>TBool</span>
-<a name="line-32"></a><a name="TWord"></a><span class='hs-keyword'>data</span> <span class='hs-conid'>TWord</span>
-<a name="line-33"></a><a name="TWild"></a><span class='hs-keyword'>data</span> <span class='hs-conid'>TWild</span>
-<a name="line-34"></a><a name="TRegex"></a><span class='hs-keyword'>data</span> <span class='hs-conid'>TRegex</span>
-<a name="line-35"></a><a name="TPhrase"></a><span class='hs-keyword'>data</span> <span class='hs-conid'>TPhrase</span>
-<a name="line-36"></a><a name="TFuzzed"></a><span class='hs-keyword'>data</span> <span class='hs-conid'>TFuzzed</span>
-<a name="line-37"></a><a name="TBoosted"></a><span class='hs-keyword'>data</span> <span class='hs-conid'>TBoosted</span>
-<a name="line-38"></a><a name="TRange"></a><span class='hs-keyword'>data</span> <span class='hs-conid'>TRange</span>
-<a name="line-39"></a>
-<a name="line-40"></a><a name="SSolrType"></a><span class='hs-comment'>-- | A Solr type singleton.</span>
-<a name="line-41"></a><a name="SSolrType"></a><span class='hs-keyword'>data</span> <span class='hs-conid'>SSolrType</span> <span class='hs-varid'>ty</span> <span class='hs-keyword'>where</span>
-<a name="line-42"></a>  <span class='hs-conid'>STNum</span>     <span class='hs-keyglyph'>::</span> <span class='hs-conid'>SSolrType</span> <span class='hs-conid'>TNum</span>
-<a name="line-43"></a>  <span class='hs-conid'>STBool</span>    <span class='hs-keyglyph'>::</span> <span class='hs-conid'>SSolrType</span> <span class='hs-conid'>TBool</span>
-<a name="line-44"></a>  <span class='hs-conid'>STWord</span>    <span class='hs-keyglyph'>::</span> <span class='hs-conid'>SSolrType</span> <span class='hs-conid'>TWord</span>
-<a name="line-45"></a>  <span class='hs-conid'>STWild</span>    <span class='hs-keyglyph'>::</span> <span class='hs-conid'>SSolrType</span> <span class='hs-conid'>TWild</span>
-<a name="line-46"></a>  <span class='hs-conid'>STRegex</span>   <span class='hs-keyglyph'>::</span> <span class='hs-conid'>SSolrType</span> <span class='hs-conid'>TRegex</span>
-<a name="line-47"></a>  <span class='hs-conid'>STPhrase</span>  <span class='hs-keyglyph'>::</span> <span class='hs-conid'>SSolrType</span> <span class='hs-conid'>TPhrase</span>
-<a name="line-48"></a>  <span class='hs-conid'>STFuzzed</span>  <span class='hs-keyglyph'>::</span> <span class='hs-conid'>SSolrType</span> <span class='hs-conid'>TFuzzed</span>
-<a name="line-49"></a>  <span class='hs-conid'>STBoosted</span> <span class='hs-keyglyph'>::</span> <span class='hs-conid'>SSolrType</span> <span class='hs-conid'>TBoosted</span>
-<a name="line-50"></a>  <span class='hs-conid'>STRange</span>   <span class='hs-keyglyph'>::</span> <span class='hs-conid'>SSolrType</span> <span class='hs-conid'>TRange</span>
-<a name="line-51"></a>
-<a name="line-52"></a><a name="SolrType"></a><span class='hs-keyword'>class</span> <span class='hs-conid'>SolrType</span> <span class='hs-varid'>ty</span> <span class='hs-keyword'>where</span>
-<a name="line-53"></a>  <span class='hs-varid'>solrType</span> <span class='hs-keyglyph'>::</span> <span class='hs-conid'>SSolrType</span> <span class='hs-varid'>ty</span>
+<a name="line-10"></a>    <span class='hs-conid'>SolrType</span><span class='hs-layout'>(</span><span class='hs-keyglyph'>..</span><span class='hs-layout'>)</span>
+<a name="line-11"></a>  <span class='hs-layout'>,</span> <span class='hs-conid'>SSolrType</span><span class='hs-layout'>(</span><span class='hs-keyglyph'>..</span><span class='hs-layout'>)</span>
+<a name="line-12"></a>  <span class='hs-layout'>,</span> <span class='hs-conid'>HasSolrType</span><span class='hs-layout'>(</span><span class='hs-keyglyph'>..</span><span class='hs-layout'>)</span>
+<a name="line-13"></a>  <span class='hs-layout'>,</span> <span class='hs-conid'>FuzzableType</span>
+<a name="line-14"></a>  <span class='hs-layout'>,</span> <span class='hs-conid'>BoostableType</span>
+<a name="line-15"></a>  <span class='hs-layout'>,</span> <span class='hs-conid'>PrimType</span>
+<a name="line-16"></a>  <span class='hs-layout'>)</span> <span class='hs-keyword'>where</span>
+<a name="line-17"></a>
+<a name="line-18"></a><span class='hs-keyword'>import</span> <span class='hs-conid'>GHC</span><span class='hs-varop'>.</span><span class='hs-conid'>Exts</span> <span class='hs-layout'>(</span><span class='hs-conid'>Constraint</span><span class='hs-layout'>)</span>
+<a name="line-19"></a>
+<a name="line-20"></a>
+<a name="line-21"></a><a name="SolrType"></a><span class='hs-keyword'>data</span> <span class='hs-conid'>SolrType</span>
+<a name="line-22"></a>  <span class='hs-keyglyph'>=</span> <span class='hs-conid'>TNum</span>
+<a name="line-23"></a>  <span class='hs-keyglyph'>|</span> <span class='hs-conid'>TBool</span>
+<a name="line-24"></a>  <span class='hs-keyglyph'>|</span> <span class='hs-conid'>TWord</span>
+<a name="line-25"></a>  <span class='hs-keyglyph'>|</span> <span class='hs-conid'>TWild</span>
+<a name="line-26"></a>  <span class='hs-keyglyph'>|</span> <span class='hs-conid'>TRegex</span>
+<a name="line-27"></a>  <span class='hs-keyglyph'>|</span> <span class='hs-conid'>TPhrase</span>
+<a name="line-28"></a>  <span class='hs-keyglyph'>|</span> <span class='hs-conid'>TFuzzed</span>
+<a name="line-29"></a>  <span class='hs-keyglyph'>|</span> <span class='hs-conid'>TBoosted</span>
+<a name="line-30"></a>  <span class='hs-keyglyph'>|</span> <span class='hs-conid'>TRange</span>
+<a name="line-31"></a>
+<a name="line-32"></a><a name="SSolrType"></a><span class='hs-comment'>-- | A Solr type singleton.</span>
+<a name="line-33"></a><a name="SSolrType"></a><span class='hs-keyword'>data</span> <span class='hs-conid'>SSolrType</span> <span class='hs-varid'>ty</span> <span class='hs-keyword'>where</span>
+<a name="line-34"></a>  <span class='hs-conid'>STNum</span>     <span class='hs-keyglyph'>::</span> <span class='hs-conid'>SSolrType</span> <span class='hs-chr'>'</span><span class='hs-conid'>TNum</span>
+<a name="line-35"></a>  <span class='hs-conid'>STBool</span>    <span class='hs-keyglyph'>::</span> <span class='hs-conid'>SSolrType</span> <span class='hs-chr'>'</span><span class='hs-conid'>TBool</span>
+<a name="line-36"></a>  <span class='hs-conid'>STWord</span>    <span class='hs-keyglyph'>::</span> <span class='hs-conid'>SSolrType</span> <span class='hs-chr'>'</span><span class='hs-conid'>TWord</span>
+<a name="line-37"></a>  <span class='hs-conid'>STWild</span>    <span class='hs-keyglyph'>::</span> <span class='hs-conid'>SSolrType</span> <span class='hs-chr'>'</span><span class='hs-conid'>TWild</span>
+<a name="line-38"></a>  <span class='hs-conid'>STRegex</span>   <span class='hs-keyglyph'>::</span> <span class='hs-conid'>SSolrType</span> <span class='hs-chr'>'</span><span class='hs-conid'>TRegex</span>
+<a name="line-39"></a>  <span class='hs-conid'>STPhrase</span>  <span class='hs-keyglyph'>::</span> <span class='hs-conid'>SSolrType</span> <span class='hs-chr'>'</span><span class='hs-conid'>TPhrase</span>
+<a name="line-40"></a>  <span class='hs-conid'>STFuzzed</span>  <span class='hs-keyglyph'>::</span> <span class='hs-conid'>SSolrType</span> <span class='hs-chr'>'</span><span class='hs-conid'>TFuzzed</span>
+<a name="line-41"></a>  <span class='hs-conid'>STBoosted</span> <span class='hs-keyglyph'>::</span> <span class='hs-conid'>SSolrType</span> <span class='hs-chr'>'</span><span class='hs-conid'>TBoosted</span>
+<a name="line-42"></a>  <span class='hs-conid'>STRange</span>   <span class='hs-keyglyph'>::</span> <span class='hs-conid'>SSolrType</span> <span class='hs-chr'>'</span><span class='hs-conid'>TRange</span>
+<a name="line-43"></a>
+<a name="line-44"></a>
+<a name="line-45"></a><a name="HasSolrType"></a><span class='hs-comment'>-- | Structures that are tagged with a Solr type.</span>
+<a name="line-46"></a><a name="HasSolrType"></a><span class='hs-keyword'>class</span> <span class='hs-conid'>HasSolrType</span> <span class='hs-varid'>expr</span> <span class='hs-keyword'>where</span>
+<a name="line-47"></a>  <span class='hs-varid'>getSolrType</span> <span class='hs-keyglyph'>::</span> <span class='hs-varid'>expr</span> <span class='hs-varid'>ty</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-conid'>SSolrType</span> <span class='hs-varid'>ty</span>
+<a name="line-48"></a>
+<a name="line-49"></a>
+<a name="line-50"></a><span class='hs-comment'>-- | Types that can be fuzzed by a @\'~\'@ operator.</span>
+<a name="line-51"></a><span class='hs-keyword'>type</span> <span class='hs-varid'>family</span> <span class='hs-conid'>FuzzableType</span> <span class='hs-varid'>ty</span> <span class='hs-keyglyph'>::</span> <span class='hs-conid'>Constraint</span> <span class='hs-keyword'>where</span>
+<a name="line-52"></a>  <span class='hs-conid'>FuzzableType</span> <span class='hs-chr'>'</span><span class='hs-conid'>TWord</span>   <span class='hs-keyglyph'>=</span> <span class='hs-conid'>()</span>
+<a name="line-53"></a>  <span class='hs-conid'>FuzzableType</span> <span class='hs-chr'>'</span><span class='hs-conid'>TPhrase</span> <span class='hs-keyglyph'>=</span> <span class='hs-conid'>()</span>
 <a name="line-54"></a>
-<a name="line-55"></a><a name="instance%20SolrType%20TNum"></a><span class='hs-keyword'>instance</span> <span class='hs-conid'>SolrType</span> <span class='hs-conid'>TNum</span>     <span class='hs-keyword'>where</span> <span class='hs-varid'>solrType</span> <span class='hs-keyglyph'>=</span> <span class='hs-conid'>STNum</span>
-<a name="line-56"></a><a name="instance%20SolrType%20TBool"></a><span class='hs-keyword'>instance</span> <span class='hs-conid'>SolrType</span> <span class='hs-conid'>TBool</span>    <span class='hs-keyword'>where</span> <span class='hs-varid'>solrType</span> <span class='hs-keyglyph'>=</span> <span class='hs-conid'>STBool</span>
-<a name="line-57"></a><a name="instance%20SolrType%20TWord"></a><span class='hs-keyword'>instance</span> <span class='hs-conid'>SolrType</span> <span class='hs-conid'>TWord</span>    <span class='hs-keyword'>where</span> <span class='hs-varid'>solrType</span> <span class='hs-keyglyph'>=</span> <span class='hs-conid'>STWord</span>
-<a name="line-58"></a><a name="instance%20SolrType%20TWild"></a><span class='hs-keyword'>instance</span> <span class='hs-conid'>SolrType</span> <span class='hs-conid'>TWild</span>    <span class='hs-keyword'>where</span> <span class='hs-varid'>solrType</span> <span class='hs-keyglyph'>=</span> <span class='hs-conid'>STWild</span>
-<a name="line-59"></a><a name="instance%20SolrType%20TRegex"></a><span class='hs-keyword'>instance</span> <span class='hs-conid'>SolrType</span> <span class='hs-conid'>TRegex</span>   <span class='hs-keyword'>where</span> <span class='hs-varid'>solrType</span> <span class='hs-keyglyph'>=</span> <span class='hs-conid'>STRegex</span>
-<a name="line-60"></a><a name="instance%20SolrType%20TPhrase"></a><span class='hs-keyword'>instance</span> <span class='hs-conid'>SolrType</span> <span class='hs-conid'>TPhrase</span>  <span class='hs-keyword'>where</span> <span class='hs-varid'>solrType</span> <span class='hs-keyglyph'>=</span> <span class='hs-conid'>STPhrase</span>
-<a name="line-61"></a><a name="instance%20SolrType%20TFuzzed"></a><span class='hs-keyword'>instance</span> <span class='hs-conid'>SolrType</span> <span class='hs-conid'>TFuzzed</span>  <span class='hs-keyword'>where</span> <span class='hs-varid'>solrType</span> <span class='hs-keyglyph'>=</span> <span class='hs-conid'>STFuzzed</span>
-<a name="line-62"></a><a name="instance%20SolrType%20TBoosted"></a><span class='hs-keyword'>instance</span> <span class='hs-conid'>SolrType</span> <span class='hs-conid'>TBoosted</span> <span class='hs-keyword'>where</span> <span class='hs-varid'>solrType</span> <span class='hs-keyglyph'>=</span> <span class='hs-conid'>STBoosted</span>
-<a name="line-63"></a><a name="instance%20SolrType%20TRange"></a><span class='hs-keyword'>instance</span> <span class='hs-conid'>SolrType</span> <span class='hs-conid'>TRange</span>   <span class='hs-keyword'>where</span> <span class='hs-varid'>solrType</span> <span class='hs-keyglyph'>=</span> <span class='hs-conid'>STRange</span>
-<a name="line-64"></a>
-<a name="line-65"></a>
-<a name="line-66"></a><a name="HasSolrType"></a><span class='hs-comment'>-- | Structures that are tagged with a Solr type.</span>
-<a name="line-67"></a><a name="HasSolrType"></a><span class='hs-keyword'>class</span> <span class='hs-conid'>HasSolrType</span> <span class='hs-varid'>expr</span> <span class='hs-keyword'>where</span>
-<a name="line-68"></a>  <span class='hs-varid'>getSolrType</span> <span class='hs-keyglyph'>::</span> <span class='hs-varid'>expr</span> <span class='hs-varid'>ty</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-conid'>SSolrType</span> <span class='hs-varid'>ty</span>
-<a name="line-69"></a>
-<a name="line-70"></a>
-<a name="line-71"></a><span class='hs-comment'>-- | Types that can be fuzzed by a @\'~\'@ operator.</span>
-<a name="line-72"></a><span class='hs-keyword'>type</span> <span class='hs-varid'>family</span> <span class='hs-conid'>FuzzableType</span> <span class='hs-varid'>ty</span> <span class='hs-keyglyph'>::</span> <span class='hs-conid'>Constraint</span> <span class='hs-keyword'>where</span>
-<a name="line-73"></a>  <span class='hs-conid'>FuzzableType</span> <span class='hs-conid'>TWord</span>   <span class='hs-keyglyph'>=</span> <span class='hs-conid'>SolrType</span> <span class='hs-conid'>TWord</span>
-<a name="line-74"></a>  <span class='hs-conid'>FuzzableType</span> <span class='hs-conid'>TPhrase</span> <span class='hs-keyglyph'>=</span> <span class='hs-conid'>SolrType</span> <span class='hs-conid'>TPhrase</span>
-<a name="line-75"></a>
-<a name="line-76"></a>
-<a name="line-77"></a><span class='hs-comment'>-- | Types that can be boosted by a @\'^\'@ operator.</span>
-<a name="line-78"></a><span class='hs-keyword'>type</span> <span class='hs-varid'>family</span> <span class='hs-conid'>BoostableType</span> <span class='hs-varid'>ty</span> <span class='hs-keyglyph'>::</span> <span class='hs-conid'>Constraint</span> <span class='hs-keyword'>where</span>
-<a name="line-79"></a>  <span class='hs-conid'>BoostableType</span> <span class='hs-conid'>TWord</span>   <span class='hs-keyglyph'>=</span> <span class='hs-conid'>SolrType</span> <span class='hs-conid'>TWord</span>
-<a name="line-80"></a>  <span class='hs-conid'>BoostableType</span> <span class='hs-conid'>TPhrase</span> <span class='hs-keyglyph'>=</span> <span class='hs-conid'>SolrType</span> <span class='hs-conid'>TPhrase</span>
-<a name="line-81"></a>
-<a name="line-82"></a>
-<a name="line-83"></a><span class='hs-comment'>-- | Types that can appear in a range expression.</span>
-<a name="line-84"></a><span class='hs-keyword'>type</span> <span class='hs-varid'>family</span> <span class='hs-conid'>PrimType</span> <span class='hs-varid'>ty</span> <span class='hs-keyglyph'>::</span> <span class='hs-conid'>Constraint</span> <span class='hs-keyword'>where</span>
-<a name="line-85"></a>  <span class='hs-conid'>PrimType</span> <span class='hs-conid'>TNum</span>  <span class='hs-keyglyph'>=</span> <span class='hs-conid'>SolrType</span> <span class='hs-conid'>TNum</span>
-<a name="line-86"></a>  <span class='hs-conid'>PrimType</span> <span class='hs-conid'>TWord</span> <span class='hs-keyglyph'>=</span> <span class='hs-conid'>SolrType</span> <span class='hs-conid'>TWord</span>
+<a name="line-55"></a>
+<a name="line-56"></a><span class='hs-comment'>-- | Types that can be boosted by a @\'^\'@ operator.</span>
+<a name="line-57"></a><span class='hs-keyword'>type</span> <span class='hs-varid'>family</span> <span class='hs-conid'>BoostableType</span> <span class='hs-varid'>ty</span> <span class='hs-keyglyph'>::</span> <span class='hs-conid'>Constraint</span> <span class='hs-keyword'>where</span>
+<a name="line-58"></a>  <span class='hs-conid'>BoostableType</span> <span class='hs-chr'>'</span><span class='hs-conid'>TWord</span>   <span class='hs-keyglyph'>=</span> <span class='hs-conid'>()</span>
+<a name="line-59"></a>  <span class='hs-conid'>BoostableType</span> <span class='hs-chr'>'</span><span class='hs-conid'>TPhrase</span> <span class='hs-keyglyph'>=</span> <span class='hs-conid'>()</span>
+<a name="line-60"></a>
+<a name="line-61"></a>
+<a name="line-62"></a><span class='hs-comment'>-- | Types that can appear in a range expression.</span>
+<a name="line-63"></a><span class='hs-keyword'>type</span> <span class='hs-varid'>family</span> <span class='hs-conid'>PrimType</span> <span class='hs-varid'>ty</span> <span class='hs-keyglyph'>::</span> <span class='hs-conid'>Constraint</span> <span class='hs-keyword'>where</span>
+<a name="line-64"></a>  <span class='hs-conid'>PrimType</span> <span class='hs-chr'>'</span><span class='hs-conid'>TNum</span>  <span class='hs-keyglyph'>=</span> <span class='hs-conid'>()</span>
+<a name="line-65"></a>  <span class='hs-conid'>PrimType</span> <span class='hs-chr'>'</span><span class='hs-conid'>TWord</span> <span class='hs-keyglyph'>=</span> <span class='hs-conid'>()</span>
 </pre></body>
 </html>
