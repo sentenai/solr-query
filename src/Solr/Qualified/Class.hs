@@ -42,11 +42,11 @@ import Prelude   hiding (and, not, or)
 
 
 -- | Named version of ('Solr.Class.~:').
-fuzz :: (SolrExprSYM expr, FuzzableType a) => expr a -> Int -> expr TFuzzed
+fuzz :: (SolrExprSYM expr, FuzzableType a) => expr a -> Int -> expr 'TFuzzed
 fuzz = (Solr.~:)
 
 -- | Named version of ('Solr.Class.^:').
-boost :: (SolrExprSYM expr, BoostableType a) => expr a -> Float -> expr TBoosted
+boost :: (SolrExprSYM expr, BoostableType a) => expr a -> Float -> expr 'TBoosted
 boost = (Solr.^:)
 
 -- | Named version of ('Solr.Class.=:').

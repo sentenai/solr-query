@@ -32,16 +32,16 @@ import Data.Text (Text)
 
 -- | A Solr expression.
 data SolrExprI ty where
-  ENum    :: Float -> SolrExprI TNum
-  ETrue   :: SolrExprI TBool
-  EFalse  :: SolrExprI TBool
-  EWord   :: Text -> SolrExprI TWord
-  EWild   :: Text -> SolrExprI TWild
-  ERegex  :: Text -> SolrExprI TRegex
-  EPhrase :: [SolrExprI TWord] -> SolrExprI TPhrase
-  EFuzz   :: FuzzableType a => SolrExprI a -> Int -> SolrExprI TFuzzed
-  ETo     :: PrimType a => Boundary (SolrExprI a) -> Boundary (SolrExprI a) -> SolrExprI TRange
-  EBoost  :: BoostableType a => SolrExprI a -> Float -> SolrExprI TBoosted
+  ENum    :: Float -> SolrExprI 'TNum
+  ETrue   :: SolrExprI 'TBool
+  EFalse  :: SolrExprI 'TBool
+  EWord   :: Text -> SolrExprI 'TWord
+  EWild   :: Text -> SolrExprI 'TWild
+  ERegex  :: Text -> SolrExprI 'TRegex
+  EPhrase :: [SolrExprI 'TWord] -> SolrExprI 'TPhrase
+  EFuzz   :: FuzzableType a => SolrExprI a -> Int -> SolrExprI 'TFuzzed
+  ETo     :: PrimType a => Boundary (SolrExprI a) -> Boundary (SolrExprI a) -> SolrExprI 'TRange
+  EBoost  :: BoostableType a => SolrExprI a -> Float -> SolrExprI 'TBoosted
 
 instance HasSolrType SolrExprI where
   getSolrType (ENum _)     = STNum
@@ -155,7 +155,7 @@ typeCheckSolrExpr u0 die k =
     -- Hm, when typechecking a [* TO *], do I really have to just pick a type
     -- here? Seems wrong...
     UETo Star Star ->
-      k (ETo (Star :: Boundary (SolrExprI TNum)) Star)
+      k (ETo (Star :: Boundary (SolrExprI 'TNum)) Star)
 
     UETo Star (Inclusive u) -> starLeft  Inclusive u die k
     UETo Star (Exclusive u) -> starLeft  Exclusive u die k

@@ -48,7 +48,7 @@ class SolrExprSYM expr where
   -- query :: 'Solr.Query.SolrQuery'
   -- query = "foo" '=:' 'num' 5
   -- @
-  num :: Float -> expr TNum
+  num :: Float -> expr 'TNum
 
   -- | A @true@ expression.
   --
@@ -59,7 +59,7 @@ class SolrExprSYM expr where
   -- query :: 'Solr.Query.SolrQuery'
   -- query = "foo" '=:' 'true'
   -- @
-  true :: expr TBool
+  true :: expr 'TBool
 
   -- | A @false@ expression.
   --
@@ -70,7 +70,7 @@ class SolrExprSYM expr where
   -- query :: 'Solr.Query.SolrQuery'
   -- query = "foo" '=:' 'false'
   -- @
-  false :: expr TBool
+  false :: expr 'TBool
 
   -- | A single word. Must /not/ contain any spaces, wildcard characters
   -- (@\'?\'@ and @\'*\'@), or tildes (@\'~\'@), though this is not enforced by
@@ -91,7 +91,7 @@ class SolrExprSYM expr where
   -- query :: 'Solr.Query.SolrQuery'
   -- query = "foo" '=:' ("bar" :: 'Solr.Query.SolrExpr' 'TWord')
   -- @
-  word :: Text -> expr TWord
+  word :: Text -> expr 'TWord
 
   -- | A single word that may contain wildcard characters (@\'?\'@ and @\'*\'@),
   -- although the meaning of consecutive @\'*\'@s is probably ill-defined. Must
@@ -105,7 +105,7 @@ class SolrExprSYM expr where
   -- query :: 'Solr.Query.SolrQuery'
   -- query = "foo" '=:' 'wild' "b?r"
   -- @
-  wild :: Text -> expr TWild
+  wild :: Text -> expr 'TWild
 
   -- | A regular expression, whose syntax is described by
   -- <http://lucene.apache.org/core/5_5_0/core/org/apache/lucene/util/automaton/RegExp.html?is-external=true>.
@@ -118,7 +118,7 @@ class SolrExprSYM expr where
   -- query :: 'Solr.Query.SolrQuery'
   -- query = "foo" '=:' 'regex' "[mb]oat"
   -- @
-  regex :: Text -> expr TRegex
+  regex :: Text -> expr 'TRegex
 
   -- | A phrase, composed of multiple (non-fuzzy) words, none of which may
   -- contain wildcard characters. Both of these properties are enforced by the
@@ -152,7 +152,7 @@ class SolrExprSYM expr where
   -- query :: 'Solr.Query.SolrQuery'
   -- query = "foo" '=:' (["bar", "baz"] :: 'Solr.Query.SolrExpr' 'TPhrase')
   -- @
-  phrase :: [expr TWord] -> expr TPhrase
+  phrase :: [expr 'TWord] -> expr 'TPhrase
 
   -- | The @\'~\'@ operator, which fuzzes its argument (either a word or phrase)
   -- by a numeric amount.
@@ -168,7 +168,7 @@ class SolrExprSYM expr where
   -- query :: 'Solr.Query.SolrQuery'
   -- query = "foo" '=:' 'phrase' ["bar", "baz", "qux"] '~:' 10
   -- @
-  (~:) :: FuzzableType a => expr a -> Int -> expr TFuzzed
+  (~:) :: FuzzableType a => expr a -> Int -> expr 'TFuzzed
   infix 6 ~:
 
   -- | A range expression.
@@ -180,7 +180,7 @@ class SolrExprSYM expr where
   -- query :: 'Solr.Query.SolrQuery'
   -- query = "foo" '=:' 'incl' ('num' 5) \`to\` 'excl' ('num' 10)
   -- @
-  to :: PrimType a => Boundary (expr a) -> Boundary (expr a) -> expr TRange
+  to :: PrimType a => Boundary (expr a) -> Boundary (expr a) -> expr 'TRange
   infix 6 `to`
 
   -- | The @\'^\'@ operator, which boosts its argument.
@@ -196,7 +196,7 @@ class SolrExprSYM expr where
   -- query :: 'Solr.Query.SolrQuery'
   -- query = "foo" '=:' 'phrase' ["bar", "baz"] '^:' 3.5
   -- @
-  (^:) :: BoostableType a => expr a -> Float -> expr TBoosted
+  (^:) :: BoostableType a => expr a -> Float -> expr 'TBoosted
   infix 6 ^:
 
 
@@ -214,7 +214,7 @@ class SolrExprSYM expr where
 -- query :: 'Solr.Query.SolrQuery'
 -- query = "foo" '=:' 'fuzzy' "bar"
 -- @
-fuzzy :: SolrExprSYM expr => expr TWord -> expr TFuzzed
+fuzzy :: SolrExprSYM expr => expr 'TWord -> expr 'TFuzzed
 fuzzy e = e ~: 2
 
 -- | Short-hand for a greater-than range query.
@@ -231,7 +231,7 @@ fuzzy e = e ~: 2
 -- query :: 'Solr.Query.SolrQuery'
 -- query = "foo" '=:' 'gt' ('num' 5)
 -- @
-gt :: (SolrExprSYM expr, PrimType a) => expr a -> expr TRange
+gt :: (SolrExprSYM expr, PrimType a) => expr a -> expr 'TRange
 gt e = excl e `to` star
 
 -- | Short-hand for a greater-than-or-equal-to range query.
@@ -248,7 +248,7 @@ gt e = excl e `to` star
 -- query :: 'Solr.Query.SolrQuery'
 -- query = "foo" '=:' 'gte' ('num' 5)
 -- @
-gte :: (SolrExprSYM expr, PrimType a) => expr a -> expr TRange
+gte :: (SolrExprSYM expr, PrimType a) => expr a -> expr 'TRange
 gte e = incl e `to` star
 
 -- | Short-hand for a less-than range query.
@@ -265,7 +265,7 @@ gte e = incl e `to` star
 -- query :: 'Solr.Query.SolrQuery'
 -- query = "foo" '=:' 'lt' ('num' 5)
 -- @
-lt :: (SolrExprSYM expr, PrimType a) => expr a -> expr TRange
+lt :: (SolrExprSYM expr, PrimType a) => expr a -> expr 'TRange
 lt e = star `to` excl e
 
 -- | Short-hand for a less-than-or-equal-to range query.
@@ -282,7 +282,7 @@ lt e = star `to` excl e
 -- query :: 'Solr.Query.SolrQuery'
 -- query = "foo" '=:' 'lte' ('num' 5)
 -- @
-lte :: (SolrExprSYM expr, PrimType a) => expr a -> expr TRange
+lte :: (SolrExprSYM expr, PrimType a) => expr a -> expr 'TRange
 lte e = star `to` incl e
 
 
