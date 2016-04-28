@@ -16,3 +16,10 @@ dependencies:
 
 library:
   source-dirs: src
+
+tests:
+  spec:
+    main: test/Spec.hs
+    dependencies:
+      - hspec
+      - solr-query

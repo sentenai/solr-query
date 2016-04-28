@@ -120,7 +120,7 @@ instance SolrExprSYM SolrExpr where
 
 -- | A Solr query.
 data SolrQuery = Query
-  { qparams :: Builder
+  { qparams :: [Builder]
   , qbody   :: Builder
   }
 
@@ -132,7 +132,7 @@ data SolrQuery = Query
 -- around its arguments.
 instance Monoid SolrQuery where
   mempty = Query mempty mempty
-  mappend q1 q2 = Query (qparams q1 <> " " <> qparams q2) (qbody q1 <> " " <> qbody q2)
+  mappend q1 q2 = Query (qparams q1 ++ qparams q2) (qbody q1 <> " " <> qbody q2)
 
 instance SolrQuerySYM SolrExpr SolrQuery where
   data ParamKey SolrQuery a where
@@ -144,22 +144,22 @@ instance SolrQuerySYM SolrExpr SolrQuery where
   f =: e = Query mempty (T.encodeUtf8Builder f <> ":" <> unExpr e)
 
   q1 &&: q2 =
-    Query (qparams q1 <> " " <> qparams q2)
+    Query (qparams q1 ++ qparams q2)
           ("(" <> qbody q1 <> " AND " <> qbody q2 <> ")")
 
   q1 ||: q2 =
-    Query (qparams q1 <> " " <> qparams q2)
+    Query (qparams q1 ++ qparams q2)
           ("(" <> qbody q1 <> " OR " <> qbody q2 <> ")")
 
   q1 -: q2 =
-    Query (qparams q1 <> " " <> qparams q2)
+    Query (qparams q1 ++ qparams q2)
           ("(" <> qbody q1 <> " NOT " <> qbody q2 <> ")")
 
   q ^=: n = Query (qparams q) ("(" <> qbody q <> ")^=" <> bshow n)
 
   neg q = Query (qparams q) ("-" <> qbody q)
 
-  params ps q = Query (spaces (map compileParam ps) <> " " <> qparams q) (qbody q)
+  params ps q = Query (map compileParam ps ++ qparams q) (qbody q)
    where
     compileParam :: Param SolrQuery -> Builder
     compileParam (Param k v) =
@@ -203,7 +203,7 @@ instance SolrQuerySYM SolrExpr SolrFilterQuery where
 
   -- Hm, for now it seems we have to duplicate this logic from SolrQuery.
   params ps q =
-    FQuery (Query (spaces (map compileParam ps) <> " " <> qparams (unFQuery q))
+    FQuery (Query (map compileParam ps ++ qparams (unFQuery q))
                   (qbody (unFQuery q)))
    where
     compileParam :: Param SolrFilterQuery -> Builder
@@ -240,12 +240,11 @@ instance HasParamCost SolrFilterQuery where
 compileSolrQuery :: SolrQuery -> ByteString
 compileSolrQuery q =
   let
-    ps = BS.toLazyByteString (qparams q)
     body = BS.toLazyByteString (qbody q)
   in
-    if BS.null ps
+    if null (qparams q)
       then body
-      else "{!" <> ps <> "}" <> body
+      else "{!" <> BS.toLazyByteString (spaces (qparams q)) <> "}" <> body
 
 -- | Compile a 'SolrFilterQuery' to a lazy 'ByteString'.
 compileSolrFilterQuery :: SolrFilterQuery -> ByteString

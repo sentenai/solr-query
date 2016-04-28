@@ -384,7 +384,7 @@ class SolrExprSYM expr => SolrQuerySYM expr query | query -> expr where
   -- Example:
   --
   -- @
-  -- -- -(foo:bar)
+  -- -- -foo:bar
   -- query :: 'Solr.Query.SolrQuery'
   -- query = 'neg' ("foo" '=:' 'word' "bar")
   -- @
