@@ -6,9 +6,11 @@ name:           solr-query
 version:        0.3.3.0
 synopsis:       Solr query EDSL
 description:    Solr query EDSL
+category:       DSLs
 homepage:       https://github.com/Sentenai/solr-query#readme
 bug-reports:    https://github.com/Sentenai/solr-query/issues
 author:         Sentenai, Inc.
+maintainer:     mitchellwrosen@gmail.com
 copyright:      2016 Sentenai, Inc.
 license:        BSD3
 license-file:   LICENSE
@@ -24,9 +26,9 @@ library
       src
   ghc-options: -Wall
   build-depends:
-      base
-    , bytestring < 0.11
-    , text       > 1.0 && < 1.3
+      base       >= 4    && < 5
+    , bytestring >= 0.10 && < 0.11
+    , text       >= 1.0  && < 1.3
   exposed-modules:
       Solr.Class
       Solr.Param
@@ -42,9 +44,9 @@ test-suite spec
   main-is: test/Spec.hs
   ghc-options: -Wall
   build-depends:
-      base
-    , bytestring < 0.11
-    , text       > 1.0 && < 1.3
+      base       >= 4    && < 5
+    , bytestring >= 0.10 && < 0.11
+    , text       >= 1.0  && < 1.3
     , hspec
     , solr-query
   default-language: Haskell2010

@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP                        #-}
 {-# LANGUAGE DataKinds                  #-}
 {-# LANGUAGE FlexibleInstances          #-}
 {-# LANGUAGE GADTs                      #-}
@@ -61,18 +62,28 @@ import Solr.Class
 import Solr.Param
 import Solr.Type
 
-import Data.ByteString.Builder    (Builder)
 import Data.ByteString.Lazy.Char8 (ByteString)
+#if !MIN_VERSION_base(4,8,0)
+import Data.Monoid                (Monoid(..), (<>))
+#else
 import Data.Monoid                ((<>))
+#endif
 import Data.String                (IsString(..))
 import Data.Text                  (Text)
 import GHC.Exts                   (IsList(..))
 
 import qualified Data.Text                  as T
 import qualified Data.Text.Encoding         as T
-import qualified Data.ByteString.Builder    as BS
 import qualified Data.ByteString.Lazy.Char8 as BS
 
+-- Data.ByteString.Lazy.Builder was renamed to Data.ByteString.Builder in 0.10.2.0
+#if MIN_VERSION_bytestring(0,10,2)
+import Data.ByteString.Builder (Builder)
+import qualified Data.ByteString.Builder as BS
+#else
+import Data.ByteString.Lazy.Builder (Builder)
+import qualified Data.ByteString.Lazy.Builder as BS
+#endif
 
 -- | A Solr expression.
 newtype SolrExpr (t :: SolrType) = Expr { unExpr :: Builder }

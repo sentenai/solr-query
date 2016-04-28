@@ -1,4 +1,5 @@
-{-# LANGUAGE DataKinds #-}
+{-# LANGUAGE ConstraintKinds #-}
+{-# LANGUAGE DataKinds       #-}
 
 -- | This module is an alternative to "Solr.Class" that does not export any
 -- operators, and is intended to be imported qualified, because it contains
