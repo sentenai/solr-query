@@ -5,7 +5,6 @@
 {-# LANGUAGE KindSignatures             #-}
 {-# LANGUAGE MultiParamTypeClasses      #-}
 {-# LANGUAGE OverloadedStrings          #-}
-{-# LANGUAGE StandaloneDeriving         #-}
 {-# LANGUAGE TypeFamilies               #-}
 
 -- | Solr query construction and compilation. You may prefer to import
@@ -64,7 +63,7 @@ import Solr.Type
 
 import Data.ByteString.Builder    (Builder)
 import Data.ByteString.Lazy.Char8 (ByteString)
-import Data.Semigroup
+import Data.Monoid                ((<>))
 import Data.String                (IsString(..))
 import Data.Text                  (Text)
 import GHC.Exts                   (IsList(..))
@@ -131,13 +130,9 @@ data SolrQuery = Query
 --
 -- Due to limited precedence options, ('<>') will typically require parens
 -- around its arguments.
-instance Semigroup SolrQuery where
-  q1 <> q2 = Query (qparams q1 <> " " <> qparams q2) (qbody q1 <> " " <> qbody q2)
-
--- | See @Semigroup@ instance.
 instance Monoid SolrQuery where
   mempty = Query mempty mempty
-  mappend = (<>)
+  mappend q1 q2 = Query (qparams q1 <> " " <> qparams q2) (qbody q1 <> " " <> qbody q2)
 
 instance SolrQuerySYM SolrExpr SolrQuery where
   data ParamKey SolrQuery a where
@@ -183,9 +178,7 @@ instance HasParamOp SolrQuery where
 -- parameters available. All functions polymorphic over 'SolrQuerySYM' will work
 -- with both.
 newtype SolrFilterQuery = FQuery { unFQuery :: SolrQuery }
-
-deriving instance Semigroup SolrFilterQuery
-deriving instance Monoid SolrFilterQuery
+  deriving Monoid
 
 instance SolrQuerySYM SolrExpr SolrFilterQuery where
   data ParamKey SolrFilterQuery a where
