@@ -23,6 +23,8 @@ module Solr.Class
   , gte
   , lt
   , lte
+  , qall
+  , qany
     -- * Local parameters
   , Param(..)
   , (.=)
@@ -36,6 +38,7 @@ module Solr.Class
 import Solr.Type
 
 import Data.Text (Text)
+import Prelude   hiding (all, any)
 
 -- | Solr expression.
 class SolrExprSYM expr where
@@ -400,6 +403,26 @@ class SolrExprSYM expr => SolrQuerySYM expr query | query -> expr where
   -- query = 'params' ['Solr.Query.SolrQuery.paramDefaultField' '.=' "foo"] ('defaultField' ('word' "bar"))
   -- @
   params :: [Param query] -> query -> query
+
+-- | Fold a list of queries with ('&&:').
+--
+-- @
+-- qall [q1,q2,q3] = q1 '&&:' q2 '&&:' q3
+-- @
+qall :: (Monoid query, SolrQuerySYM expr query) => [query] -> query
+qall []  = mempty
+qall [q] = q
+qall (q:qs) = q &&: qall qs
+
+-- | Fold a list of queries with ('||:').
+--
+-- @
+-- 'qall' [q1,q2,q3] = q1 '||:' q2 '||:' q3
+-- @
+qany :: (Monoid query, SolrQuerySYM expr query) => [query] -> query
+qany []  = mempty
+qany [q] = q
+qany (q:qs) = q ||: qall qs
 
 
 -- | A parameter is built from a key and a value, whose type depends on the key.

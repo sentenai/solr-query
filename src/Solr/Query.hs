@@ -25,6 +25,8 @@ module Solr.Query
   , (-:)
   , (^=:)
   , neg
+  , qall
+  , qany
   , params
   -- * Expression type
   , SolrExpr
