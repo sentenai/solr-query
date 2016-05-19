@@ -1,5 +1,5 @@
 name: solr-query
-version: 0.3.3.0
+version: 0.3.4.0
 synopsis: Solr query EDSL
 description: Solr query EDSL
 category: DSLs
