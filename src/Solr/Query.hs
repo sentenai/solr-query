@@ -40,6 +40,9 @@ module Solr.Query
   , (~:)
   , fuzzy
   , to
+  , incl
+  , excl
+  , star
   , gt
   , gte
   , lt
@@ -130,53 +133,47 @@ instance SolrExprSYM SolrExpr where
 
 
 -- | A Solr query.
-data SolrQuery = Query
-  { qparams :: [Builder]
-  , qbody   :: Builder
-  }
+newtype SolrQuery = Query { unQuery :: Builder }
 
 -- | Appending Solr queries simply puts a space between them. To Solr, this is
 -- equivalent to combining them with \'OR\'. However, this behavior can be
 -- adjusted on a per-query basis using 'paramOp'.
 --
+-- Note that 'mempty' is only useful for expressing the truly empty query; it
+-- does not combine sensibly with larger queries.
+--
 -- Due to limited precedence options, ('<>') will typically require parens
 -- around its arguments.
 instance Monoid SolrQuery where
-  mempty = Query mempty mempty
-  mappend q1 q2 = Query (qparams q1 ++ qparams q2) (qbody q1 <> " " <> qbody q2)
+  mempty = Query mempty
+  mappend q1 q2 = Query (unQuery q1 <> " " <> unQuery q2)
 
 instance SolrQuerySYM SolrExpr SolrQuery where
   data ParamKey SolrQuery a where
     SolrQueryDefaultField :: ParamKey SolrQuery Text
     SolrQueryOp           :: ParamKey SolrQuery Text
 
-  defaultField e = Query mempty (unExpr e)
+  defaultField e = Query (unExpr e)
 
-  f =: e = Query mempty (T.encodeUtf8Builder f <> ":" <> unExpr e)
+  f =: e = Query (T.encodeUtf8Builder f <> ":" <> unExpr e)
 
-  q1 &&: q2 =
-    Query (qparams q1 ++ qparams q2)
-          ("(" <> qbody q1 <> " AND " <> qbody q2 <> ")")
+  q1 &&: q2 = Query ("(" <> unQuery q1 <> " AND " <> unQuery q2 <> ")")
 
-  q1 ||: q2 =
-    Query (qparams q1 ++ qparams q2)
-          ("(" <> qbody q1 <> " OR " <> qbody q2 <> ")")
+  q1 ||: q2 = Query ("(" <> unQuery q1 <> " OR " <> unQuery q2 <> ")")
 
-  q1 -: q2 =
-    Query (qparams q1 ++ qparams q2)
-          ("(" <> qbody q1 <> " NOT " <> qbody q2 <> ")")
+  q1 -: q2 = Query ("(" <> unQuery q1 <> " NOT " <> unQuery q2 <> ")")
 
-  q ^=: n = Query (qparams q) ("(" <> qbody q <> ")^=" <> bshow n)
+  q ^=: n = Query ("(" <> unQuery q <> ")^=" <> bshow n)
 
-  neg q = Query (qparams q) ("-" <> qbody q)
+  neg q = Query ("-" <> unQuery q)
 
-  params ps q = Query (map compileParam ps ++ qparams q) (qbody q)
+  params ps q = Query ("{!" <> spaces (map compileParam ps) <> "}" <> unQuery q)
    where
     compileParam :: Param SolrQuery -> Builder
     compileParam (Param k v) =
       case k of
-        SolrQueryDefaultField -> "df=" <> T.encodeUtf8Builder v
-        SolrQueryOp -> "q.op=" <> T.encodeUtf8Builder v
+        SolrQueryDefaultField -> "df="   <> T.encodeUtf8Builder v
+        SolrQueryOp           -> "q.op=" <> T.encodeUtf8Builder v
 
 instance HasParamDefaultField SolrQuery where
   paramDefaultField = SolrQueryDefaultField
@@ -214,16 +211,15 @@ instance SolrQuerySYM SolrExpr SolrFilterQuery where
 
   -- Hm, for now it seems we have to duplicate this logic from SolrQuery.
   params ps q =
-    FQuery (Query (map compileParam ps ++ qparams (unFQuery q))
-                  (qbody (unFQuery q)))
+    FQuery (Query ("{!" <> spaces (map compileParam ps) <> "}" <> unQuery (unFQuery q)))
    where
     compileParam :: Param SolrFilterQuery -> Builder
     compileParam (Param k v) =
       case k of
-        SolrFilterQueryDefaultField -> "df=" <> T.encodeUtf8Builder v
-        SolrFilterQueryOp -> "q.op=" <> T.encodeUtf8Builder v
-        SolrFilterQueryCache -> "cache=" <> if v then "true" else "false"
-        SolrFilterQueryCost -> "cost=" <> bshow v
+        SolrFilterQueryDefaultField -> "df="    <> T.encodeUtf8Builder v
+        SolrFilterQueryOp           -> "q.op="  <> T.encodeUtf8Builder v
+        SolrFilterQueryCache        -> "cache=" <> if v then "true" else "false"
+        SolrFilterQueryCost         -> "cost="  <> bshow v
 
 instance HasParamDefaultField SolrFilterQuery where
   paramDefaultField = SolrFilterQueryDefaultField
@@ -238,7 +234,10 @@ instance HasParamCost SolrFilterQuery where
   paramCost = SolrFilterQueryCost
 
 
--- | Compile a 'SolrQuery' to a lazy 'ByteString'.
+-- | Compile a 'SolrQuery' to a lazy 'ByteString'. Note that the DSL admits many
+-- ways to create an invalid Solr query; that is, if it compiles, it doesn't
+-- necessarily work. For example, multiple 'neg's on a query, multiple 'params',
+-- using 'mempty' inside a larger query, etc.
 --
 -- Example:
 --
@@ -246,20 +245,14 @@ instance HasParamCost SolrFilterQuery where
 -- λ let ps = ['paramDefaultField' '.=' "body"]
 -- λ let q = "foo" =: 'phrase' ["bar", "baz"] '~:' 5 '&&:' 'defaultField' ('regex' "wh?at")
 -- λ 'compileSolrQuery' ('params' ps q)
--- "{!df=body }(foo:\\"bar baz\\"~5 AND \/wh?t\/)"
+-- "q={!df=body}(foo:\\"bar baz\\"~5 AND \/wh?t\/)"
 -- @
 compileSolrQuery :: SolrQuery -> ByteString
-compileSolrQuery q =
-  let
-    body = BS.toLazyByteString (qbody q)
-  in
-    if null (qparams q)
-      then body
-      else "{!" <> BS.toLazyByteString (spaces (qparams q)) <> "}" <> body
+compileSolrQuery = BS.toLazyByteString . ("q=" <>) . unQuery
 
 -- | Compile a 'SolrFilterQuery' to a lazy 'ByteString'.
 compileSolrFilterQuery :: SolrFilterQuery -> ByteString
-compileSolrFilterQuery = compileSolrQuery . unFQuery
+compileSolrFilterQuery = BS.toLazyByteString . ("fq=" <>) . unQuery . unFQuery
 
 
 bshow :: Show a => a -> Builder
