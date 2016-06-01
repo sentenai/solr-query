@@ -40,8 +40,9 @@ import Solr.Type
 
 import qualified Solr.Class as Solr
 
-import Data.Text (Text)
-import Prelude   hiding (all, and, any, not, or)
+import Data.Monoid (Monoid(..))
+import Data.Text   (Text)
+import Prelude     hiding (all, and, any, not, or)
 
 
 -- | Named version of ('Solr.Class.~:').

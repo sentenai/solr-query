@@ -37,8 +37,9 @@ module Solr.Class
 
 import Solr.Type
 
-import Data.Text (Text)
-import Prelude   hiding (all, any)
+import Data.Monoid (Monoid(..))
+import Data.Text   (Text)
+import Prelude     hiding (all, any)
 
 -- | Solr expression.
 class SolrExprSYM expr where
