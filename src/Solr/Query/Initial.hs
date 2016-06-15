@@ -9,6 +9,8 @@
 -- | An initial encoding of a Solr query. This is an alternative interpretation
 -- of the Solr language that is more amenable to parsing from arbitrary user
 -- input.
+--
+-- Warning: This module is not very complete, or tested.
 
 module Solr.Query.Initial
   (

@@ -38,39 +38,27 @@ import Solr.Type
 import Data.Text (Text)
 import Prelude   hiding (all, any)
 
+-- $setup
+-- >>> import Solr.Query
+
 -- | Solr expression.
 class SolrExprSYM expr where
   -- | A @num@ expression.
   --
-  -- Example:
-  --
-  -- @
-  -- -- foo:5
-  -- query :: 'Solr.Query.SolrQuery'
-  -- query = "foo" '=:' 'num' 5
-  -- @
+  -- >>> "foo" =: num 5 :: SolrQuery
+  -- q=foo:5.0
   num :: Float -> expr 'TNum
 
   -- | A @true@ expression.
   --
-  -- Example:
-  --
-  -- @
-  -- -- foo:true
-  -- query :: 'Solr.Query.SolrQuery'
-  -- query = "foo" '=:' 'true'
-  -- @
+  -- >>> "foo" =: true :: SolrQuery
+  -- q=foo:true
   true :: expr 'TBool
 
   -- | A @false@ expression.
   --
-  -- Example:
-  --
-  -- @
-  -- -- foo:false
-  -- query :: 'Solr.Query.SolrQuery'
-  -- query = "foo" '=:' 'false'
-  -- @
+  -- >>> "foo" =: false :: SolrQuery
+  -- q=foo:false
   false :: expr 'TBool
 
   -- | A single word. Must /not/ contain any spaces, wildcard characters
@@ -81,17 +69,8 @@ class SolrExprSYM expr where
   -- 'Solr.Query.SolrExpr' 'TWord', but usually an explicit type signature
   -- will be required (at the interpretation site or earlier).
   --
-  -- Example:
-  --
-  -- @
-  -- -- foo:bar
-  -- query :: 'Solr.Query.SolrQuery'
-  -- query = "foo" '=:' 'word' "bar"
-  --
-  -- -- foo:bar
-  -- query :: 'Solr.Query.SolrQuery'
-  -- query = "foo" '=:' ("bar" :: 'Solr.Query.SolrExpr' 'TWord')
-  -- @
+  -- >>> "foo" =: word "bar" :: SolrQuery
+  -- q=foo:bar
   word :: Text -> expr 'TWord
 
   -- | A single word that may contain wildcard characters (@\'?\'@ and @\'*\'@),
@@ -99,13 +78,8 @@ class SolrExprSYM expr where
   -- also /not/ contain any spaces or tildes (@\'~\'@), though this is not
   -- enforced by the type system.
   --
-  -- Example:
-  --
-  -- @
-  -- -- foo:b?r
-  -- query :: 'Solr.Query.SolrQuery'
-  -- query = "foo" '=:' 'wild' "b?r"
-  -- @
+  -- >>> "foo" =: wild "b?r" :: SolrQuery
+  -- q=foo:b?r
   wild :: Text -> expr 'TWild
 
   -- | A regular expression, whose syntax is described by
@@ -114,11 +88,8 @@ class SolrExprSYM expr where
   -- Note that the leading and trailing @\'/\'@ must be omitted. The regex
   -- innards are not type checked in any way.
   --
-  -- @
-  -- -- foo:\/[mb]oat\/
-  -- query :: 'Solr.Query.SolrQuery'
-  -- query = "foo" '=:' 'regex' "[mb]oat"
-  -- @
+  -- >>> "foo" =: regex "[mb]oat" :: SolrQuery
+  -- q=foo:/[mb]oat/
   regex :: Text -> expr 'TRegex
 
   -- | A phrase, composed of multiple (non-fuzzy) words, none of which may
@@ -126,77 +97,42 @@ class SolrExprSYM expr where
   -- type system, as long as the words themselves adhere to the 'word' contract.
   -- The list should not be empty.
   --
-  -- Note that sometimes you may use the 'GHC.Exts.IsList' instance for
-  -- 'Solr.Query.SolrExpr' 'TPhrase', but usually an explicit type signature
-  -- will be required (at the interpretation site or earlier).
-  --
-  -- Example:
-  --
-  -- @
-  -- -- foo:"bar baz"
-  -- query :: 'Solr.Query.SolrQuery'
-  -- query = "foo" '=:' 'phrase' ["bar", "baz"] -- ok
-  --
-  -- -- foo:"bar b?z" (an invalid Solr query)
-  -- query :: 'Solr.Query.SolrQuery'
-  -- query = "foo" '=:' 'phrase' ["bar", 'wild' "b?z"] -- type error
-  --
-  -- -- foo:"bar b?z" (an invalid Solr query)
-  -- query :: 'Solr.Query.SolrQuery'
-  -- query = "foo" '=:' 'phrase' ["bar", "b?z"] -- breaks 'word' contract
-  -- @
-  --
-  -- Or, with @OverloadedLists@:
-  --
-  -- @
-  -- -- foo:"bar baz"
-  -- query :: 'Solr.Query.SolrQuery'
-  -- query = "foo" '=:' (["bar", "baz"] :: 'Solr.Query.SolrExpr' 'TPhrase')
-  -- @
+  -- >>> "foo" =: phrase ["bar", "baz"] :: SolrQuery
+  -- q=foo:"bar baz"
   phrase :: [expr 'TWord] -> expr 'TPhrase
 
   -- | The @\'~\'@ operator, which fuzzes its argument (either a word or phrase)
   -- by a numeric amount.
   --
-  -- Example:
+  -- >>> "foo" =: word "bar" ~: 1 :: SolrQuery
+  -- q=foo:bar~1
   --
-  -- @
-  -- -- foo:bar~1
-  -- query :: 'Solr.Query.SolrQuery'
-  -- query = "foo" '=:' 'word' "bar" '~:' 1
-  --
-  -- -- foo:"bar baz qux"~10
-  -- query :: 'Solr.Query.SolrQuery'
-  -- query = "foo" '=:' 'phrase' ["bar", "baz", "qux"] '~:' 10
-  -- @
+  -- >>> "foo" =: phrase ["bar", "baz", "qux"] ~: 10 :: SolrQuery
+  -- q=foo:"bar baz qux"~10
   (~:) :: FuzzableType a => expr a -> Int -> expr 'TFuzzed
   infix 6 ~:
 
   -- | A range expression.
   --
-  -- Example:
+  -- >>> "foo" =: incl (num 5) `to` excl (num 10) :: SolrQuery
+  -- q=foo:[5.0 TO 10.0}
   --
-  -- @
-  -- -- foo:[5 TO 10}
-  -- query :: 'Solr.Query.SolrQuery'
-  -- query = "foo" '=:' 'incl' ('num' 5) \`to\` 'excl' ('num' 10)
-  -- @
+  -- >>> "foo" =: excl (word "bar") `to` star :: SolrQuery
+  -- q=foo:{bar TO *]
+  --
+  -- -- Note the explicit type signature required for @[* TO *]@ queries
+  -- >>> "foo" =: star `to` (star :: Boundary (SolrExpr 'TNum)) :: SolrQuery
+  -- q=foo:[* TO *]
   to :: PrimType a => Boundary (expr a) -> Boundary (expr a) -> expr 'TRange
   infix 6 `to`
 
   -- | The @\'^\'@ operator, which boosts its argument.
   --
-  -- Example:
+  -- >>> "foo" =: word "bar" ^: 3.5 :: SolrQuery
+  -- q=foo:bar^3.5
   --
-  -- @
-  -- -- foo:bar^3.5
-  -- query :: 'Solr.Query.SolrQuery'
-  -- query = "foo" '=:' 'word' "bar" '^:' 3.5
-  --
-  -- -- foo:"bar baz"^3.5
-  -- query :: 'Solr.Query.SolrQuery'
-  -- query = "foo" '=:' 'phrase' ["bar", "baz"] '^:' 3.5
-  -- @
+  -- >>> "foo" =: phrase ["bar", "baz"] ^: 3.5 :: SolrQuery
+  -- q=foo:"bar baz"^3.5
   (^:) :: BoostableType a => expr a -> Float -> expr 'TBoosted
   infix 6 ^:
 
@@ -208,13 +144,8 @@ class SolrExprSYM expr where
 -- 'fuzzy' e = e '~:' 2
 -- @
 --
--- Example:
---
--- @
--- -- foo:bar~
--- query :: 'Solr.Query.SolrQuery'
--- query = "foo" '=:' 'fuzzy' "bar"
--- @
+-- >>> "foo" =: fuzzy "bar" :: SolrQuery
+-- q=foo:bar~2
 fuzzy :: SolrExprSYM expr => expr 'TWord -> expr 'TFuzzed
 fuzzy e = e ~: 2
 
@@ -224,14 +155,8 @@ fuzzy e = e ~: 2
 -- 'gt' e = 'excl' e \`to\` 'star'
 -- @
 --
--- Example:
---
--- @
--- -- foo:>5
--- -- foo:{5 TO *]
--- query :: 'Solr.Query.SolrQuery'
--- query = "foo" '=:' 'gt' ('num' 5)
--- @
+-- >>> "foo" =: gt (num 5) :: SolrQuery
+-- q=foo:{5.0 TO *]
 gt :: (SolrExprSYM expr, PrimType a) => expr a -> expr 'TRange
 gt e = excl e `to` star
 
@@ -241,14 +166,8 @@ gt e = excl e `to` star
 -- 'gte' e = 'incl' e \`to\` 'star'
 -- @
 --
--- Example:
---
--- @
--- -- foo:>=5
--- -- foo:[5 TO *]
--- query :: 'Solr.Query.SolrQuery'
--- query = "foo" '=:' 'gte' ('num' 5)
--- @
+-- >>> "foo" =: gte (num 5) :: SolrQuery
+-- q=foo:[5.0 TO *]
 gte :: (SolrExprSYM expr, PrimType a) => expr a -> expr 'TRange
 gte e = incl e `to` star
 
@@ -258,14 +177,8 @@ gte e = incl e `to` star
 --  'lt' e = 'star' \`to\` 'excl' e
 -- @
 --
--- Example:
---
--- @
--- -- foo:<5
--- -- foo:[* TO 5}
--- query :: 'Solr.Query.SolrQuery'
--- query = "foo" '=:' 'lt' ('num' 5)
--- @
+-- >>> "foo" =: lt (num 5) :: SolrQuery
+-- q=foo:[* TO 5.0}
 lt :: (SolrExprSYM expr, PrimType a) => expr a -> expr 'TRange
 lt e = star `to` excl e
 
@@ -275,14 +188,8 @@ lt e = star `to` excl e
 -- 'lte' e = 'star' \`to\` 'incl' e
 -- @
 --
--- Example:
---
--- @
--- -- foo:<=5
--- -- foo:[* TO 5]
--- query :: 'Solr.Query.SolrQuery'
--- query = "foo" '=:' 'lte' ('num' 5)
--- @
+-- >>> "foo" =: lte (num 5) :: SolrQuery
+-- q=foo:[* TO 5.0]
 lte :: (SolrExprSYM expr, PrimType a) => expr a -> expr 'TRange
 lte e = star `to` incl e
 
@@ -304,102 +211,57 @@ class SolrExprSYM expr => SolrQuerySYM expr query | query -> expr where
 
   -- | A default field query.
   --
-  -- Example:
-  --
-  -- @
-  -- -- foo
-  -- query :: 'Solr.Query.SolrQuery'
-  -- query = 'defaultField' ('word' "foo")
-  -- @
+  -- >>> defaultField (word "foo") :: SolrQuery
+  -- q=foo
   defaultField :: expr a -> query
 
   -- | A field query.
   --
-  -- Example:
-  --
-  -- @
-  -- -- foo:bar
-  -- query :: 'Solr.Query.SolrQuery'
-  -- query = "foo" '=:' 'word' "bar"
-  -- @
+  -- >>> "foo" =: word "bar" :: SolrQuery
+  -- q=foo:bar
   (=:) :: Text -> expr a -> query
   infix 5 =:
 
   -- | An @AND@ query.
   --
-  -- Example:
-  --
-  -- @
-  -- -- foo:bar AND baz:qux
-  -- query :: 'Solr.Query.SolrQuery'
-  -- query = "foo" '=:' 'word' "bar"
-  --     '&&:' "baz" '=:' 'word' "qux"
-  -- @
+  -- >>> "foo" =: word "bar" &&: "baz" =: word "qux" :: SolrQuery
+  -- q=(foo:bar AND baz:qux)
   (&&:) :: query -> query -> query
   infixr 3 &&:
 
   -- | An @OR@ query.
   --
-  -- Example:
-  --
-  -- @
-  -- -- foo:bar OR baz:qux
-  -- query :: 'Solr.Query.SolrQuery'
-  -- query = "foo" '=:' 'word' "bar"
-  --     '||:' "baz" '=:' 'word' "qux"
-  -- @
+  -- >>> "foo" =: word "bar" ||: "baz" =: word "qux" :: SolrQuery
+  -- q=(foo:bar OR baz:qux)
   (||:) :: query -> query -> query
   infixr 2 ||:
 
   -- | A @NOT@, @\'!\'@, or @\'-\'@ query.
   --
-  -- Example:
-  --
-  -- @
-  -- -- foo:bar NOT baz:qux
-  -- query :: 'Solr.Query.SolrQuery'
-  -- query = "foo" '=:' 'word' "bar"
-  --      '-:' "baz" '=:' 'word' "qux"
-  -- @
+  -- >>> "foo" =: word "bar" -: "baz" =: word "qux" :: SolrQuery
+  -- q=(foo:bar NOT baz:qux)
   (-:) :: query -> query -> query
   infixr 1 -:
 
   -- | The @\'^=\'@ constant score operator.
   --
-  -- This is given right-fixity to reject queries like @q ^= 1 ^= 2@, which may
-  -- very well be a valid Solr query (I haven't tested), but are nonetheless
-  -- nonsense.
+  -- This is given right-fixity to reject queries like @q ^= 1 ^= 2@.
   --
-  -- Example:
-  --
-  -- @
-  -- -- (foo:bar)^=3.5
-  -- query :: 'Solr.Query.SolrQuery'
-  -- query = "foo" '=:' 'word' "bar" '^=:' 3.5
-  -- @
+  -- >>> "foo" =: word "bar" ^=: 3.5 :: SolrQuery
+  -- q=foo:bar^=3.5
   (^=:) :: query -> Float -> query
   infixr 4 ^=:
 
   -- | Negate a query.
   --
-  -- Example:
-  --
-  -- @
-  -- -- -foo:bar
-  -- query :: 'Solr.Query.SolrQuery'
-  -- query = 'neg' ("foo" '=:' 'word' "bar")
-  -- @
+  -- >>> neg ("foo" =: word "bar") :: SolrQuery
+  -- q=-foo:bar
   neg :: query -> query
 
   -- | Add local parameters to a query.
   --
-  -- Example:
-  --
-  -- @
-  -- -- {!df=foo}bar
-  -- query :: 'Solr.Query.SolrQuery'
-  -- query = 'params' ['Solr.Query.SolrQuery.paramDefaultField' '.=' "foo"] ('defaultField' ('word' "bar"))
-  -- @
+  -- >>> params [paramDefaultField .= "foo"] (defaultField (word "bar")) :: SolrQuery
+  -- q={!df=foo}bar
   params :: [Param query] -> query -> query
 
 

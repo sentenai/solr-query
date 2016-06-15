@@ -41,7 +41,7 @@ spec =
     it "&&:"             (test ("foo" =: word "bar" &&: "baz" =: word "qux")     "q=(foo:bar AND baz:qux)")
     it "||:"             (test ("foo" =: word "bar" ||: "baz" =: word "qux")     "q=(foo:bar OR baz:qux)")
     it "-:"              (test ("foo" =: word "bar" -: "baz" =: word "qux")      "q=(foo:bar NOT baz:qux)")
-    it "^=:"             (test ("foo" =: word "bar" ^=: 3.5)                     "q=(foo:bar)^=3.5")
+    it "^=:"             (test ("foo" =: word "bar" ^=: 3.5)                     "q=foo:bar^=3.5")
     it "neg"             (test (neg ("foo" =: word "bar"))                       "q=-foo:bar")
     it "zero params"     (test (params [] (defaultField (word "bar")))           "q={!}bar")
     it "one param"       (test (params ps1 (defaultField (word "bar")))          "q={!df=foo}bar")

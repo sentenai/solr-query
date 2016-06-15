@@ -17,7 +17,6 @@ module Solr.Query
     SolrQuery
   , SolrFilterQuery
   -- * Query construction
-  -- $note-simplicity
   , defaultField
   , (=:)
   , (&&:)
@@ -29,7 +28,6 @@ module Solr.Query
   -- * Expression type
   , SolrExpr
   -- * Expression construction
-  -- $note-simplicity
   , num
   , true
   , false
@@ -65,36 +63,31 @@ import Solr.Class
 import Solr.Param
 import Solr.Type
 
-import Data.ByteString.Lazy.Char8 (ByteString)
-import Data.Semigroup             (Semigroup(..))
-import Data.String                (IsString(..))
-import Data.Text                  (Text)
-import GHC.Exts                   (IsList(..))
+import Data.Semigroup       (Semigroup(..))
+import Data.String          (IsString(..))
+import Data.Text            (Text)
 
-import qualified Data.Text                  as T
-import qualified Data.Text.Encoding         as T
-import qualified Data.ByteString.Lazy.Char8 as BS
+import qualified Data.ByteString.Lazy    as LByteString
+import qualified Data.Text               as Text
+import qualified Data.Text.Encoding      as Text
+import qualified Data.Text.Lazy          as LText
+import qualified Data.Text.Lazy.Encoding as LText
+import qualified Text.Show.ByteString    as Text.Show.ByteString
 
 -- Data.ByteString.Lazy.Builder was renamed to Data.ByteString.Builder in 0.10.2.0
 #if MIN_VERSION_bytestring(0,10,2)
 import Data.ByteString.Builder (Builder)
-import qualified Data.ByteString.Builder as BS
+import qualified Data.ByteString.Builder as Builder
 #else
 import Data.ByteString.Lazy.Builder (Builder)
-import qualified Data.ByteString.Lazy.Builder as BS
+import qualified Data.ByteString.Lazy.Builder as Builder
 #endif
 
 -- | A Solr expression.
 newtype SolrExpr (t :: SolrType) = Expr { unExpr :: Builder }
 
 instance IsString (SolrExpr 'TWord) where
-  fromString s = word (T.pack s)
-
-instance IsList (SolrExpr 'TPhrase) where
-  type Item (SolrExpr 'TPhrase) = SolrExpr 'TWord
-
-  fromList = phrase
-  toList = map (Expr . BS.lazyByteString) . BS.words . BS.toLazyByteString . unExpr
+  fromString s = word (Text.pack s)
 
 instance SolrExprSYM SolrExpr where
   num n = Expr (bshow n)
@@ -103,11 +96,11 @@ instance SolrExprSYM SolrExpr where
 
   false = Expr "false"
 
-  word s = Expr (T.encodeUtf8Builder s)
+  word s = Expr (Text.encodeUtf8Builder s)
 
-  wild s = Expr (T.encodeUtf8Builder s)
+  wild s = Expr (Text.encodeUtf8Builder s)
 
-  regex s = Expr ("/" <> T.encodeUtf8Builder s <> "/")
+  regex s = Expr ("/" <> Text.encodeUtf8Builder s <> "/")
 
   phrase ss = Expr ("\"" <> spaces (map unExpr ss) <> "\"")
 
@@ -116,20 +109,24 @@ instance SolrExprSYM SolrExpr where
   to b1 b2 = Expr (lhs b1 <> " TO " <> rhs b2)
    where
     lhs :: Boundary (SolrExpr a) -> Builder
-    lhs (Inclusive e) = BS.char8 '[' <> unExpr e
-    lhs (Exclusive e) = BS.char8 '{' <> unExpr e
-    lhs Star          = BS.lazyByteString "[*"
+    lhs (Inclusive e) = Builder.char8 '[' <> unExpr e
+    lhs (Exclusive e) = Builder.char8 '{' <> unExpr e
+    lhs Star          = Builder.lazyByteString "[*"
 
     rhs :: Boundary (SolrExpr a) -> Builder
-    rhs (Inclusive e) = unExpr e <> BS.char8 ']'
-    rhs (Exclusive e) = unExpr e <> BS.char8 '}'
-    rhs Star          = BS.lazyByteString "*]"
+    rhs (Inclusive e) = unExpr e <> Builder.char8 ']'
+    rhs (Exclusive e) = unExpr e <> Builder.char8 '}'
+    rhs Star          = Builder.lazyByteString "*]"
 
   e ^: n = Expr (unExpr e <> "^" <> bshow n)
 
 
 -- | A Solr query.
 newtype SolrQuery = Query { unQuery :: Builder }
+
+-- | For debugging. Calls 'compileSolrQuery'.
+instance Show SolrQuery where
+  show = showb . compileSolrQuery
 
 -- | Appending Solr queries simply puts a space between them. To Solr, this is
 -- equivalent to combining them with \'OR\'. However, this behavior can be
@@ -147,7 +144,7 @@ instance SolrQuerySYM SolrExpr SolrQuery where
 
   defaultField e = Query (unExpr e)
 
-  f =: e = Query (T.encodeUtf8Builder f <> ":" <> unExpr e)
+  f =: e = Query (Text.encodeUtf8Builder f <> ":" <> unExpr e)
 
   q1 &&: q2 = Query ("(" <> unQuery q1 <> " AND " <> unQuery q2 <> ")")
 
@@ -155,7 +152,7 @@ instance SolrQuerySYM SolrExpr SolrQuery where
 
   q1 -: q2 = Query ("(" <> unQuery q1 <> " NOT " <> unQuery q2 <> ")")
 
-  q ^=: n = Query ("(" <> unQuery q <> ")^=" <> bshow n)
+  q ^=: n = Query (unQuery q <> "^=" <> bshow n)
 
   neg q = Query ("-" <> unQuery q)
 
@@ -164,8 +161,8 @@ instance SolrQuerySYM SolrExpr SolrQuery where
     compileParam :: Param SolrQuery -> Builder
     compileParam (Param k v) =
       case k of
-        SolrQueryDefaultField -> "df="   <> T.encodeUtf8Builder v
-        SolrQueryOp           -> "q.op=" <> T.encodeUtf8Builder v
+        SolrQueryDefaultField -> "df="   <> Text.encodeUtf8Builder v
+        SolrQueryOp           -> "q.op=" <> Text.encodeUtf8Builder v
 
 instance HasParamDefaultField SolrQuery where
   paramDefaultField = SolrQueryDefaultField
@@ -179,6 +176,10 @@ instance HasParamOp SolrQuery where
 -- with both.
 newtype SolrFilterQuery = FQuery { unFQuery :: SolrQuery }
   deriving Semigroup
+
+-- | For debugging. Calls 'compileSolrFilterQuery'.
+instance Show SolrFilterQuery where
+  show = showb . compileSolrFilterQuery
 
 instance SolrQuerySYM SolrExpr SolrFilterQuery where
   data ParamKey SolrFilterQuery a where
@@ -208,8 +209,8 @@ instance SolrQuerySYM SolrExpr SolrFilterQuery where
     compileParam :: Param SolrFilterQuery -> Builder
     compileParam (Param k v) =
       case k of
-        SolrFilterQueryDefaultField -> "df="    <> T.encodeUtf8Builder v
-        SolrFilterQueryOp           -> "q.op="  <> T.encodeUtf8Builder v
+        SolrFilterQueryDefaultField -> "df="    <> Text.encodeUtf8Builder v
+        SolrFilterQueryOp           -> "q.op="  <> Text.encodeUtf8Builder v
         SolrFilterQueryCache        -> "cache=" <> if v then "true" else "false"
         SolrFilterQueryCost         -> "cost="  <> bshow v
 
@@ -226,37 +227,35 @@ instance HasParamCost SolrFilterQuery where
   paramCost = SolrFilterQueryCost
 
 
--- | Compile a 'SolrQuery' to a lazy 'ByteString'. Note that the DSL admits many
--- ways to create an invalid Solr query; that is, if it compiles, it doesn't
--- necessarily work. For example, multiple 'neg's on a query, multiple 'params',
--- etc.
+-- | Compile a 'SolrQuery' to a lazy 'ByteString'.
 --
--- Example:
+-- Note that the DSL admits many ways to create an invalid Solr query; that is,
+-- if it compiles, it doesn't necessarily work. For example, multiple 'neg's on
+-- a query, multiple 'params', etc.
 --
--- @
--- λ let ps = ['paramDefaultField' '.=' "body"]
--- λ let q = "foo" =: 'phrase' ["bar", "baz"] '~:' 5 '&&:' 'defaultField' ('regex' "wh?at")
--- λ 'compileSolrQuery' ('params' ps q)
--- "q={!df=body}(foo:\\"bar baz\\"~5 AND \/wh?t\/)"
--- @
-compileSolrQuery :: SolrQuery -> ByteString
-compileSolrQuery = BS.toLazyByteString . ("q=" <>) . unQuery
+-- >>> let ps = [paramDefaultField .= "body"]
+-- >>> let q = "foo" =: phrase ["bar", "baz"] ~: 5 &&: defaultField (regex "wh?t")
+-- >>> compileSolrQuery (params ps q)
+-- "q={!df=body}(foo:\"bar baz\"~5 AND /wh?t/)"
+compileSolrQuery :: SolrQuery -> LByteString.ByteString
+compileSolrQuery = Builder.toLazyByteString . ("q=" <>) . unQuery
 
 -- | Compile a 'SolrFilterQuery' to a lazy 'ByteString'.
-compileSolrFilterQuery :: SolrFilterQuery -> ByteString
-compileSolrFilterQuery = BS.toLazyByteString . ("fq=" <>) . unQuery . unFQuery
+compileSolrFilterQuery :: SolrFilterQuery -> LByteString.ByteString
+compileSolrFilterQuery = Builder.toLazyByteString . ("fq=" <>) . unQuery . unFQuery
 
 
-bshow :: Show a => a -> Builder
-bshow = BS.lazyByteString . BS.pack . show
+--------------------------------------------------------------------------------
+-- Misc. helpers
+
+bshow :: Text.Show.ByteString.Show a => a -> Builder
+bshow = Builder.lazyByteString . Text.Show.ByteString.show
+
+-- Round-trip through UTF-8 encoded Text because ByteString.Char8 is BAD!
+showb :: LByteString.ByteString -> String
+showb = either show LText.unpack . LText.decodeUtf8'
 
 spaces :: [Builder] -> Builder
 spaces [] = ""
 spaces [w] = w
 spaces (w:ws) = w <> " " <> spaces ws
-
-
--- $note-simplicity
--- For simplicity, the type signatures in the examples below monomorphise the
--- functions to use 'SolrQuery' (and therefore 'SolrExpr', due to the
--- functional dependency).
