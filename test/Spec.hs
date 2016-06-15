@@ -39,7 +39,6 @@ spec =
     it "word ^:"         (test ("foo" =: word "bar" ^: 3)                        "q=foo:bar^3.0")
     it "phrase ^:"       (test ("foo" =: phrase ["bar", "baz"] ^: 3)             "q=foo:\"bar baz\"^3.0")
     it "&&:"             (test ("foo" =: word "bar" &&: "baz" =: word "qux")     "q=(foo:bar AND baz:qux)")
-    it "&&: mempty"      (test ("foo" =: word "bar" &&: mempty)                  "q=(foo:bar AND )")
     it "||:"             (test ("foo" =: word "bar" ||: "baz" =: word "qux")     "q=(foo:bar OR baz:qux)")
     it "-:"              (test ("foo" =: word "bar" -: "baz" =: word "qux")      "q=(foo:bar NOT baz:qux)")
     it "^=:"             (test ("foo" =: word "bar" ^=: 3.5)                     "q=(foo:bar)^=3.5")
@@ -47,12 +46,6 @@ spec =
     it "zero params"     (test (params [] (defaultField (word "bar")))           "q={!}bar")
     it "one param"       (test (params ps1 (defaultField (word "bar")))          "q={!df=foo}bar")
     it "two params"      (test (params ps2 (defaultField (word "bar")))          "q={!df=foo q.op=FOO}bar")
-    it "qall []"         (test (qall [])                                         "q=")
-    it "qall [q]"        (test (qall ["foo" =: word "bar"])                      "q=foo:bar")
-    it "qall [q1,q2]"    (test (qall ["foo" =: word "bar", "baz" =: word "qux"]) "q=(foo:bar AND baz:qux)")
-    it "qany []"         (test (qany [])                                         "q=")
-    it "qany [q]"        (test (qany ["foo" =: word "bar"])                      "q=foo:bar")
-    it "qany [q1,q2]"    (test (qany ["foo" =: word "bar", "baz" =: word "qux"]) "q=(foo:bar OR baz:qux)")
  where
   ps1 = [paramDefaultField .= "foo"]
   ps2 = [paramDefaultField .= "foo", paramOp .= "FOO"]

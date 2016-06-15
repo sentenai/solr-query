@@ -29,8 +29,6 @@ module Solr.Qualified.Class
   , or
   , not
   , score
-  , all
-  , any
   -- * Re-exports
   , module Solr.Class
   ) where
@@ -40,9 +38,8 @@ import Solr.Type
 
 import qualified Solr.Class as Solr
 
-import Data.Monoid (Monoid(..))
-import Data.Text   (Text)
-import Prelude     hiding (all, and, any, not, or)
+import Data.Text (Text)
+import Prelude   hiding (all, and, any, not, or)
 
 
 -- | Named version of ('Solr.Class.~:').
@@ -76,11 +73,3 @@ infixr 1 `not`
 score :: SolrQuerySYM expr query => query -> Float -> query
 score = (Solr.^=:)
 infixr 4 `score`
-
--- | Renamed version of ('Solr.Class.qall').
-all :: (Monoid query, SolrQuerySYM expr query) => [query] -> query
-all = Solr.qall
-
--- | Renamed version of ('Solr.Class.qany).
-any :: (Monoid query, SolrQuerySYM expr query) => [query] -> query
-any = Solr.qany

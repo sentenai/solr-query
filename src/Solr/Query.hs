@@ -25,8 +25,6 @@ module Solr.Query
   , (-:)
   , (^=:)
   , neg
-  , qall
-  , qany
   , params
   -- * Expression type
   , SolrExpr
@@ -68,11 +66,7 @@ import Solr.Param
 import Solr.Type
 
 import Data.ByteString.Lazy.Char8 (ByteString)
-#if !MIN_VERSION_base(4,8,0)
-import Data.Monoid                (Monoid(..), (<>))
-#else
-import Data.Monoid                ((<>))
-#endif
+import Data.Semigroup             (Semigroup(..))
 import Data.String                (IsString(..))
 import Data.Text                  (Text)
 import GHC.Exts                   (IsList(..))
@@ -141,14 +135,10 @@ newtype SolrQuery = Query { unQuery :: Builder }
 -- equivalent to combining them with \'OR\'. However, this behavior can be
 -- adjusted on a per-query basis using 'paramOp'.
 --
--- Note that 'mempty' is only useful for expressing the truly empty query; it
--- does not combine sensibly with larger queries.
---
 -- Due to limited precedence options, ('<>') will typically require parens
 -- around its arguments.
-instance Monoid SolrQuery where
-  mempty = Query mempty
-  mappend q1 q2 = Query (unQuery q1 <> " " <> unQuery q2)
+instance Semigroup SolrQuery where
+  q1 <> q2 = Query (unQuery q1 <> " " <> unQuery q2)
 
 instance SolrQuerySYM SolrExpr SolrQuery where
   data ParamKey SolrQuery a where
@@ -188,7 +178,7 @@ instance HasParamOp SolrQuery where
 -- parameters available. All functions polymorphic over 'SolrQuerySYM' will work
 -- with both.
 newtype SolrFilterQuery = FQuery { unFQuery :: SolrQuery }
-  deriving Monoid
+  deriving Semigroup
 
 instance SolrQuerySYM SolrExpr SolrFilterQuery where
   data ParamKey SolrFilterQuery a where
@@ -239,7 +229,7 @@ instance HasParamCost SolrFilterQuery where
 -- | Compile a 'SolrQuery' to a lazy 'ByteString'. Note that the DSL admits many
 -- ways to create an invalid Solr query; that is, if it compiles, it doesn't
 -- necessarily work. For example, multiple 'neg's on a query, multiple 'params',
--- using 'mempty' inside a larger query, etc.
+-- etc.
 --
 -- Example:
 --
