@@ -50,7 +50,7 @@ test-suite doctest
     , bytestring >= 0.10.4 && < 0.11
     , semigroups >= 0.3    && < 0.19
     , text       >= 1.0    && < 1.3
-    , doctest
+    , doctest >= 0.11
     , solr-query
   default-language: Haskell2010
 

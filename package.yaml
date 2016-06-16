@@ -32,5 +32,5 @@ tests:
   doctest:
     main: test/DocTest.hs
     dependencies:
-      - doctest
+      - doctest >= 0.11
       - solr-query
