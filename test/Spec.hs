@@ -1,7 +1,7 @@
 {-# LANGUAGE DataKinds         #-}
 {-# LANGUAGE OverloadedStrings #-}
 
-import Solr.Class
+import Solr.Internal.Class
 import Solr.Query
 import Solr.Type
 
@@ -55,5 +55,5 @@ spec =
   star' = star
 
 
-test :: SolrQuery -> ByteString -> Expectation
+test :: SolrQuery SolrExpr -> ByteString -> Expectation
 test query result = compileSolrQuery query `shouldBe` result

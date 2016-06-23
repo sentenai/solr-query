@@ -4,8 +4,7 @@
 {-# LANGUAGE TypeFamilies    #-}
 
 module Solr.Type
-  (
-  -- * Solr types
+  ( -- * Solr types
     SolrType(..)
   , SSolrType(..)
   , HasSolrType(..)

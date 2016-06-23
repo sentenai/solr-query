@@ -1,5 +1,5 @@
 name: solr-query
-version: 0.3.4.1
+version: 0.3.5.0
 synopsis: Solr query EDSL
 description: Solr query EDSL
 category: DSLs
@@ -19,6 +19,9 @@ dependencies:
 
 library:
   source-dirs: src
+  other-modules:
+    - Builder
+    - Solr.Expr.Internal
   dependencies:
     - bytestring-show >= 0.2 && < 0.4
 
