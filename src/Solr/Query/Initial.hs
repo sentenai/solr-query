@@ -15,14 +15,11 @@
 module Solr.Query.Initial
   (
   -- * Query type
-    SolrQueryI(..)
+    SolrQuery(..)
   -- * Expression type
-  , SolrExprI(..)
+  , SolrExpr(..)
   -- * Query compilation
-  , solrQueryI
-  -- * Untyped ADTs
-  , USolrQueryI(..)
-  , USolrExprI(..)
+  , solrQuery
   -- * Type checking
   , typeCheckSolrQuery
   ) where
@@ -31,22 +28,24 @@ import Solr.Class
 import Solr.Param
 import Solr.Type
 
+import qualified Solr.Query.Initial.Untyped as Untyped
+
 import Data.Text (Text)
 
 -- | A Solr expression.
-data SolrExprI ty where
-  ENum    :: Float -> SolrExprI 'TNum
-  ETrue   :: SolrExprI 'TBool
-  EFalse  :: SolrExprI 'TBool
-  EWord   :: Text -> SolrExprI 'TWord
-  EWild   :: Text -> SolrExprI 'TWild
-  ERegex  :: Text -> SolrExprI 'TRegex
-  EPhrase :: [SolrExprI 'TWord] -> SolrExprI 'TPhrase
-  EFuzz   :: FuzzableType a => SolrExprI a -> Int -> SolrExprI 'TFuzzed
-  ETo     :: PrimType a => Boundary (SolrExprI a) -> Boundary (SolrExprI a) -> SolrExprI 'TRange
-  EBoost  :: BoostableType a => SolrExprI a -> Float -> SolrExprI 'TBoosted
+data SolrExpr ty where
+  ENum    :: Float -> SolrExpr 'TNum
+  ETrue   :: SolrExpr 'TBool
+  EFalse  :: SolrExpr 'TBool
+  EWord   :: Text -> SolrExpr 'TWord
+  EWild   :: Text -> SolrExpr 'TWild
+  ERegex  :: Text -> SolrExpr 'TRegex
+  EPhrase :: [SolrExpr 'TWord] -> SolrExpr 'TPhrase
+  EFuzz   :: FuzzableType a => SolrExpr a -> Int -> SolrExpr 'TFuzzed
+  ETo     :: PrimType a => Boundary (SolrExpr a) -> Boundary (SolrExpr a) -> SolrExpr 'TRange
+  EBoost  :: BoostableType a => SolrExpr a -> Float -> SolrExpr 'TBoosted
 
-instance HasSolrType SolrExprI where
+instance HasSolrType SolrExpr where
   getSolrType (ENum _)     = STNum
   getSolrType ETrue        = STBool
   getSolrType EFalse       = STBool
@@ -58,7 +57,7 @@ instance HasSolrType SolrExprI where
   getSolrType (ETo _ _)    = STRange
   getSolrType (EBoost _ _) = STBoosted
 
-instance SolrExprSYM SolrExprI where
+instance SolrExprSYM SolrExpr where
   num    = ENum
   true   = ETrue
   false  = EFalse
@@ -72,20 +71,20 @@ instance SolrExprSYM SolrExprI where
 
 
 -- | A Solr query.
-data SolrQueryI where
-  QDefaultField :: SolrExprI a -> SolrQueryI
-  QField        :: Text -> SolrExprI a -> SolrQueryI
-  QAnd          :: SolrQueryI -> SolrQueryI -> SolrQueryI
-  QOr           :: SolrQueryI -> SolrQueryI -> SolrQueryI
-  QNot          :: SolrQueryI -> SolrQueryI -> SolrQueryI
-  QScore        :: SolrQueryI -> Float -> SolrQueryI
-  QNeg          :: SolrQueryI -> SolrQueryI
-  QParams       :: [Param SolrQueryI] -> SolrQueryI -> SolrQueryI
+data SolrQuery where
+  QDefaultField :: SolrExpr a -> SolrQuery
+  QField        :: Text -> SolrExpr a -> SolrQuery
+  QAnd          :: SolrQuery -> SolrQuery -> SolrQuery
+  QOr           :: SolrQuery -> SolrQuery -> SolrQuery
+  QNot          :: SolrQuery -> SolrQuery -> SolrQuery
+  QScore        :: SolrQuery -> Float -> SolrQuery
+  QNeg          :: SolrQuery -> SolrQuery
+  QParams       :: [Param SolrQuery] -> SolrQuery -> SolrQuery
 
-instance SolrQuerySYM SolrExprI SolrQueryI where
-  data ParamKey SolrQueryI a where
-    SolrQueryIDefaultField :: ParamKey SolrQueryI Text
-    SolrQueryIOp           :: ParamKey SolrQueryI Text
+instance SolrQuerySYM SolrExpr SolrQuery where
+  data ParamKey SolrQuery a where
+    SolrQueryDefaultField :: ParamKey SolrQuery Text
+    SolrQueryOp           :: ParamKey SolrQuery Text
 
   defaultField = QDefaultField
   (=:)         = QField
@@ -96,49 +95,36 @@ instance SolrQuerySYM SolrExprI SolrQueryI where
   neg          = QNeg
   params       = QParams
 
-instance HasParamDefaultField SolrQueryI where
-  paramDefaultField = SolrQueryIDefaultField
+instance HasParamDefaultField SolrQuery where
+  paramDefaultField = SolrQueryDefaultField
 
-instance HasParamOp SolrQueryI where
-  paramOp = SolrQueryIOp
+instance HasParamOp SolrQuery where
+  paramOp = SolrQueryOp
 
 
--- | Select the 'SolrQueryI' interpreter.
+-- | Select the 'SolrQuery' interpreter.
 --
--- > solrQueryI = id
-solrQueryI :: SolrQueryI -> SolrQueryI
-solrQueryI = id
+-- > solrQuery = id
+solrQuery :: SolrQuery -> SolrQuery
+solrQuery = id
 
 
--- | An untyped Solr expression.
-data USolrExprI
-  = UENum Float
-  | UETrue
-  | UEFalse
-  | UEWord Text
-  | UEWild Text
-  | UERegex Text
-  | UEPhrase [USolrExprI]
-  | UEFuzz USolrExprI Int
-  | UETo (Boundary USolrExprI) (Boundary USolrExprI)
-  | UEBoost USolrExprI Float
-
-typeCheckSolrExpr :: USolrExprI -> r -> (forall ty. SolrExprI ty -> r) -> r
+typeCheckSolrExpr :: Untyped.SolrExpr a -> r -> (forall ty. SolrExpr ty -> r) -> r
 typeCheckSolrExpr u0 die k =
   case u0 of
-    UENum n -> k (ENum n)
+    Untyped.ENum n -> k (ENum n)
 
-    UETrue -> k ETrue
+    Untyped.ETrue -> k ETrue
 
-    UEFalse -> k EFalse
+    Untyped.EFalse -> k EFalse
 
-    UEWord s -> k (EWord s)
+    Untyped.EWord s -> k (EWord s)
 
-    UEWild s -> k (EWild s)
+    Untyped.EWild s -> k (EWild s)
 
-    UERegex s -> k (ERegex s)
+    Untyped.ERegex s -> k (ERegex s)
 
-    UEPhrase ss0 -> go [] ss0
+    Untyped.EPhrase ss0 -> go [] ss0
      where
       go acc [] = k (EPhrase (reverse acc))
       go acc (s:ss) =
@@ -147,7 +133,7 @@ typeCheckSolrExpr u0 die k =
             case getSolrType e of
               STWord -> go (e:acc) ss
               _      -> die)
-    UEFuzz u n ->
+    Untyped.EFuzz u n ->
       typeCheckSolrExpr u die
         (\e ->
           case getSolrType e of
@@ -157,20 +143,20 @@ typeCheckSolrExpr u0 die k =
 
     -- Hm, when typechecking a [* TO *], do I really have to just pick a type
     -- here? Seems wrong...
-    UETo Star Star ->
-      k (ETo (Star :: Boundary (SolrExprI 'TNum)) Star)
+    Untyped.ETo Star Star ->
+      k (ETo (Star :: Boundary (SolrExpr 'TNum)) Star)
 
-    UETo Star (Inclusive u) -> starLeft  Inclusive u die k
-    UETo Star (Exclusive u) -> starLeft  Exclusive u die k
-    UETo (Inclusive u) Star -> starRight Inclusive u die k
-    UETo (Exclusive u) Star -> starRight Exclusive u die k
+    Untyped.ETo Star (Inclusive u) -> starLeft  Inclusive u die k
+    Untyped.ETo Star (Exclusive u) -> starLeft  Exclusive u die k
+    Untyped.ETo (Inclusive u) Star -> starRight Inclusive u die k
+    Untyped.ETo (Exclusive u) Star -> starRight Exclusive u die k
 
-    UETo (Inclusive u1) (Inclusive u2) -> noStar Inclusive Inclusive u1 u2 die k
-    UETo (Inclusive u1) (Exclusive u2) -> noStar Inclusive Exclusive u1 u2 die k
-    UETo (Exclusive u1) (Inclusive u2) -> noStar Exclusive Inclusive u1 u2 die k
-    UETo (Exclusive u1) (Exclusive u2) -> noStar Exclusive Exclusive u1 u2 die k
+    Untyped.ETo (Inclusive u1) (Inclusive u2) -> noStar Inclusive Inclusive u1 u2 die k
+    Untyped.ETo (Inclusive u1) (Exclusive u2) -> noStar Inclusive Exclusive u1 u2 die k
+    Untyped.ETo (Exclusive u1) (Inclusive u2) -> noStar Exclusive Inclusive u1 u2 die k
+    Untyped.ETo (Exclusive u1) (Exclusive u2) -> noStar Exclusive Exclusive u1 u2 die k
 
-    UEBoost u n ->
+    Untyped.EBoost u n ->
       typeCheckSolrExpr u die
         (\e ->
           case getSolrType e of
@@ -178,7 +164,7 @@ typeCheckSolrExpr u0 die k =
             STPhrase -> k (EBoost e n)
             _        -> die)
 
-starLeft :: (forall a. a -> Boundary a) -> USolrExprI -> r -> (forall ty. SolrExprI ty -> r) -> r
+starLeft :: (forall x. x -> Boundary x) -> Untyped.SolrExpr a -> r -> (forall ty. SolrExpr ty -> r) -> r
 starLeft con u die k =
   typeCheckSolrExpr u die
     (\e ->
@@ -187,7 +173,7 @@ starLeft con u die k =
         STWord -> k (ETo Star (con e))
         _      -> die)
 
-starRight :: (forall a. a -> Boundary a) -> USolrExprI -> r -> (forall ty. SolrExprI ty -> r) -> r
+starRight :: (forall x. x -> Boundary x) -> Untyped.SolrExpr a -> r -> (forall ty. SolrExpr ty -> r) -> r
 starRight con u die k =
   typeCheckSolrExpr u die
     (\e ->
@@ -197,12 +183,12 @@ starRight con u die k =
         _      -> die)
 
 noStar
-  :: (forall a. a -> Boundary a)
-  -> (forall a. a -> Boundary a)
-  -> USolrExprI
-  -> USolrExprI
+  :: (forall x. x -> Boundary x)
+  -> (forall x. x -> Boundary x)
+  -> Untyped.SolrExpr a
+  -> Untyped.SolrExpr a
   -> r
-  -> (forall ty. SolrExprI ty -> r)
+  -> (forall ty. SolrExpr ty -> r)
   -> r
 noStar con1 con2 u1 u2 die k =
   typeCheckSolrExpr u1 die
@@ -215,38 +201,26 @@ noStar con1 con2 u1 u2 die k =
             _ -> die))
 
 
--- | An untyped Solr query.
-data USolrQueryI
-  = UQDefaultField USolrExprI
-  | UQField Text USolrExprI
-  | UQAnd USolrQueryI USolrQueryI
-  | UQOr USolrQueryI USolrQueryI
-  | UQNot USolrQueryI USolrQueryI
-  | UQScore USolrQueryI Float
-  | UQNeg USolrQueryI
-  -- TODO: Figure this out
-  -- UQParams [Param SolrQueryI] USolrQueryI
-
-typeCheckSolrQuery :: USolrQueryI -> r -> (SolrQueryI -> r) -> r
+typeCheckSolrQuery :: Untyped.SolrQuery -> r -> (SolrQuery -> r) -> r
 typeCheckSolrQuery u0 die k =
   case u0 of
-    UQDefaultField u ->
+    Untyped.QDefaultField u ->
       typeCheckSolrExpr u die
         (\e -> k (QDefaultField e))
 
-    UQField s u ->
+    Untyped.QField s u ->
       typeCheckSolrExpr u die
         (\e -> k (QField s e))
 
-    UQAnd u1 u2 -> binop QAnd u1 u2
-    UQOr  u1 u2 -> binop QOr  u1 u2
-    UQNot u1 u2 -> binop QNot u1 u2
+    Untyped.QAnd u1 u2 -> binop QAnd u1 u2
+    Untyped.QOr  u1 u2 -> binop QOr  u1 u2
+    Untyped.QNot u1 u2 -> binop QNot u1 u2
 
-    UQScore u n ->
+    Untyped.QScore u n ->
       typeCheckSolrQuery u die
         (\q -> k (QScore q n))
 
-    UQNeg u ->
+    Untyped.QNeg u ->
       typeCheckSolrQuery u die
         (\q -> k (QNeg q))
  where
