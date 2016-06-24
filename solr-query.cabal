@@ -31,6 +31,7 @@ library
     , semigroups >= 0.3    && < 0.19
     , text       >= 1.0    && < 1.3
     , bytestring-show >= 0.2 && < 0.4
+    , uniplate        >= 1.3 && < 1.7
   exposed-modules:
       Solr.Expr
       Solr.Expr.Initial.Typed

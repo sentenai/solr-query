@@ -27,6 +27,7 @@ library:
 
   dependencies:
     - bytestring-show >= 0.2 && < 0.4
+    - uniplate        >= 1.3 && < 1.7
 
 tests:
   spec:

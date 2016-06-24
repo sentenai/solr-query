@@ -3,6 +3,8 @@ module Solr.Query.Initial.Typed
     SolrQuery(..)
     -- * Type checking
   , typeCheckSolrQuery
+    -- * Factorization
+  , factorSolrQuery
     -- * Re-exports
   , module Solr.Internal.Class.Query
   , module Solr.Query.Param

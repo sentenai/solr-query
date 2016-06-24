@@ -76,7 +76,6 @@ import Solr.Type
 
 import qualified Builder
 
-
 import Data.Semigroup (Semigroup(..))
 import Data.Text      (Text)
 
