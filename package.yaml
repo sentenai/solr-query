@@ -31,7 +31,8 @@ library:
 
 tests:
   spec:
-    main: test/Spec.hs
+    source-dirs: test
+    main: Spec.hs
     dependencies:
       - hspec
       - solr-query
