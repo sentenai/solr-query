@@ -25,4 +25,4 @@ module Solr.Expr
   ) where
 
 import Solr.Expr.Internal
-import Solr.Internal.Class
+import Solr.Internal.Class.Expr

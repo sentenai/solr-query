@@ -8,42 +8,12 @@
 -- | An initial encoding of a Solr query. This is an alternative interpretation
 -- of the Solr language that is more amenable to parsing from arbitrary user
 -- input.
---
--- Comes in typed and untyped variants; see "Solr.Expr.Initial.Typed" and
--- "Solr.Expr.Initial.Untyped".
 
-module Solr.Query.Initial
-  ( -- * Query type
-    SolrQuery(..)
-    -- * Query construction
-  , defaultField
-  , (=:)
-  , field
-  , (&&:)
-  , Solr.Internal.Class.and
-  , (||:)
-  , Solr.Internal.Class.or
-  , (-:)
-  , Solr.Internal.Class.not
-  , (^=:)
-  , score
-  , neg
-  , params
-    -- * Local parameters
-  , ParamKey
-  , Param(..)
-  , (.=)
-  , HasParamDefaultField(..)
-  , HasParamOp(..)
-  , HasParamCache(..)
-  , HasParamCost(..)
-    -- * Type checking
-  , typeCheckSolrQuery
-  ) where
+module Solr.Query.Initial.Internal where
 
-import Solr.Expr.Initial.Typed (typeCheckSolrExpr)
-import Solr.Internal.Class
-import Solr.Param
+import Solr.Expr.Initial.Typed   (typeCheckSolrExpr)
+import Solr.Internal.Class.Query
+import Solr.Query.Param
 
 import qualified Solr.Expr.Initial.Untyped as Untyped
 import qualified Solr.Expr.Initial.Typed   as Typed
@@ -83,7 +53,7 @@ instance HasParamOp SolrQuery where
   paramOp = SolrQueryOp
 
 
--- | Typecheck an untyped Solr query. Note the 'Untyped.SolrExpr' on the way in
+-- | Type check an untyped Solr query. Note the 'Untyped.SolrExpr' on the way in
 -- is not the same as the 'Typed.SolrExpr' on the way out.
 typeCheckSolrQuery :: SolrQuery Untyped.SolrExpr -> Maybe (SolrQuery Typed.SolrExpr)
 typeCheckSolrQuery u0 =

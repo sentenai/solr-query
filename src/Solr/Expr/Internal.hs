@@ -5,8 +5,8 @@
 
 module Solr.Expr.Internal where
 
-import Builder             (Builder)
-import Solr.Internal.Class
+import Builder                  (Builder)
+import Solr.Internal.Class.Expr
 import Solr.Type
 
 import qualified Builder

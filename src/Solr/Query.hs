@@ -6,7 +6,12 @@
 {-# LANGUAGE OverloadedStrings          #-}
 {-# LANGUAGE TypeFamilies               #-}
 
--- | Solr query construction and compilation.
+-- | Solr query construction and compilation. This is the "simplest"
+-- interpretation of the Solr query language as a lazy 'LByteString.ByteString'.
+--
+-- This module re-exports the expression and query languages from
+-- "Solr.Internal.Class.Query" /inline/, for ease of browsing the haddocks.
+-- Other modules simply re-export those modules whole.
 
 module Solr.Query
   (
@@ -18,11 +23,11 @@ module Solr.Query
   , (=:)
   , field
   , (&&:)
-  , Solr.Internal.Class.and
+  , Solr.Internal.Class.Query.and
   , (||:)
-  , Solr.Internal.Class.or
+  , Solr.Internal.Class.Query.or
   , (-:)
-  , Solr.Internal.Class.not
+  , Solr.Internal.Class.Query.not
   , (^=:)
   , score
   , neg
@@ -63,10 +68,10 @@ module Solr.Query
   , compileSolrFilterQuery
   ) where
 
-import Builder            (Builder)
+import Builder                   (Builder)
 import Solr.Expr.Internal
-import Solr.Internal.Class
-import Solr.Param
+import Solr.Internal.Class.Query
+import Solr.Query.Param
 import Solr.Type
 
 import qualified Builder

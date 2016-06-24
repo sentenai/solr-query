@@ -35,14 +35,18 @@ library
       Solr.Expr
       Solr.Expr.Initial.Typed
       Solr.Expr.Initial.Untyped
-      Solr.Internal.Class
-      Solr.Param
+      Solr.Internal.Class.Expr
+      Solr.Internal.Class.Query
       Solr.Query
-      Solr.Query.Initial
+      Solr.Query.Initial.Typed
+      Solr.Query.Initial.Untyped
+      Solr.Query.Param
       Solr.Type
   other-modules:
       Builder
+      Solr.Expr.Initial.Untyped.Internal
       Solr.Expr.Internal
+      Solr.Query.Initial.Internal
   default-language: Haskell2010
 
 test-suite doctest

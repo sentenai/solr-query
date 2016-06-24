@@ -1,7 +1,7 @@
 {-# LANGUAGE DataKinds         #-}
 {-# LANGUAGE OverloadedStrings #-}
 
-import Solr.Internal.Class
+import Solr.Internal.Class.Query
 import Solr.Query
 import Solr.Type
 

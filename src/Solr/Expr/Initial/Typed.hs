@@ -8,35 +8,16 @@
 module Solr.Expr.Initial.Typed
   ( -- * Expression type
     SolrExpr(..)
-    -- * Expression construction
-  , num
-  , true
-  , false
-  , word
-  , wild
-  , regex
-  , phrase
-  , (~:)
-  , fuzz
-  , fuzzy
-  , to
-  , incl
-  , excl
-  , star
-  , gt
-  , gte
-  , lt
-  , lte
-  , (^:)
-  , boost
     -- * Type checking
   , typeCheckSolrExpr
+    -- * Re-exports
+  , module Solr.Internal.Class.Expr
   ) where
 
-import Solr.Internal.Class
+import Solr.Internal.Class.Expr
 import Solr.Type
 
-import qualified Solr.Expr.Initial.Untyped as Untyped
+import qualified Solr.Expr.Initial.Untyped.Internal as Untyped
 
 import Control.Monad (forM)
 import Data.Text     (Text)
@@ -68,7 +49,7 @@ instance SolrExprSYM SolrExpr where
   (^:)   = EBoost
 
 
--- | Typecheck an untyped Solr expression. Note the 'Untyped.SolrExpr' on the
+-- | Type check an untyped Solr expression. Note the 'Untyped.SolrExpr' on the
 -- way in is not the same as the 'SolrExpr' on the way out.
 typeCheckSolrExpr :: Untyped.SolrExpr a -> (forall ty. Maybe (SolrExpr ty) -> r) -> r
 typeCheckSolrExpr u k =
@@ -104,7 +85,7 @@ typeCheckSolrExpr' u0 =
         EPhrase _ -> pure (Some (EFuzz e n))
         _         -> Nothing
 
-    -- Hm, when typechecking a [* TO *], do I really have to just pick a type
+    -- Hm, when type checking a [* TO *], do I really have to just pick a type
     -- here? Seems wrong...
     Untyped.ETo Star Star ->
       pure (Some (ETo (Star :: Boundary (SolrExpr 'TNum)) Star))
@@ -126,7 +107,7 @@ typeCheckSolrExpr' u0 =
         EPhrase _ -> pure (Some (EBoost e n))
         _         -> Nothing
 
--- Typecheck a *-to-EXPR
+-- Type check a *-to-EXPR
 starLeft :: (forall x. x -> Boundary x) -> Untyped.SolrExpr a -> Maybe (Some SolrExpr)
 starLeft con u = do
   Some e <- typeCheckSolrExpr' u
@@ -135,7 +116,7 @@ starLeft con u = do
     EWord _ -> pure (Some (ETo Star (con e)))
     _       -> Nothing
 
--- Typecheck a EXPR-to-*
+-- Type check a EXPR-to-*
 starRight :: (forall x. x -> Boundary x) -> Untyped.SolrExpr a -> Maybe (Some SolrExpr)
 starRight con u = do
   Some e <- typeCheckSolrExpr' u
@@ -144,7 +125,7 @@ starRight con u = do
     EWord _ -> pure (Some (ETo (con e) Star))
     _       -> Nothing
 
--- Typecheck a EXPR-to-EXPR
+-- Type check a EXPR-to-EXPR
 noStar
   :: (forall x. x -> Boundary x)
   -> (forall x. x -> Boundary x)

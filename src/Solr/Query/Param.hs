@@ -3,9 +3,9 @@
 
 -- | Query parameters.
 
-module Solr.Param where
+module Solr.Query.Param where
 
-import Solr.Internal.Class
+import Solr.Internal.Class.Query
 import Solr.Type
 
 import Data.Text (Text)
