@@ -88,13 +88,9 @@ instance HasParamOp SolrQuery where
 typeCheckSolrQuery :: SolrQuery Untyped.SolrExpr -> Maybe (SolrQuery Typed.SolrExpr)
 typeCheckSolrQuery u0 =
   case u0 of
-    QDefaultField u ->
-      typeCheckSolrExpr u Nothing
-        (\e -> Just (QDefaultField e))
+    QDefaultField u -> typeCheckSolrExpr u (fmap QDefaultField)
 
-    QField s u ->
-      typeCheckSolrExpr u Nothing
-        (\e -> Just (QField s e))
+    QField s u -> typeCheckSolrExpr u (fmap (QField s))
 
     QAnd u1 u2 -> binop QAnd u1 u2
     QOr  u1 u2 -> binop QOr  u1 u2

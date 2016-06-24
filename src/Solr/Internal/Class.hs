@@ -118,7 +118,7 @@ class SolrExprSYM expr where
   --
   -- >>> "foo" =: phrase ["bar", "baz", "qux"] ~: 10 :: SolrQuery SolrExpr
   -- q=foo:"bar baz qux"~10
-  (~:) :: FuzzableType a => expr a -> Int -> expr 'TFuzzed
+  (~:) :: Fuzzable a => expr a -> Int -> expr ('TFuzzed a)
   infix 6 ~:
 
   -- | A range expression.
@@ -132,7 +132,7 @@ class SolrExprSYM expr where
   -- -- Note the explicit type signature required for @[* TO *]@ queries
   -- >>> "foo" =: star `to` (star :: Boundary (SolrExpr 'TNum)) :: SolrQuery SolrExpr
   -- q=foo:[* TO *]
-  to :: PrimType a => Boundary (expr a) -> Boundary (expr a) -> expr 'TRange
+  to :: Rangeable a => Boundary (expr a) -> Boundary (expr a) -> expr ('TRanged a)
   infix 6 `to`
 
   -- | The @\'^\'@ operator, which boosts its argument.
@@ -142,7 +142,7 @@ class SolrExprSYM expr where
   --
   -- >>> "foo" =: phrase ["bar", "baz"] ^: 3.5 :: SolrQuery SolrExpr
   -- q=foo:"bar baz"^3.5
-  (^:) :: BoostableType a => expr a -> Float -> expr 'TBoosted
+  (^:) :: Boostable a => expr a -> Float -> expr ('TBoosted a)
   infix 6 ^:
 
 
@@ -155,7 +155,7 @@ class SolrExprSYM expr where
 --
 -- >>> "foo" =: fuzzy "bar" :: SolrQuery SolrExpr
 -- q=foo:bar~2
-fuzzy :: SolrExprSYM expr => expr 'TWord -> expr 'TFuzzed
+fuzzy :: SolrExprSYM expr => expr 'TWord -> expr ('TFuzzed 'TWord)
 fuzzy e = e ~: 2
 
 -- | Short-hand for a greater-than range query.
@@ -166,7 +166,7 @@ fuzzy e = e ~: 2
 --
 -- >>> "foo" =: gt (num 5) :: SolrQuery SolrExpr
 -- q=foo:{5.0 TO *]
-gt :: (SolrExprSYM expr, PrimType a) => expr a -> expr 'TRange
+gt :: (SolrExprSYM expr, Rangeable a) => expr a -> expr ('TRanged a)
 gt e = excl e `to` star
 
 -- | Short-hand for a greater-than-or-equal-to range query.
@@ -177,7 +177,7 @@ gt e = excl e `to` star
 --
 -- >>> "foo" =: gte (num 5) :: SolrQuery SolrExpr
 -- q=foo:[5.0 TO *]
-gte :: (SolrExprSYM expr, PrimType a) => expr a -> expr 'TRange
+gte :: (SolrExprSYM expr, Rangeable a) => expr a -> expr ('TRanged a)
 gte e = incl e `to` star
 
 -- | Short-hand for a less-than range query.
@@ -188,7 +188,7 @@ gte e = incl e `to` star
 --
 -- >>> "foo" =: lt (num 5) :: SolrQuery SolrExpr
 -- q=foo:[* TO 5.0}
-lt :: (SolrExprSYM expr, PrimType a) => expr a -> expr 'TRange
+lt :: (SolrExprSYM expr, Rangeable a) => expr a -> expr ('TRanged a)
 lt e = star `to` excl e
 
 -- | Short-hand for a less-than-or-equal-to range query.
@@ -199,7 +199,7 @@ lt e = star `to` excl e
 --
 -- >>> "foo" =: lte (num 5) :: SolrQuery SolrExpr
 -- q=foo:[* TO 5.0]
-lte :: (SolrExprSYM expr, PrimType a) => expr a -> expr 'TRange
+lte :: (SolrExprSYM expr, Rangeable a) => expr a -> expr ('TRanged a)
 lte e = star `to` incl e
 
 
@@ -307,11 +307,11 @@ star = Star
 
 
 -- | Named version of ('~:').
-fuzz :: (SolrExprSYM expr, FuzzableType a) => expr a -> Int -> expr 'TFuzzed
+fuzz :: (SolrExprSYM expr, Fuzzable a) => expr a -> Int -> expr ('TFuzzed a)
 fuzz = (~:)
 
 -- | Named version of ('^:').
-boost :: (SolrExprSYM expr, BoostableType a) => expr a -> Float -> expr 'TBoosted
+boost :: (SolrExprSYM expr, Boostable a) => expr a -> Float -> expr ('TBoosted a)
 boost = (^:)
 
 -- | Named version of ('=:').
