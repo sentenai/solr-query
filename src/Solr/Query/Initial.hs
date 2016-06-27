@@ -5,7 +5,10 @@
 {-# LANGUAGE LambdaCase                #-}
 {-# LANGUAGE MultiParamTypeClasses     #-}
 {-# LANGUAGE ScopedTypeVariables       #-}
+{-# LANGUAGE StandaloneDeriving        #-}
 {-# LANGUAGE TypeFamilies              #-}
+{-# LANGUAGE TypeOperators             #-}
+{-# LANGUAGE UndecidableInstances      #-}
 
 -- | An initial encoding of a Solr query. This is an alternative interpretation
 -- of the Solr language that is more amenable to parsing from arbitrary user
@@ -14,6 +17,7 @@
 module Solr.Query.Initial
   ( -- * Query type
     SolrQuery(..)
+  , ParamKey(..)
     -- * Type checking
   , typeCheckSolrQuery
     -- * Factorization
@@ -32,10 +36,13 @@ import Solr.Query.Param
 import qualified Solr.Expr.Initial.Untyped as Untyped
 import qualified Solr.Expr.Initial.Typed   as Typed
 
+import Data.Constraint               ((:-), (\\))
+import Data.Constraint.Forall
 import Data.Function                 (fix)
 import Data.Generics.Uniplate.Direct (Uniplate(..), (|-), (|*), plate, rewrite, transform)
 import Data.Generics.Str             (Str)
 import Data.Text (Text)
+import GHC.Show                      (showSpace)
 
 
 -- | An initial encoding of a Solr query.
@@ -48,6 +55,23 @@ data SolrQuery expr
   | QScore (SolrQuery expr) Float
   | QNeg (SolrQuery expr)
   | QParams [Param SolrQuery] (SolrQuery expr)
+
+-- This might be the ugliest Show instance I've ever written
+instance ForallF Show expr => Show (SolrQuery expr) where
+  showsPrec n = \case
+    QDefaultField (e :: expr a) ->
+      showParen (n >= 11) (showString "QDefaultField " . showsPrec 11 e)
+        \\ (instF :: ForallF Show expr :- Show (expr a))
+    QField s (e :: expr a) ->
+      showParen (n >= 11) (showString "QField " . showsPrec 11 s . showSpace . showsPrec 11 e)
+        \\ (instF :: ForallF Show expr :- Show (expr a))
+
+    QAnd q1 q2   -> showParen (n >= 11) (showString "QAnd "    . showsPrec 11 q1 . showSpace . showsPrec 11 q2)
+    QOr q1 q2    -> showParen (n >= 11) (showString "QOr "     . showsPrec 11 q1 . showSpace . showsPrec 11 q2)
+    QNot q1 q2   -> showParen (n >= 11) (showString "QNot "    . showsPrec 11 q1 . showSpace . showsPrec 11 q2)
+    QScore q m   -> showParen (n >= 11) (showString "QScore "  . showsPrec 11 q  . showSpace . showsPrec 11 m)
+    QNeg q       -> showParen (n >= 11) (showString "QNeg "    . showsPrec 11 q)
+    QParams ps q -> showParen (n >= 11) (showString "QParams " . showsPrec 11 ps . showSpace . showsPrec 11 q)
 
 instance Uniplate (SolrQuery expr) where
   uniplate :: SolrQuery expr -> (Str (SolrQuery expr), Str (SolrQuery expr) -> SolrQuery expr)
@@ -74,6 +98,13 @@ instance SolrExprSYM expr => SolrQuerySYM expr SolrQuery where
   (^=:)        = QScore
   neg          = QNeg
   params       = QParams
+
+instance Show (Param SolrQuery) where
+  showsPrec n = \case
+    Param SolrQueryDefaultField s ->
+      showParen (n >= 11) (showString "Param SolrQueryDefaultField " . showSpace . showsPrec 11 s)
+    Param SolrQueryOp s ->
+      showParen (n >= 11) (showString "Param SolrQueryOp " . showSpace . showsPrec 11 s)
 
 instance HasParamDefaultField SolrQuery where
   paramDefaultField = SolrQueryDefaultField

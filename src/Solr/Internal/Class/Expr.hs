@@ -188,6 +188,7 @@ data Boundary a
   = Inclusive a
   | Exclusive a
   | Star
+  deriving Show
 
 -- | Mark an expression as inclusive, for use in a range query.
 incl :: SolrExprSYM expr => expr a -> Boundary (expr a)

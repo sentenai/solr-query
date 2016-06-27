@@ -1,6 +1,7 @@
 {-# LANGUAGE DataKinds                 #-}
 {-# LANGUAGE ExistentialQuantification #-}
 {-# LANGUAGE KindSignatures            #-}
+{-# LANGUAGE StandaloneDeriving        #-}
 
 module Solr.Expr.Initial.Untyped.Internal where
 
@@ -22,6 +23,8 @@ data SolrExpr (a :: SolrType)
   | forall b. EFuzz (SolrExpr b) Int
   | forall b. ETo (Boundary (SolrExpr b)) (Boundary (SolrExpr b))
   | forall b. EBoost (SolrExpr b) Float
+
+deriving instance Show (SolrExpr a)
 
 instance SolrExprSYM SolrExpr where
   num    = ENum
