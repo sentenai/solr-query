@@ -33,17 +33,23 @@ instance Arbitrary a => Arbitrary (Boundary a) where
     Star        -> []
 
 instance Arbitrary (SolrExpr a) where
-  arbitrary = oneof
-    [ ENum <$> arbitrary
-    , pure ETrue
-    , pure EFalse
-    , EWord <$> arbitrary
-    , EWild <$> arbitrary
-    , ERegex <$> arbitrary
-    , EPhrase <$> listOf (scale (`div` 3) arbitrary)
-    , EFuzz <$> scale (subtract 1) arbitrary <*> arbitrary
-    , ETo <$> scale (`div` 2) arbitrary <*> scale (`div` 2) arbitrary
-    , EBoost <$> scale (subtract 1) arbitrary <*> arbitrary
+  arbitrary = frequency
+    [ (40, oneof
+        [ ENum <$> arbitrary
+        , pure ETrue
+        , pure EFalse
+        , EWord <$> arbitrary
+        , EWild <$> arbitrary
+        , ERegex <$> arbitrary
+        ])
+    , (35, oneof
+        [ EFuzz <$> scaleSub1 arbitrary <*> arbitrary
+        , EBoost <$> scaleSub1 arbitrary <*> arbitrary
+        ])
+    , (25, oneof
+        [ EPhrase <$> listOf (scale (`div` 3) arbitrary)
+        , ETo <$> scale (`div` 2) arbitrary <*> scale (`div` 2) arbitrary
+        ])
     ]
 
   shrink = \case
@@ -59,15 +65,21 @@ instance Arbitrary (SolrExpr a) where
     EBoost e n -> coerce e : [ EBoost e' n' | (e', n') <- shrink (e, n) ]
 
 instance Arbitrary (SolrQuery SolrExpr) where
-  arbitrary = oneof
-    [ QDefaultField <$> arbitrary
-    , QField <$> arbitrary <*> arbitrary
-    , QAnd <$> scale (`div` 2) arbitrary <*> scale (`div` 2) arbitrary
-    , QOr <$> scale (`div` 2) arbitrary <*> scale (`div` 2) arbitrary
-    , QNot <$> scale (`div` 2) arbitrary <*> scale (`div` 2) arbitrary
-    , QScore <$> scale (subtract 1) arbitrary <*> arbitrary
-    , QNeg <$> scale (subtract 1) arbitrary
-    , QParams <$> arbitrary <*> scale (subtract 1) arbitrary
+  arbitrary = frequency
+    [ (40, oneof
+        [ QDefaultField <$> arbitrary
+        , QField <$> arbitrary <*> arbitrary
+        ])
+    , (35, oneof
+        [ QScore <$> scale (`div` 2) arbitrary <*> arbitrary
+        , QNeg <$> scale (`div` 2) arbitrary
+        , QParams <$> arbitrary <*> scale (`div` 2) arbitrary
+        ])
+    , (25, oneof
+        [ QAnd <$> scale (`div` 2) arbitrary <*> scale (`div` 2) arbitrary
+        , QOr <$> scale (`div` 2) arbitrary <*> scale (`div` 2) arbitrary
+        , QNot <$> scale (`div` 2) arbitrary <*> scale (`div` 2) arbitrary
+        ])
     ]
 
   shrink = \case
@@ -89,3 +101,7 @@ instance Arbitrary (Param SolrQuery) where
   shrink = \case
     Param SolrQueryDefaultField s -> [ Param SolrQueryDefaultField s' | s' <- shrink s ]
     Param SolrQueryOp s -> [ Param SolrQueryOp s' | s' <- shrink s ]
+
+-- Subtract by 1, but don't go below 0
+scaleSub1 :: Gen a -> Gen a
+scaleSub1 g = scale (max 0 . subtract 1) g

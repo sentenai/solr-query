@@ -74,6 +74,7 @@ test-suite spec
     , semigroups >= 0.3    && < 0.19
     , text       >= 1.0    && < 1.3
     , hspec
+    , mtl
     , QuickCheck
     , solr-query
     , uniplate
