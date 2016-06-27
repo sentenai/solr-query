@@ -60,9 +60,10 @@ instance Arbitrary QueryWithParams where
             PickParams -> do
               put True
               lift (QParams <$> arbitrary <*> scale (`div` 2) arbitrary)
-            PickAnd -> binop QAnd
-            PickOr  -> binop QOr
-            PickNot -> binop QNot
+            PickAnd    -> binop QAnd
+            PickOr     -> binop QOr
+            PickNot    -> binop QNot
+            PickAppend -> binop QAppend
 
     binop
       :: (SolrQuery SolrExpr -> SolrQuery SolrExpr -> SolrQuery SolrExpr)
@@ -85,9 +86,10 @@ data Pick
   | PickAnd
   | PickOr
   | PickNot
+  | PickAppend
 
 instance Arbitrary Pick where
   arbitrary = frequency
     [ (35, elements [PickScore, PickNeg, PickParams])
-    , (25, elements [PickAnd, PickOr, PickNot])
+    , (25, elements [PickAnd, PickOr, PickNot, PickAppend])
     ]

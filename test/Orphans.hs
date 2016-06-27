@@ -76,21 +76,23 @@ instance Arbitrary (SolrQuery SolrExpr) where
         , QParams <$> arbitrary <*> scale (`div` 2) arbitrary
         ])
     , (25, oneof
-        [ QAnd <$> scale (`div` 2) arbitrary <*> scale (`div` 2) arbitrary
-        , QOr <$> scale (`div` 2) arbitrary <*> scale (`div` 2) arbitrary
-        , QNot <$> scale (`div` 2) arbitrary <*> scale (`div` 2) arbitrary
+        [ QAnd    <$> scale (`div` 2) arbitrary <*> scale (`div` 2) arbitrary
+        , QOr     <$> scale (`div` 2) arbitrary <*> scale (`div` 2) arbitrary
+        , QNot    <$> scale (`div` 2) arbitrary <*> scale (`div` 2) arbitrary
+        , QAppend <$> scale (`div` 2) arbitrary <*> scale (`div` 2) arbitrary
         ])
     ]
 
   shrink = \case
     QDefaultField e -> [ QDefaultField e' | e' <- shrink e ]
-    QField s e -> [ QField s' e' | (s', e') <- shrink (s, e) ]
-    QAnd q1 q2 -> q1 : q2 : [ QAnd q1' q2' | (q1', q2') <- shrink (q1, q2) ]
-    QOr q1 q2 -> q1 : q2 : [ QOr q1' q2' | (q1', q2') <- shrink (q1, q2) ]
-    QNot q1 q2 -> q1 : q2 : [ QNot q1' q2' | (q1', q2') <- shrink (q1, q2) ]
-    QScore q n -> q : [ QScore q' n' | (q', n') <- shrink (q, n) ]
-    QNeg q -> q : [ QNeg q' | q' <- shrink q ]
-    QParams ps q -> q : [ QParams ps' q' | (ps', q') <- shrink (ps, q) ]
+    QField s e      -> [ QField s' e' | (s', e') <- shrink (s, e) ]
+    QAnd q1 q2      -> q1 : q2 : [ QAnd q1' q2' | (q1', q2') <- shrink (q1, q2) ]
+    QOr q1 q2       -> q1 : q2 : [ QOr q1' q2' | (q1', q2') <- shrink (q1, q2) ]
+    QNot q1 q2      -> q1 : q2 : [ QNot q1' q2' | (q1', q2') <- shrink (q1, q2) ]
+    QScore q n      -> q : [ QScore q' n' | (q', n') <- shrink (q, n) ]
+    QNeg q          -> q : [ QNeg q' | q' <- shrink q ]
+    QParams ps q    -> q : [ QParams ps' q' | (ps', q') <- shrink (ps, q) ]
+    QAppend q1 q2   -> q1 : q2 : [ QAppend q1' q2' | (q1', q2') <- shrink (q1, q2) ]
 
 instance Arbitrary (Param SolrQuery) where
   arbitrary = oneof

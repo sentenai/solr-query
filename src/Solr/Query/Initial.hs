@@ -41,6 +41,7 @@ import Data.Constraint.Forall
 import Data.Function                 (fix)
 import Data.Generics.Uniplate.Direct (Uniplate(..), (|-), (|*), plate, rewrite, transform)
 import Data.Generics.Str             (Str)
+import Data.Semigroup                (Semigroup(..))
 import Data.Text (Text)
 import GHC.Show                      (showSpace)
 
@@ -55,6 +56,7 @@ data SolrQuery expr
   | QScore (SolrQuery expr) Float
   | QNeg (SolrQuery expr)
   | QParams [Param SolrQuery] (SolrQuery expr)
+  | QAppend (SolrQuery expr) (SolrQuery expr)
 
 -- This might be the ugliest Show instance I've ever written
 instance ForallF Show expr => Show (SolrQuery expr) where
@@ -66,12 +68,19 @@ instance ForallF Show expr => Show (SolrQuery expr) where
       showParen (n >= 11) (showString "QField " . showsPrec 11 s . showSpace . showsPrec 11 e)
         \\ (instF :: ForallF Show expr :- Show (expr a))
 
-    QAnd q1 q2   -> showParen (n >= 11) (showString "QAnd "    . showsPrec 11 q1 . showSpace . showsPrec 11 q2)
-    QOr q1 q2    -> showParen (n >= 11) (showString "QOr "     . showsPrec 11 q1 . showSpace . showsPrec 11 q2)
-    QNot q1 q2   -> showParen (n >= 11) (showString "QNot "    . showsPrec 11 q1 . showSpace . showsPrec 11 q2)
-    QScore q m   -> showParen (n >= 11) (showString "QScore "  . showsPrec 11 q  . showSpace . showsPrec 11 m)
-    QNeg q       -> showParen (n >= 11) (showString "QNeg "    . showsPrec 11 q)
-    QParams ps q -> showParen (n >= 11) (showString "QParams " . showsPrec 11 ps . showSpace . showsPrec 11 q)
+    QAnd q1 q2    -> showParen (n >= 11) (showString "QAnd "    . showsPrec 11 q1 . showSpace . showsPrec 11 q2)
+    QOr q1 q2     -> showParen (n >= 11) (showString "QOr "     . showsPrec 11 q1 . showSpace . showsPrec 11 q2)
+    QNot q1 q2    -> showParen (n >= 11) (showString "QNot "    . showsPrec 11 q1 . showSpace . showsPrec 11 q2)
+    QScore q m    -> showParen (n >= 11) (showString "QScore "  . showsPrec 11 q  . showSpace . showsPrec 11 m)
+    QNeg q        -> showParen (n >= 11) (showString "QNeg "    . showsPrec 11 q)
+    QParams ps q  -> showParen (n >= 11) (showString "QParams " . showsPrec 11 ps . showSpace . showsPrec 11 q)
+    QAppend q1 q2 -> showParen (n >= 11) (showString "QAppend " . showsPrec 11 q1 . showSpace . showsPrec 11 q2)
+
+-- | Technically not a law-abiding 'Semigroup' instance, as you can observe the
+-- associativity of '<>'. It's up to interpreters to use this instance
+-- correctly.
+instance Semigroup (SolrQuery expr) where
+  (<>) = QAppend
 
 instance Uniplate (SolrQuery expr) where
   uniplate :: SolrQuery expr -> (Str (SolrQuery expr), Str (SolrQuery expr) -> SolrQuery expr)
@@ -84,6 +93,7 @@ instance Uniplate (SolrQuery expr) where
     QScore q n      -> plate QScore |* q |- n
     QNeg q          -> plate QNeg |* q
     QParams ps q    -> plate QParams |- ps |* q
+    QAppend q1 q2   -> plate QAppend |* q1 |* q2
 
 instance SolrExprSYM expr => SolrQuerySYM expr SolrQuery where
   data ParamKey SolrQuery a where
@@ -122,9 +132,10 @@ typeCheckSolrQuery u0 =
 
     QField s u -> typeCheckSolrExpr u (fmap (QField s))
 
-    QAnd u1 u2 -> binop QAnd u1 u2
-    QOr  u1 u2 -> binop QOr  u1 u2
-    QNot u1 u2 -> binop QNot u1 u2
+    QAnd    u1 u2 -> binop QAnd    u1 u2
+    QOr     u1 u2 -> binop QOr     u1 u2
+    QNot    u1 u2 -> binop QNot    u1 u2
+    QAppend u1 u2 -> binop QAppend u1 u2
 
     QScore u n -> do
       q <- typeCheckSolrQuery u
@@ -137,6 +148,7 @@ typeCheckSolrQuery u0 =
     QParams ps u -> do
       q <- typeCheckSolrQuery u
       pure (QParams ps q)
+
  where
   binop
     :: (SolrQuery Typed.SolrExpr -> SolrQuery Typed.SolrExpr -> SolrQuery Typed.SolrExpr)
@@ -171,6 +183,8 @@ factorSolrQuery =
     QScore (QParams ps q) n    -> Just (QParams ps (QScore q n))
     QNeg (QParams ps q)        -> Just (QParams ps (QNeg q))
     QParams ps (QParams ps' q) -> Just (QParams (ps ++ ps') q) -- TODO: Merge params
+    QAppend (QParams ps q1) q2 -> Just (QParams ps (QAppend q1 q2))
+    QAppend q1 (QParams ps q2) -> Just (QParams ps (QAppend q1 q2))
     _                          -> Nothing
 
   -- Rewrite "-(-q)" as "q"
@@ -190,14 +204,15 @@ factorSolrQuery =
     -- QScore we find (top-down).
     unscore :: SolrQuery expr -> SolrQuery expr
     unscore = \case
-      QAnd q1 q2   -> QAnd (unscore q1) (unscore q2)
-      QOr q1 q2    -> QOr (unscore q1) (unscore q2)
-      QNot q1 q2   -> QNot (unscore q1) (unscore q2)
-      QScore q _   -> q -- note, not 'unscore q'
-      QNeg q       -> QNeg (unscore q)
+      QAnd q1 q2    -> QAnd (unscore q1) (unscore q2)
+      QOr q1 q2     -> QOr (unscore q1) (unscore q2)
+      QNot q1 q2    -> QNot (unscore q1) (unscore q2)
+      QScore q _    -> q -- note, not 'unscore q'
+      QNeg q        -> QNeg (unscore q)
       -- We shouldn't ever hit this case because we apply pushUpParams first
-      QParams ps q -> QParams ps (unscore q)
-      q            -> q
+      QParams ps q  -> QParams ps (unscore q)
+      QAppend q1 q2 -> QAppend (unscore q1) (unscore q2)
+      q             -> q
 
 -- Reinterpret an initially-encoded 'SolrQuery' to some other interpretation
 -- that supports all of 'SolrQuery'\'s params.
@@ -210,6 +225,7 @@ reinterpretSolrQuery
      ( SolrQuerySYM expr query
      , HasParamDefaultField query
      , HasParamOp query
+     , Semigroup (query expr)
      )
   => SolrQuery expr
   -> query expr
@@ -228,3 +244,4 @@ reinterpretSolrQuery = fix $ \r -> \case
       case k of
         SolrQueryDefaultField -> paramDefaultField .= s
         SolrQueryOp -> paramOp .= s
+  QAppend q1 q2   -> r q1 <> r q2
