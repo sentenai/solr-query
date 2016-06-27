@@ -167,8 +167,9 @@ typeCheckSolrQuery u0 =
 -- Check the source code for all transformations performed.
 factorSolrQuery :: SolrQuery expr -> SolrQuery expr
 factorSolrQuery =
-    transform elimInnerScores
+    transform rightAssocAppend
   . transform doubleNegationElim
+  . transform elimInnerScores
   . rewrite pushUpParams
  where
   -- Push all 'params' up to a big list at the top level.
@@ -186,12 +187,6 @@ factorSolrQuery =
     QAppend (QParams ps q1) q2 -> Just (QParams ps (QAppend q1 q2))
     QAppend q1 (QParams ps q2) -> Just (QParams ps (QAppend q1 q2))
     _                          -> Nothing
-
-  -- Rewrite "-(-q)" as "q"
-  doubleNegationElim :: SolrQuery expr -> SolrQuery expr
-  doubleNegationElim = \case
-    QNeg (QNeg q) -> q
-    q             -> q
 
   -- Eliminate all scores inside of a scored query (essentially, the outermost
   -- score takes precedence).
@@ -213,6 +208,19 @@ factorSolrQuery =
       QParams ps q  -> QParams ps (unscore q)
       QAppend q1 q2 -> QAppend (unscore q1) (unscore q2)
       q             -> q
+
+  -- Rewrite -(-q) as q
+  doubleNegationElim :: SolrQuery expr -> SolrQuery expr
+  doubleNegationElim = \case
+    QNeg (QNeg q) -> q
+    q -> q
+
+  -- Rewrite ((q1 <> q2) <> q3) as (q1 <> (q2 <> q3))
+  rightAssocAppend :: SolrQuery expr -> SolrQuery expr
+  rightAssocAppend = \case
+    QAppend (QAppend q1 q2) q3 -> QAppend q1 (QAppend q2 q3)
+    q -> q
+
 
 -- Reinterpret an initially-encoded 'SolrQuery' to some other interpretation
 -- that supports all of 'SolrQuery'\'s params.
