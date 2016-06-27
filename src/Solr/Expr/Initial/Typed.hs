@@ -8,8 +8,12 @@
 module Solr.Expr.Initial.Typed
   ( -- * Expression type
     SolrExpr(..)
+  , SomeSolrExpr(..)
     -- * Type checking
   , typeCheckSolrExpr
+  , typeCheckSolrExpr'
+    -- * Reinterpretation
+  , reinterpretSolrExpr
     -- * Re-exports
   , module Solr.Internal.Class.Expr
   ) where
@@ -23,7 +27,7 @@ import Control.Monad (forM)
 import Data.Text     (Text)
 
 
--- | A Solr expression.
+-- | A typed, initially-encoded Solr expression.
 data SolrExpr :: SolrType -> * where
   ENum    :: Float -> SolrExpr 'TNum
   ETrue   :: SolrExpr 'TBool
@@ -49,46 +53,54 @@ instance SolrExprSYM SolrExpr where
   (^:)   = EBoost
 
 
--- | Type check an untyped Solr expression. Note the 'Untyped.SolrExpr' on the
--- way in is not the same as the 'SolrExpr' on the way out.
+-- | Existential wrapper around 'SolrExpr'.
+data SomeSolrExpr = forall ty. SomeSolrExpr (SolrExpr ty)
+
+
+-- | Type check an untyped Solr expression. Note the untyped 'Untyped.SolrExpr'
+-- on the way in is not the same as the typed 'SolrExpr' on the way out.
+--
+-- @
+-- 'typeCheckSolrExpr' u k =
+--   case 'typeCheckSolrExpr'' u of
+--     Nothing -> k Nothing
+--     Just ('SomeSolrExpr' e) -> k (Just e)
+-- @
 typeCheckSolrExpr :: Untyped.SolrExpr a -> (forall ty. Maybe (SolrExpr ty) -> r) -> r
 typeCheckSolrExpr u k =
   case typeCheckSolrExpr' u of
-    Nothing       -> k Nothing
-    Just (Some e) -> k (Just e)
+    Nothing -> k Nothing
+    Just (SomeSolrExpr e) -> k (Just e)
 
-data Some (f :: k -> *) = forall a. Some (f a)
-
--- "Helper" type checker, working in a nicer monad (Maybe as opposed to Cont).
--- But, we expose the continuation-based rank-2 interface rather than exporting
--- this one-off 'Some' GADT.
-typeCheckSolrExpr' :: Untyped.SolrExpr a -> Maybe (Some SolrExpr)
+-- | Like 'typeCheckSolrExpr', but return an existential type rather than use
+-- rank-2 continuation passing style, if you prefer.
+typeCheckSolrExpr' :: Untyped.SolrExpr a -> Maybe SomeSolrExpr
 typeCheckSolrExpr' u0 =
   case u0 of
-    Untyped.ENum n   -> pure (Some (ENum n))
-    Untyped.ETrue    -> pure (Some ETrue)
-    Untyped.EFalse   -> pure (Some EFalse)
-    Untyped.EWord s  -> pure (Some (EWord s))
-    Untyped.EWild s  -> pure (Some (EWild s))
-    Untyped.ERegex s -> pure (Some (ERegex s))
+    Untyped.ENum n   -> pure (SomeSolrExpr (ENum n))
+    Untyped.ETrue    -> pure (SomeSolrExpr ETrue)
+    Untyped.EFalse   -> pure (SomeSolrExpr EFalse)
+    Untyped.EWord s  -> pure (SomeSolrExpr (EWord s))
+    Untyped.EWild s  -> pure (SomeSolrExpr (EWild s))
+    Untyped.ERegex s -> pure (SomeSolrExpr (ERegex s))
 
     Untyped.EPhrase ss0 -> do
       es <- forM ss0 (\s -> do
-                       Some e@(EWord _) <- typeCheckSolrExpr' s
+                       SomeSolrExpr e@(EWord _) <- typeCheckSolrExpr' s
                        pure e)
-      pure (Some (EPhrase es))
+      pure (SomeSolrExpr (EPhrase es))
 
     Untyped.EFuzz u n -> do
-      Some e <- typeCheckSolrExpr' u
+      SomeSolrExpr e <- typeCheckSolrExpr' u
       case e of
-        EWord _   -> pure (Some (EFuzz e n))
-        EPhrase _ -> pure (Some (EFuzz e n))
+        EWord _   -> pure (SomeSolrExpr (EFuzz e n))
+        EPhrase _ -> pure (SomeSolrExpr (EFuzz e n))
         _         -> Nothing
 
     -- Hm, when type checking a [* TO *], do I really have to just pick a type
     -- here? Seems wrong...
     Untyped.ETo Star Star ->
-      pure (Some (ETo (Star :: Boundary (SolrExpr 'TNum)) Star))
+      pure (SomeSolrExpr (ETo (Star :: Boundary (SolrExpr 'TNum)) Star))
 
     Untyped.ETo Star (Inclusive u)            -> starLeft  Inclusive u
     Untyped.ETo Star (Exclusive u)            -> starLeft  Exclusive u
@@ -101,28 +113,28 @@ typeCheckSolrExpr' u0 =
     Untyped.ETo (Exclusive u1) (Exclusive u2) -> noStar Exclusive Exclusive u1 u2
 
     Untyped.EBoost u n -> do
-      Some e <- typeCheckSolrExpr' u
+      SomeSolrExpr e <- typeCheckSolrExpr' u
       case e of
-        EWord _   -> pure (Some (EBoost e n))
-        EPhrase _ -> pure (Some (EBoost e n))
+        EWord _   -> pure (SomeSolrExpr (EBoost e n))
+        EPhrase _ -> pure (SomeSolrExpr (EBoost e n))
         _         -> Nothing
 
 -- Type check a *-to-EXPR
-starLeft :: (forall x. x -> Boundary x) -> Untyped.SolrExpr a -> Maybe (Some SolrExpr)
+starLeft :: (forall x. x -> Boundary x) -> Untyped.SolrExpr a -> Maybe SomeSolrExpr
 starLeft con u = do
-  Some e <- typeCheckSolrExpr' u
+  SomeSolrExpr e <- typeCheckSolrExpr' u
   case e of
-    ENum _  -> pure (Some (ETo Star (con e)))
-    EWord _ -> pure (Some (ETo Star (con e)))
+    ENum _  -> pure (SomeSolrExpr (ETo Star (con e)))
+    EWord _ -> pure (SomeSolrExpr (ETo Star (con e)))
     _       -> Nothing
 
 -- Type check a EXPR-to-*
-starRight :: (forall x. x -> Boundary x) -> Untyped.SolrExpr a -> Maybe (Some SolrExpr)
+starRight :: (forall x. x -> Boundary x) -> Untyped.SolrExpr a -> Maybe SomeSolrExpr
 starRight con u = do
-  Some e <- typeCheckSolrExpr' u
+  SomeSolrExpr e <- typeCheckSolrExpr' u
   case e of
-    ENum _  -> pure (Some (ETo (con e) Star))
-    EWord _ -> pure (Some (ETo (con e) Star))
+    ENum _  -> pure (SomeSolrExpr (ETo (con e) Star))
+    EWord _ -> pure (SomeSolrExpr (ETo (con e) Star))
     _       -> Nothing
 
 -- Type check a EXPR-to-EXPR
@@ -131,11 +143,26 @@ noStar
   -> (forall x. x -> Boundary x)
   -> Untyped.SolrExpr a
   -> Untyped.SolrExpr a
-  -> Maybe (Some SolrExpr)
+  -> Maybe SomeSolrExpr
 noStar con1 con2 u1 u2 = do
-  Some e1 <- typeCheckSolrExpr' u1
-  Some e2 <- typeCheckSolrExpr' u2
+  SomeSolrExpr e1 <- typeCheckSolrExpr' u1
+  SomeSolrExpr e2 <- typeCheckSolrExpr' u2
   case (e1, e2) of
-    (ENum _,  ENum _)  -> pure (Some (ETo (con1 e1) (con2 e2)))
-    (EWord _, EWord _) -> pure (Some (ETo (con1 e1) (con2 e2)))
+    (ENum _,  ENum _)  -> pure (SomeSolrExpr (ETo (con1 e1) (con2 e2)))
+    (EWord _, EWord _) -> pure (SomeSolrExpr (ETo (con1 e1) (con2 e2)))
     _                  -> Nothing
+
+
+-- Reinterpret a Solr expression.
+reinterpretSolrExpr :: SolrExprSYM expr => SolrExpr ty -> expr ty
+reinterpretSolrExpr = \case
+  ENum n     -> num n
+  ETrue      -> true
+  EFalse     -> false
+  EWord s    -> word s
+  EWild s    -> wild s
+  ERegex s   -> regex s
+  EPhrase es -> phrase (map reinterpretSolrExpr es)
+  EFuzz e n  -> reinterpretSolrExpr e ~: n
+  ETo e1 e2  -> fmap reinterpretSolrExpr e1 `to` fmap reinterpretSolrExpr e2
+  EBoost e n -> reinterpretSolrExpr e ^: n

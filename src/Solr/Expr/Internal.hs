@@ -18,7 +18,17 @@ import qualified Data.Text          as Text
 import qualified Data.Text.Encoding as Text
 
 
--- | A Solr expression.
+-- |
+-- @
+-- 'SolrExpr' :: 'SolrType' -> *
+-- @
+--
+-- An opaque Solr expression, indexed by its 'SolrType'. Its interpretation,
+-- accessed via e.g. 'Solr.Query.compileSolrQuery', is a lazy
+-- 'Data.ByteString.Lazy.ByteString'.
+--
+-- For an initially-encoded version, see "Solr.Expr.Untyped" or
+-- "Solr.Expr.Typed".
 newtype SolrExpr (t :: SolrType) = Expr { unExpr :: Builder }
 
 instance IsString (SolrExpr 'TWord) where

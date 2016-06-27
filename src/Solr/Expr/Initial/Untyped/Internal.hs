@@ -1,6 +1,7 @@
 {-# LANGUAGE DataKinds                 #-}
 {-# LANGUAGE ExistentialQuantification #-}
 {-# LANGUAGE KindSignatures            #-}
+{-# LANGUAGE RankNTypes                #-}
 {-# LANGUAGE StandaloneDeriving        #-}
 
 module Solr.Expr.Initial.Untyped.Internal where
@@ -11,7 +12,7 @@ import Solr.Type
 import Data.Text (Text)
 
 
--- | An untyped Solr expression.
+-- | An untyped, initially-encoded Solr expression.
 data SolrExpr (a :: SolrType)
   = ENum Float
   | ETrue

@@ -1,27 +1,8 @@
 module Solr.Expr
   ( -- * Expression type
     SolrExpr
-    -- * Expression construction
-  , num
-  , true
-  , false
-  , word
-  , wild
-  , regex
-  , phrase
-  , (~:)
-  , fuzz
-  , fuzzy
-  , to
-  , incl
-  , excl
-  , star
-  , gt
-  , gte
-  , lt
-  , lte
-  , (^:)
-  , boost
+    -- * Re-exports
+  , module Solr.Internal.Class.Expr
   ) where
 
 import Solr.Expr.Internal

@@ -6,12 +6,30 @@
 {-# LANGUAGE OverloadedStrings          #-}
 {-# LANGUAGE TypeFamilies               #-}
 
--- | Solr query construction and compilation. This is the "simplest"
+-- | Solr query construction and compilation. This is the simplest
 -- interpretation of the Solr query language as a lazy 'LByteString.ByteString'.
 --
 -- This module re-exports the expression and query languages from
 -- "Solr.Internal.Class.Query" /inline/, for ease of browsing the haddocks.
 -- Other modules simply re-export those modules whole.
+--
+-- Not all type-correct expressions using the Solr DSL result in well-formed
+-- queries. For example,
+--
+-- >>> params [paramDefaultField .= "foo"] (params [paramOp .= "AND"] (defaultField (word "bar"))) :: SolrQuery SolrExpr
+-- q={!df=foo}{!q.op=AND}bar
+--
+-- For this reason, you may want to first interpret a query using
+-- "Solr.Query.Initial", manually fix up the AST
+-- (perhaps with 'Solr.Query.Initial.factorSolrQuery'), and then reinterpret it as the
+-- lazy 'Data.ByteString.Lazy.ByteString' version using
+-- 'Solr.Query.Initial.reinterpretSolrQuery':
+--
+-- >>> import qualified Solr.Query.Initial as Q
+-- >>> import qualified Solr.Expr.Initial.Typed as E
+-- >>> let q = params [paramDefaultField .= "foo"] (params [paramOp .= "AND"] (defaultField (word "bar"))) :: Q.SolrQuery E.SolrExpr
+-- >>> Q.reinterpretSolrQuery (Q.factorSolrQuery q) :: SolrQuery SolrExpr
+-- q={!df=foo q.op=AND}bar
 
 module Solr.Query
   (

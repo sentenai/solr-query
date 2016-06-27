@@ -1,4 +1,5 @@
-{-# LANGUAGE DataKinds              #-}
+{-# LANGUAGE DataKinds     #-}
+{-# LANGUAGE DeriveFunctor #-}
 
 module Solr.Internal.Class.Expr
   ( -- * Solr expression language
@@ -188,7 +189,7 @@ data Boundary a
   = Inclusive a
   | Exclusive a
   | Star
-  deriving Show
+  deriving (Show, Functor)
 
 -- | Mark an expression as inclusive, for use in a range query.
 incl :: SolrExprSYM expr => expr a -> Boundary (expr a)

@@ -12,7 +12,7 @@
 
 -- | An initial encoding of a Solr query. This is an alternative interpretation
 -- of the Solr language that is more amenable to parsing from arbitrary user
--- input.
+-- input and applying query transformations.
 
 module Solr.Query.Initial
   ( -- * Query type
@@ -235,11 +235,11 @@ reinterpretSolrQuery
      , HasParamOp query
      , Semigroup (query expr)
      )
-  => SolrQuery expr
+  => SolrQuery Typed.SolrExpr
   -> query expr
 reinterpretSolrQuery = fix $ \r -> \case
-  QDefaultField e -> defaultField e
-  QField s e      -> field s e
+  QDefaultField e -> defaultField (Typed.reinterpretSolrExpr e)
+  QField s e      -> field s (Typed.reinterpretSolrExpr e)
   QAnd q1 q2      -> r q1 &&: r q2
   QOr q1 q2       -> r q1 ||: r q2
   QNot q1 q2      -> r q1 -: r q2
