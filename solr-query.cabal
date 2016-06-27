@@ -45,7 +45,6 @@ library
       Solr.Type
   other-modules:
       Builder
-      Solr.Expr.Initial.Untyped.Internal
       Solr.Expr.Internal
   default-language: Haskell2010
 

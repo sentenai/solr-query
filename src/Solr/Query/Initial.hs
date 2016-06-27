@@ -123,8 +123,8 @@ instance HasParamOp SolrQuery where
   paramOp = SolrQueryOp
 
 
--- | Type check an untyped Solr query. Note the 'Untyped.SolrExpr' on the way in
--- is not the same as the 'Typed.SolrExpr' on the way out.
+-- | Type check an untyped Solr query. Note the untyped 'Untyped.SolrExpr' on
+-- the way in is not the same as the typed 'Typed.SolrExpr' on the way out.
 typeCheckSolrQuery :: SolrQuery Untyped.SolrExpr -> Maybe (SolrQuery Typed.SolrExpr)
 typeCheckSolrQuery u0 =
   case u0 of
@@ -222,7 +222,7 @@ factorSolrQuery =
     q -> q
 
 
--- Reinterpret an initially-encoded 'SolrQuery' to some other interpretation
+-- | Reinterpret an initially-encoded 'SolrQuery' to some other interpretation
 -- that supports all of 'SolrQuery'\'s params.
 --
 -- This may be useful for reinterpreting a 'SolrQuery' as a lazy

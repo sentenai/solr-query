@@ -27,8 +27,8 @@ import qualified Data.Text.Encoding as Text
 -- accessed via e.g. 'Solr.Query.compileSolrQuery', is a lazy
 -- 'Data.ByteString.Lazy.ByteString'.
 --
--- For an initially-encoded version, see "Solr.Expr.Untyped" or
--- "Solr.Expr.Typed".
+-- For an initially-encoded version, see "Solr.Expr.Initial.Untyped" or
+-- "Solr.Expr.Initial.Typed".
 newtype SolrExpr (t :: SolrType) = Expr { unExpr :: Builder }
 
 instance IsString (SolrExpr 'TWord) where

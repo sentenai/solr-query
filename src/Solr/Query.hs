@@ -16,7 +16,15 @@
 -- Not all type-correct expressions using the Solr DSL result in well-formed
 -- queries. For example,
 --
--- >>> params [paramDefaultField .= "foo"] (params [paramOp .= "AND"] (defaultField (word "bar"))) :: SolrQuery SolrExpr
+-- >>> type C query expr = (SolrQuerySYM expr query, HasParamDefaultField query, HasParamOp query)
+-- >>> :{
+--  let p1    = [paramDefaultField .= "foo"]
+--      p2    = [paramOp .= "AND"]
+--      q0    = defaultField (word "bar")
+--      query = params p1 (params p2 q0) :: C query expr => query expr
+-- :}
+--
+-- >>> query :: SolrQuery SolrExpr
 -- q={!df=foo}{!q.op=AND}bar
 --
 -- For this reason, you may want to first interpret a query using
@@ -27,8 +35,7 @@
 --
 -- >>> import qualified Solr.Query.Initial as Q
 -- >>> import qualified Solr.Expr.Initial.Typed as E
--- >>> let q = params [paramDefaultField .= "foo"] (params [paramOp .= "AND"] (defaultField (word "bar"))) :: Q.SolrQuery E.SolrExpr
--- >>> Q.reinterpretSolrQuery (Q.factorSolrQuery q) :: SolrQuery SolrExpr
+-- >>> Q.reinterpretSolrQuery (Q.factorSolrQuery query) :: SolrQuery SolrExpr
 -- q={!df=foo q.op=AND}bar
 
 module Solr.Query

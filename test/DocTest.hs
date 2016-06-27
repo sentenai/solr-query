@@ -2,7 +2,8 @@ import Test.DocTest
 
 main :: IO ()
 main = doctest
-  [ "-XDataKinds"
+  [ "-XConstraintKinds"
+  , "-XDataKinds"
   , "-XOverloadedStrings"
   , "src"
   ]

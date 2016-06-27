@@ -3,7 +3,12 @@
 
 -- | Query parameters.
 
-module Solr.Query.Param where
+module Solr.Query.Param
+  ( HasParamDefaultField(..)
+  , HasParamOp(..)
+  , HasParamCache(..)
+  , HasParamCost(..)
+  ) where
 
 import Solr.Internal.Class.Query
 import Solr.Type

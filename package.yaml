@@ -21,7 +21,6 @@ library:
   source-dirs: src
   other-modules:
     - Builder
-    - Solr.Expr.Initial.Untyped.Internal
     - Solr.Expr.Internal
   dependencies:
     - bytestring-show >= 0.2 && < 0.4

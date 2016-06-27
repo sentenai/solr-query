@@ -21,7 +21,7 @@ module Solr.Expr.Initial.Typed
 import Solr.Internal.Class.Expr
 import Solr.Type
 
-import qualified Solr.Expr.Initial.Untyped.Internal as Untyped
+import qualified Solr.Expr.Initial.Untyped as Untyped
 
 import Control.Monad (forM)
 import Data.Text     (Text)
@@ -153,7 +153,7 @@ noStar con1 con2 u1 u2 = do
     _                  -> Nothing
 
 
--- Reinterpret a Solr expression.
+-- | Reinterpret a Solr expression.
 reinterpretSolrExpr :: SolrExprSYM expr => SolrExpr ty -> expr ty
 reinterpretSolrExpr = \case
   ENum n     -> num n
