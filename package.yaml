@@ -23,7 +23,6 @@ library:
     - Builder
     - Solr.Expr.Initial.Untyped.Internal
     - Solr.Expr.Internal
-    - Solr.Query.Initial.Internal
 
   dependencies:
     - bytestring-show >= 0.2 && < 0.4

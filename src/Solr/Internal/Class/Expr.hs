@@ -122,6 +122,7 @@ class SolrExprSYM expr where
   -- q=foo:"bar baz"^3.5
   (^:) :: Boostable a => expr a -> Float -> expr ('TBoosted a)
   infix 6 ^:
+
 -- | Short-hand for fuzzing a word by 2. This is the default behavior of a
 -- Solr @\'~\'@ operator without an integer added.
 --

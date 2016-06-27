@@ -11,7 +11,19 @@
 -- of the Solr language that is more amenable to parsing from arbitrary user
 -- input.
 
-module Solr.Query.Initial.Internal where
+module Solr.Query.Initial
+  ( -- * Query type
+    SolrQuery(..)
+    -- * Type checking
+  , typeCheckSolrQuery
+    -- * Factorization
+  , factorSolrQuery
+    -- * Reinterpretation
+  , reinterpretSolrQuery
+    -- * Re-exports
+  , module Solr.Internal.Class.Query
+  , module Solr.Query.Param
+  ) where
 
 import Solr.Expr.Initial.Typed   (typeCheckSolrExpr)
 import Solr.Internal.Class.Query
@@ -20,12 +32,13 @@ import Solr.Query.Param
 import qualified Solr.Expr.Initial.Untyped as Untyped
 import qualified Solr.Expr.Initial.Typed   as Typed
 
+import Data.Function                 (fix)
 import Data.Generics.Uniplate.Direct (Uniplate(..), (|-), (|*), plate, rewrite, transform)
 import Data.Generics.Str             (Str)
 import Data.Text (Text)
 
 
--- | A Solr query.
+-- | An initial encoding of a Solr query.
 data SolrQuery expr
   = forall a. QDefaultField (expr a)
   | forall a. QField Text (expr a)
@@ -154,3 +167,33 @@ factorSolrQuery =
       -- We shouldn't ever hit this case because we apply pushUpParams first
       QParams ps q -> QParams ps (unscore q)
       q            -> q
+
+-- Reinterpret an initially-encoded 'SolrQuery' to some other interpretation
+-- that supports all of 'SolrQuery'\'s params.
+--
+-- This may be useful for reinterpreting a 'SolrQuery' as a lazy
+-- 'Data.ByteString.Lazy.ByteString' after it's been type checked and factored
+-- with the machinery in this module.
+reinterpretSolrQuery
+  :: forall expr query.
+     ( SolrQuerySYM expr query
+     , HasParamDefaultField query
+     , HasParamOp query
+     )
+  => SolrQuery expr
+  -> query expr
+reinterpretSolrQuery = fix $ \r -> \case
+  QDefaultField e -> defaultField e
+  QField s e      -> field s e
+  QAnd q1 q2      -> r q1 &&: r q2
+  QOr q1 q2       -> r q1 ||: r q2
+  QNot q1 q2      -> r q1 -: r q2
+  QScore q n      -> r q ^=: n
+  QNeg q          -> neg (r q)
+  QParams ps q    -> params (map f ps) (r q)
+   where
+    f :: Param SolrQuery -> Param query
+    f (Param k s) =
+      case k of
+        SolrQueryDefaultField -> paramDefaultField .= s
+        SolrQueryOp -> paramOp .= s
