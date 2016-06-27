@@ -517,8 +517,8 @@ module Solr.Expr
 --   interpretation, accessed via e.g. <a>compileSolrQuery</a>, is a lazy
 --   <a>ByteString</a>.
 --   
---   For an initially-encoded version, see <a>Solr.Expr.Untyped</a> or
---   <a>Solr.Expr.Typed</a>.
+--   For an initially-encoded version, see <a>Solr.Expr.Initial.Untyped</a>
+--   or <a>Solr.Expr.Initial.Typed</a>.
 data SolrExpr (t :: SolrType)
 
 
@@ -661,8 +661,8 @@ params :: SolrQuerySYM expr query => [Param query] -> query expr -> query expr
 --   interpretation, accessed via e.g. <a>compileSolrQuery</a>, is a lazy
 --   <a>ByteString</a>.
 --   
---   For an initially-encoded version, see <a>Solr.Expr.Untyped</a> or
---   <a>Solr.Expr.Typed</a>.
+--   For an initially-encoded version, see <a>Solr.Expr.Initial.Untyped</a>
+--   or <a>Solr.Expr.Initial.Typed</a>.
 data SolrExpr (t :: SolrType)
 
 -- | A <tt>num</tt> expression.
