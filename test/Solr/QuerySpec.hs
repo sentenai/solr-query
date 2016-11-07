@@ -44,10 +44,10 @@ spec =
     it "neg"             (test (neg ("foo" =: word "bar"))                       "q=-foo:bar")
     it "zero params"     (test (params [] (defaultField (word "bar")))           "q={!}bar")
     it "one param"       (test (params ps1 (defaultField (word "bar")))          "q={!df=foo}bar")
-    it "two params"      (test (params ps2 (defaultField (word "bar")))          "q={!df=foo q.op=FOO}bar")
+    it "two params"      (test (params ps2 (defaultField (word "bar")))          "q={!df=foo q.op=AND}bar")
  where
-  ps1 = [paramDefaultField .= "foo"]
-  ps2 = [paramDefaultField .= "foo", paramOp .= "FOO"]
+  ps1 = [paramDefaultField "foo"]
+  ps2 = [paramDefaultField "foo", paramOpAnd]
 
   -- Help type inference in [* TO *]
   star' :: Boundary (SolrExpr 'TNum)

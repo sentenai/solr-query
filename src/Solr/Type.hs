@@ -1,7 +1,3 @@
-{-# LANGUAGE DataKinds       #-}
-{-# LANGUAGE KindSignatures  #-}
-{-# LANGUAGE TypeFamilies    #-}
-
 module Solr.Type
   ( -- * Solr types
     SolrType(..)

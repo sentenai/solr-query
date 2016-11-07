@@ -1,9 +1,3 @@
-{-# LANGUAGE DataKinds                 #-}
-{-# LANGUAGE ExistentialQuantification #-}
-{-# LANGUAGE KindSignatures            #-}
-{-# LANGUAGE RankNTypes                #-}
-{-# LANGUAGE StandaloneDeriving        #-}
-
 module Solr.Expr.Initial.Untyped
   ( -- * Expression type
     SolrExpr(..)

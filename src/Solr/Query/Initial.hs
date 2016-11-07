@@ -1,14 +1,4 @@
-{-# LANGUAGE ExistentialQuantification #-}
-{-# LANGUAGE FlexibleInstances         #-}
-{-# LANGUAGE GADTs                     #-}
-{-# LANGUAGE InstanceSigs              #-}
-{-# LANGUAGE LambdaCase                #-}
-{-# LANGUAGE MultiParamTypeClasses     #-}
-{-# LANGUAGE ScopedTypeVariables       #-}
-{-# LANGUAGE StandaloneDeriving        #-}
-{-# LANGUAGE TypeFamilies              #-}
-{-# LANGUAGE TypeOperators             #-}
-{-# LANGUAGE UndecidableInstances      #-}
+{-# LANGUAGE UndecidableInstances #-}
 
 -- | An initial encoding of a Solr query. This is an alternative interpretation
 -- of the Solr language that is more amenable to parsing from arbitrary user
@@ -17,7 +7,6 @@
 module Solr.Query.Initial
   ( -- * Query type
     SolrQuery(..)
-  , ParamKey(..)
     -- * Type checking
   , typeCheckSolrQuery
     -- * Factorization
@@ -32,6 +21,7 @@ module Solr.Query.Initial
 import Solr.Expr.Initial.Typed   (typeCheckSolrExpr)
 import Solr.Internal.Class.Query
 import Solr.Query.Param
+import Solr.Query.Param.Internal
 
 import qualified Solr.Expr.Initial.Untyped as Untyped
 import qualified Solr.Expr.Initial.Typed   as Typed
@@ -96,10 +86,6 @@ instance Uniplate (SolrQuery expr) where
     QAppend q1 q2   -> plate QAppend |* q1 |* q2
 
 instance SolrExprSYM expr => SolrQuerySYM expr SolrQuery where
-  data ParamKey SolrQuery a where
-    SolrQueryDefaultField :: ParamKey SolrQuery Text
-    SolrQueryOp           :: ParamKey SolrQuery Text
-
   defaultField = QDefaultField
   (=:)         = QField
   (&&:)        = QAnd
@@ -109,19 +95,8 @@ instance SolrExprSYM expr => SolrQuerySYM expr SolrQuery where
   neg          = QNeg
   params       = QParams
 
-instance Show (Param SolrQuery) where
-  showsPrec n = \case
-    Param SolrQueryDefaultField s ->
-      showParen (n >= 11) (showString "Param SolrQueryDefaultField " . showSpace . showsPrec 11 s)
-    Param SolrQueryOp s ->
-      showParen (n >= 11) (showString "Param SolrQueryOp " . showSpace . showsPrec 11 s)
-
-instance HasParamDefaultField SolrQuery where
-  paramDefaultField = SolrQueryDefaultField
-
-instance HasParamOp SolrQuery where
-  paramOp = SolrQueryOp
-
+instance HasParamDefaultField SolrQuery
+instance HasParamOp SolrQuery
 
 -- | Type check an untyped Solr query. Note the untyped 'Untyped.SolrExpr' on
 -- the way in is not the same as the typed 'Typed.SolrExpr' on the way out.
@@ -248,8 +223,12 @@ reinterpretSolrQuery = fix $ \r -> \case
   QParams ps q    -> params (map f ps) (r q)
    where
     f :: Param SolrQuery -> Param query
-    f (Param k s) =
-      case k of
-        SolrQueryDefaultField -> paramDefaultField .= s
-        SolrQueryOp -> paramOp .= s
-  QAppend q1 q2   -> r q1 <> r q2
+    f = \case
+      ParamDefaultField s -> paramDefaultField s
+      ParamOpAnd          -> paramOpAnd
+      ParamOpOr           -> paramOpOr
+
+      ParamCache _        -> error "Solr.Query.Initial.reinterpretSolrQuery: ParamCache"
+      ParamCost _         -> error "Solr.Query.Initial.reinterpretSolrQuery: ParamCost"
+
+  QAppend q1 q2 -> r q1 <> r q2

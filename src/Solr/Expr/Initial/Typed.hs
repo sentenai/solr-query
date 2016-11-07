@@ -1,10 +1,3 @@
-{-# LANGUAGE DataKinds      #-}
-{-# LANGUAGE GADTs          #-}
-{-# LANGUAGE KindSignatures #-}
-{-# LANGUAGE LambdaCase     #-}
-{-# LANGUAGE PolyKinds      #-}
-{-# LANGUAGE RankNTypes     #-}
-
 module Solr.Expr.Initial.Typed
   ( -- * Expression type
     SolrExpr(..)

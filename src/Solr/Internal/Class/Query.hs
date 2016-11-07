@@ -1,7 +1,3 @@
-{-# LANGUAGE GADTs                  #-}
-{-# LANGUAGE MultiParamTypeClasses  #-}
-{-# LANGUAGE TypeFamilies           #-}
-
 -- | This module defines the finally tagless Solr DSL. This style admits
 -- multiple interpreters, two of which (lazy 'Data.ByteString.Lazy.ByteString's
 -- and an initial encoding) are provided by this library, in the "Solr.Query"
@@ -12,9 +8,6 @@
 module Solr.Internal.Class.Query
   ( -- * Solr query language
     SolrQuerySYM(..)
-    -- * Local parameters
-  , Param(..)
-  , (.=)
     -- * Named operators
   , field
   , Solr.Internal.Class.Query.and
@@ -26,6 +19,7 @@ module Solr.Internal.Class.Query
   ) where
 
 import Solr.Internal.Class.Expr
+import Solr.Query.Param
 
 import Data.Text (Text)
 
@@ -36,19 +30,6 @@ import Data.Text (Text)
 
 -- | Solr query language.
 class SolrExprSYM expr => SolrQuerySYM expr query where
-  -- | Different queries support different sets of local parameters. Each
-  -- parameter is indexed by the type of its value.
-  --
-  -- Example:
-  --
-  -- @
-  -- data ParamKey MyQuery a where
-  --   Foo :: ParamKey MyQuery Int
-  --   Bar :: ParamKey MyQuery Bool
-  --   Baz :: ParamKey MyQuery String
-  -- @
-  data ParamKey query :: * -> *
-
   -- | A default field query.
   --
   -- >>> defaultField (word "foo") :: SolrQuery SolrExpr
@@ -100,18 +81,9 @@ class SolrExprSYM expr => SolrQuerySYM expr query where
 
   -- | Add local parameters to a query.
   --
-  -- >>> params [paramDefaultField .= "foo"] (defaultField (word "bar")) :: SolrQuery SolrExpr
+  -- >>> params [paramDefaultField "foo"] (defaultField (word "bar")) :: SolrQuery SolrExpr
   -- q={!df=foo}bar
   params :: [Param query] -> query expr -> query expr
-
-
--- | A parameter is built from a key and a value, whose type depends on the key.
-data Param query where
-  Param :: ParamKey query val -> val -> Param query
-
--- | Infix constructor for 'Param'.
-(.=) :: ParamKey query val -> val -> Param query
-(.=) = Param
 
 
 -- | Named version of ('=:').

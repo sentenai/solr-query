@@ -1,11 +1,3 @@
-{-# LANGUAGE DataKinds                  #-}
-{-# LANGUAGE GADTs                      #-}
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
-{-# LANGUAGE KindSignatures             #-}
-{-# LANGUAGE MultiParamTypeClasses      #-}
-{-# LANGUAGE OverloadedStrings          #-}
-{-# LANGUAGE TypeFamilies               #-}
-
 -- | Solr query construction and compilation. This is the simplest
 -- interpretation of the Solr query language as a lazy 'LByteString.ByteString'.
 --
@@ -18,8 +10,8 @@
 --
 -- >>> type C query expr = (SolrQuerySYM expr query, HasParamDefaultField query, HasParamOp query)
 -- >>> :{
---  let p1    = [paramDefaultField .= "foo"]
---      p2    = [paramOp .= "AND"]
+--  let p1    = [paramDefaultField "foo"]
+--      p2    = [paramOpAnd]
 --      q0    = defaultField (word "bar")
 --      query = params p1 (params p2 q0) :: C query expr => query expr
 -- :}
@@ -81,13 +73,12 @@ module Solr.Query
   , (^:)
   , boost
   -- * Local parameters
-  , ParamKey
-  , Param(..)
-  , (.=)
-  , HasParamDefaultField(..)
-  , HasParamOp(..)
-  , HasParamCache(..)
-  , HasParamCost(..)
+  , Param
+  , paramCache
+  , paramCost
+  , paramDefaultField
+  , paramOpAnd
+  , paramOpOr
   -- * Query compilation
   , compileSolrQuery
   , compileSolrFilterQuery
@@ -96,13 +87,12 @@ module Solr.Query
 import Builder                   (Builder)
 import Solr.Expr.Internal
 import Solr.Internal.Class.Query
-import Solr.Query.Param
+import Solr.Query.Param.Internal
 import Solr.Type
 
 import qualified Builder
 
 import Data.Semigroup (Semigroup(..))
-import Data.Text      (Text)
 
 import qualified Data.ByteString.Lazy    as LByteString
 import qualified Data.Text.Encoding      as Text
@@ -127,10 +117,6 @@ instance Semigroup (SolrQuery expr) where
   q1 <> q2 = Query (unQuery q1 <> " " <> unQuery q2)
 
 instance SolrQuerySYM SolrExpr SolrQuery where
-  data ParamKey SolrQuery a where
-    SolrQueryDefaultField :: ParamKey SolrQuery Text
-    SolrQueryOp           :: ParamKey SolrQuery Text
-
   defaultField e = Query (unExpr e)
 
   f =: e = Query (Text.encodeUtf8Builder f <> ":" <> unExpr e)
@@ -146,18 +132,9 @@ instance SolrQuerySYM SolrExpr SolrQuery where
   neg q = Query ("-" <> unQuery q)
 
   params ps q = Query ("{!" <> Builder.spaces (map compileParam ps) <> "}" <> unQuery q)
-   where
-    compileParam :: Param SolrQuery -> Builder
-    compileParam (Param k v) =
-      case k of
-        SolrQueryDefaultField -> "df="   <> Text.encodeUtf8Builder v
-        SolrQueryOp           -> "q.op=" <> Text.encodeUtf8Builder v
 
-instance HasParamDefaultField SolrQuery where
-  paramDefaultField = SolrQueryDefaultField
-
-instance HasParamOp SolrQuery where
-  paramOp = SolrQueryOp
+instance HasParamDefaultField SolrQuery
+instance HasParamOp           SolrQuery
 
 
 -- | A Solr filter query. This is like 'SolrQuery', but with different local
@@ -171,12 +148,6 @@ instance Show (SolrFilterQuery expr) where
   show = showb . compileSolrFilterQuery
 
 instance SolrQuerySYM SolrExpr SolrFilterQuery where
-  data ParamKey SolrFilterQuery a where
-    SolrFilterQueryDefaultField :: ParamKey SolrFilterQuery Text
-    SolrFilterQueryOp           :: ParamKey SolrFilterQuery Text
-    SolrFilterQueryCache        :: ParamKey SolrFilterQuery Bool
-    SolrFilterQueryCost         :: ParamKey SolrFilterQuery Int
-
   defaultField e = FQuery (defaultField e)
 
   f =: e = FQuery (f =: e)
@@ -194,27 +165,20 @@ instance SolrQuerySYM SolrExpr SolrFilterQuery where
   -- Hm, for now it seems we have to duplicate this logic from SolrQuery.
   params ps q =
     FQuery (Query ("{!" <> Builder.spaces (map compileParam ps) <> "}" <> unQuery (unFQuery q)))
-   where
-    compileParam :: Param SolrFilterQuery -> Builder
-    compileParam (Param k v) =
-      case k of
-        SolrFilterQueryDefaultField -> "df="    <> Text.encodeUtf8Builder v
-        SolrFilterQueryOp           -> "q.op="  <> Text.encodeUtf8Builder v
-        SolrFilterQueryCache        -> "cache=" <> if v then "true" else "false"
-        SolrFilterQueryCost         -> "cost="  <> Builder.show v
 
-instance HasParamDefaultField SolrFilterQuery where
-  paramDefaultField = SolrFilterQueryDefaultField
+instance HasParamDefaultField SolrFilterQuery
+instance HasParamOp           SolrFilterQuery
+instance HasParamCache        SolrFilterQuery
+instance HasParamCost         SolrFilterQuery
 
-instance HasParamOp SolrFilterQuery where
-  paramOp = SolrFilterQueryOp
 
-instance HasParamCache SolrFilterQuery where
-  paramCache = SolrFilterQueryCache
-
-instance HasParamCost SolrFilterQuery where
-  paramCost = SolrFilterQueryCost
-
+compileParam :: Param query -> Builder
+compileParam = \case
+  ParamDefaultField v -> "df=" <> Text.encodeUtf8Builder v
+  ParamOpAnd          -> "q.op=AND"
+  ParamOpOr           -> "q.op=OR"
+  ParamCache b        -> "cache=" <> if b then "true" else "false"
+  ParamCost n         -> "cost=" <> Builder.show n
 
 -- | Compile a 'SolrQuery' to a lazy 'ByteString'.
 --
@@ -222,7 +186,7 @@ instance HasParamCost SolrFilterQuery where
 -- if it compiles, it doesn't necessarily work. For example, multiple 'neg's on
 -- a query, multiple 'params', etc.
 --
--- >>> let ps = [paramDefaultField .= "body"]
+-- >>> let ps = [paramDefaultField "body"]
 -- >>> let q = "foo" =: phrase ["bar", "baz"] ~: 5 &&: defaultField (regex "wh?t") :: SolrQuery SolrExpr
 -- >>> compileSolrQuery (params ps q)
 -- "q={!df=body}(foo:\"bar baz\"~5 AND /wh?t/)"

@@ -1,6 +1,3 @@
-{-# LANGUAGE DataKinds     #-}
-{-# LANGUAGE DeriveFunctor #-}
-
 module Solr.Internal.Class.Expr
   ( -- * Solr expression language
     SolrExprSYM(..)

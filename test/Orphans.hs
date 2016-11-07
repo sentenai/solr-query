@@ -96,13 +96,10 @@ instance Arbitrary (SolrQuery SolrExpr) where
 
 instance Arbitrary (Param SolrQuery) where
   arbitrary = oneof
-    [ Param SolrQueryDefaultField <$> arbitrary
-    , Param SolrQueryOp <$> arbitrary
+    [ paramDefaultField <$> arbitrary
+    , pure paramOpAnd
+    , pure paramOpOr
     ]
-
-  shrink = \case
-    Param SolrQueryDefaultField s -> [ Param SolrQueryDefaultField s' | s' <- shrink s ]
-    Param SolrQueryOp s -> [ Param SolrQueryOp s' | s' <- shrink s ]
 
 -- Subtract by 1, but don't go below 0
 scaleSub1 :: Gen a -> Gen a
