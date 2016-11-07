@@ -135,6 +135,7 @@ instance SolrQuerySYM SolrExpr SolrQuery where
 
 instance HasParamDefaultField SolrQuery
 instance HasParamOp           SolrQuery
+instance HasParamStart        SolrQuery
 
 
 -- | A Solr filter query. This is like 'SolrQuery', but with different local
@@ -166,19 +167,21 @@ instance SolrQuerySYM SolrExpr SolrFilterQuery where
   params ps q =
     FQuery (Query ("{!" <> Builder.spaces (map compileParam ps) <> "}" <> unQuery (unFQuery q)))
 
-instance HasParamDefaultField SolrFilterQuery
-instance HasParamOp           SolrFilterQuery
 instance HasParamCache        SolrFilterQuery
 instance HasParamCost         SolrFilterQuery
+instance HasParamDefaultField SolrFilterQuery
+instance HasParamOp           SolrFilterQuery
+instance HasParamStart        SolrFilterQuery
 
 
 compileParam :: Param query -> Builder
 compileParam = \case
+  ParamCache b        -> "cache=" <> if b then "true" else "false"
+  ParamCost n         -> "cost=" <> Builder.show n
   ParamDefaultField v -> "df=" <> Text.encodeUtf8Builder v
   ParamOpAnd          -> "q.op=AND"
   ParamOpOr           -> "q.op=OR"
-  ParamCache b        -> "cache=" <> if b then "true" else "false"
-  ParamCost n         -> "cost=" <> Builder.show n
+  ParamStart n        -> "start=" <> Builder.show n
 
 -- | Compile a 'SolrQuery' to a lazy 'ByteString'.
 --
