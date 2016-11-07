@@ -14,6 +14,7 @@ data Param query where
   ParamDefaultField :: HasParamDefaultField query => Text -> Param query
   ParamOpAnd        :: HasParamOp           query =>         Param query
   ParamOpOr         :: HasParamOp           query =>         Param query
+  ParamRows         :: HasParamRows         query => Int  -> Param query
   ParamStart        :: HasParamStart        query => Int  -> Param query
 
 deriving instance Show (Param query)
@@ -53,6 +54,13 @@ paramOpAnd = ParamOpAnd
 paramOpOr :: HasParamOp query => Param query
 paramOpOr = ParamOpOr
 
+-- | The @\'rows\'@ local parameter.
+--
+-- >>> params [paramRows 5] ("foo" =: word "bar") :: SolrQuery SolrExpr
+-- q={!q.rows=5}foo:bar
+paramRows :: HasParamRows query => Int -> Param query
+paramRows = ParamRows
+
 -- | The @\'start\'@ local parameter.
 --
 -- >>> params [paramStart 10] ("foo" =: word "bar") :: SolrQuery SolrExpr
@@ -60,17 +68,9 @@ paramOpOr = ParamOpOr
 paramStart :: HasParamStart query => Int -> Param query
 paramStart = ParamStart
 
--- | The class of queries that support the @\'cache\'@ local parameter.
-class HasParamCache (query :: (SolrType -> *) -> *)
-
--- | The class of queries that support the @\'cost\'@ local parameter.
-class HasParamCost (query :: (SolrType -> *) -> *)
-
--- | The class of queries that support the @\'df\'@ local parameter.
+class HasParamCache        (query :: (SolrType -> *) -> *)
+class HasParamCost         (query :: (SolrType -> *) -> *)
 class HasParamDefaultField (query :: (SolrType -> *) -> *)
-
--- | The class of queries that support the @\'op\'@ local parameter.
-class HasParamOp (query :: (SolrType -> *) -> *)
-
--- | The class of queries that support the @\'start\'@ local parameter.
-class HasParamStart (query :: (SolrType -> *) -> *)
+class HasParamOp           (query :: (SolrType -> *) -> *)
+class HasParamRows         (query :: (SolrType -> *) -> *)
+class HasParamStart        (query :: (SolrType -> *) -> *)

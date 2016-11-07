@@ -97,6 +97,7 @@ instance SolrExprSYM expr => SolrQuerySYM expr SolrQuery where
 
 instance HasParamDefaultField SolrQuery
 instance HasParamOp           SolrQuery
+instance HasParamRows        SolrQuery
 instance HasParamStart        SolrQuery
 
 -- | Type check an untyped Solr query. Note the untyped 'Untyped.SolrExpr' on
@@ -209,6 +210,7 @@ reinterpretSolrQuery
      ( SolrQuerySYM expr query
      , HasParamDefaultField query
      , HasParamOp query
+     , HasParamRows query
      , HasParamStart query
      , Semigroup (query expr)
      )
@@ -229,6 +231,7 @@ reinterpretSolrQuery = fix $ \r -> \case
       ParamDefaultField s -> paramDefaultField s
       ParamOpAnd          -> paramOpAnd
       ParamOpOr           -> paramOpOr
+      ParamRows n         -> paramRows n
       ParamStart n        -> paramStart n
 
       ParamCache _        -> error "Solr.Query.Initial.reinterpretSolrQuery: ParamCache"

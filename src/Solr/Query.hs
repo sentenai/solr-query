@@ -135,6 +135,7 @@ instance SolrQuerySYM SolrExpr SolrQuery where
 
 instance HasParamDefaultField SolrQuery
 instance HasParamOp           SolrQuery
+instance HasParamRows         SolrQuery
 instance HasParamStart        SolrQuery
 
 
@@ -171,6 +172,7 @@ instance HasParamCache        SolrFilterQuery
 instance HasParamCost         SolrFilterQuery
 instance HasParamDefaultField SolrFilterQuery
 instance HasParamOp           SolrFilterQuery
+instance HasParamRows         SolrFilterQuery
 instance HasParamStart        SolrFilterQuery
 
 
@@ -181,6 +183,7 @@ compileParam = \case
   ParamDefaultField v -> "df=" <> Text.encodeUtf8Builder v
   ParamOpAnd          -> "q.op=AND"
   ParamOpOr           -> "q.op=OR"
+  ParamRows n         -> "rows=" <> Builder.show n
   ParamStart n        -> "start=" <> Builder.show n
 
 -- | Compile a 'SolrQuery' to a lazy 'ByteString'.
