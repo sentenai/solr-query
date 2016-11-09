@@ -1,6 +1,3 @@
-{-# LANGUAGE FlexibleInstances    #-}
-{-# LANGUAGE GADTs                #-}
-{-# LANGUAGE LambdaCase           #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
 module Orphans where
@@ -73,7 +70,6 @@ instance Arbitrary (SolrQuery SolrExpr) where
     , (35, oneof
         [ QScore <$> scale (`div` 2) arbitrary <*> arbitrary
         , QNeg <$> scale (`div` 2) arbitrary
-        , QParams <$> arbitrary <*> scale (`div` 2) arbitrary
         ])
     , (25, oneof
         [ QAnd    <$> scale (`div` 2) arbitrary <*> scale (`div` 2) arbitrary
@@ -91,7 +87,6 @@ instance Arbitrary (SolrQuery SolrExpr) where
     QNot q1 q2      -> q1 : q2 : [ QNot q1' q2' | (q1', q2') <- shrink (q1, q2) ]
     QScore q n      -> q : [ QScore q' n' | (q', n') <- shrink (q, n) ]
     QNeg q          -> q : [ QNeg q' | q' <- shrink q ]
-    QParams ps q    -> q : [ QParams ps' q' | (ps', q') <- shrink (ps, q) ]
     QAppend q1 q2   -> q1 : q2 : [ QAppend q1' q2' | (q1', q2') <- shrink (q1, q2) ]
 
 instance Arbitrary (Param SolrQuery) where

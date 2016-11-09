@@ -19,7 +19,6 @@ module Solr.Internal.Class.Query
   ) where
 
 import Solr.Internal.Class.Expr
-import Solr.Query.Param
 
 import Data.Text (Text)
 
@@ -32,35 +31,45 @@ import Data.Text (Text)
 class SolrExprSYM expr => SolrQuerySYM expr query where
   -- | A default field query.
   --
-  -- >>> defaultField (word "foo") :: SolrQuery SolrExpr
-  -- q=foo
+  -- ==== __Examples__
+  --
+  -- >>> compileSolrQuery [] (defaultField (word "foo") :: SolrQuery SolrExpr)
+  -- "q=foo"
   defaultField :: expr a -> query expr
 
   -- | A field query.
   --
-  -- >>> "foo" =: word "bar" :: SolrQuery SolrExpr
-  -- q=foo:bar
+  -- ==== __Examples__
+  --
+  -- >>> compileSolrQuery [] ("foo" =: word "bar" :: SolrQuery SolrExpr)
+  -- "q=foo:bar"
   (=:) :: Text -> expr a -> query expr
   infix 5 =:
 
   -- | An @AND@ query.
   --
-  -- >>> "foo" =: word "bar" &&: "baz" =: word "qux" :: SolrQuery SolrExpr
-  -- q=(foo:bar AND baz:qux)
+  -- ==== __Examples__
+  --
+  -- >>> compileSolrQuery [] ("foo" =: word "bar" &&: "baz" =: word "qux" :: SolrQuery SolrExpr)
+  -- "q=(foo:bar AND baz:qux)"
   (&&:) :: query expr -> query expr -> query expr
   infixr 3 &&:
 
   -- | An @OR@ query.
   --
-  -- >>> "foo" =: word "bar" ||: "baz" =: word "qux" :: SolrQuery SolrExpr
-  -- q=(foo:bar OR baz:qux)
+  -- ==== __Examples__
+  --
+  -- >>> compileSolrQuery [] ("foo" =: word "bar" ||: "baz" =: word "qux" :: SolrQuery SolrExpr)
+  -- "q=(foo:bar OR baz:qux)"
   (||:) :: query expr -> query expr -> query expr
   infixr 2 ||:
 
   -- | A @NOT@, @\'!\'@, or @\'-\'@ query.
   --
-  -- >>> "foo" =: word "bar" -: "baz" =: word "qux" :: SolrQuery SolrExpr
-  -- q=(foo:bar NOT baz:qux)
+  -- ==== __Examples__
+  --
+  -- >>> compileSolrQuery [] ("foo" =: word "bar" -: "baz" =: word "qux" :: SolrQuery SolrExpr)
+  -- "q=(foo:bar NOT baz:qux)"
   (-:) :: query expr -> query expr -> query expr
   infixr 1 -:
 
@@ -68,22 +77,20 @@ class SolrExprSYM expr => SolrQuerySYM expr query where
   --
   -- This is given right-fixity to reject queries like @q ^= 1 ^= 2@.
   --
-  -- >>> "foo" =: word "bar" ^=: 3.5 :: SolrQuery SolrExpr
-  -- q=foo:bar^=3.5
+  -- ==== __Examples__
+  --
+  -- >>> compileSolrQuery [] ("foo" =: word "bar" ^=: 3.5 :: SolrQuery SolrExpr)
+  -- "q=foo:bar^=3.5"
   (^=:) :: query expr -> Float -> query expr
   infixr 4 ^=:
 
   -- | Negate a query.
   --
-  -- >>> neg ("foo" =: word "bar") :: SolrQuery SolrExpr
-  -- q=-foo:bar
-  neg :: query expr -> query expr
-
-  -- | Add local parameters to a query.
+  -- ==== __Examples__
   --
-  -- >>> params [paramDefaultField "foo"] (defaultField (word "bar")) :: SolrQuery SolrExpr
-  -- q={!df=foo}bar
-  params :: [Param query] -> query expr -> query expr
+  -- >>> compileSolrQuery [] (neg ("foo" =: word "bar") :: SolrQuery SolrExpr)
+  -- "q=-foo:bar"
+  neg :: query expr -> query expr
 
 
 -- | Named version of ('=:').

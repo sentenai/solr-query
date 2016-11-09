@@ -8,11 +8,12 @@ module Solr.Expr.Initial.Untyped
 import Solr.Internal.Class.Expr
 import Solr.Type
 
-import Data.Text (Text)
+import Data.Coerce (coerce)
+import Data.Text   (Text)
 
 
 -- | An untyped, initially-encoded Solr expression.
-data SolrExpr (a :: SolrType)
+data SolrExpr (ty :: SolrType)
   = ENum Float
   | ETrue
   | EFalse
@@ -24,7 +25,20 @@ data SolrExpr (a :: SolrType)
   | forall b. ETo (Boundary (SolrExpr b)) (Boundary (SolrExpr b))
   | forall b. EBoost (SolrExpr b) Float
 
-deriving instance Show (SolrExpr a)
+deriving instance Show (SolrExpr ty)
+
+instance Eq (SolrExpr ty) where
+  ENum    a   == ENum    c   =        a == c
+  ETrue       == ETrue       = True
+  EFalse      == EFalse      = True
+  EWord   a   == EWord   c   =        a == c
+  EWild   a   == EWild   c   =        a == c
+  ERegex  a   == ERegex  c   =        a == c
+  EPhrase a   == EPhrase c   = coerce a == c
+  EFuzz   a b == EFuzz   c d = coerce a == c &&        b == d
+  ETo     a b == ETo     c d = coerce a == c && coerce b == d
+  EBoost  a b == EBoost  c d = coerce a == c &&        b == d
+  _           == _           = False
 
 instance SolrExprSYM SolrExpr where
   num    = ENum

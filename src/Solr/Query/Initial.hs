@@ -22,14 +22,16 @@ import Solr.Expr.Initial.Typed   (typeCheckSolrExpr)
 import Solr.Internal.Class.Query
 import Solr.Query.Param
 import Solr.Query.Param.Internal
+import Solr.Type                 (SolrType)
 
 import qualified Solr.Expr.Initial.Untyped as Untyped
 import qualified Solr.Expr.Initial.Typed   as Typed
 
+import Data.Coerce                   (coerce)
 import Data.Constraint               ((:-), (\\))
 import Data.Constraint.Forall
 import Data.Function                 (fix)
-import Data.Generics.Uniplate.Direct (Uniplate(..), (|-), (|*), plate, rewrite, transform)
+import Data.Generics.Uniplate.Direct (Uniplate(..), (|-), (|*), plate, transform)
 import Data.Generics.Str             (Str)
 import Data.Semigroup                (Semigroup(..))
 import Data.Text (Text)
@@ -37,7 +39,7 @@ import GHC.Show                      (showSpace)
 
 
 -- | An initial encoding of a Solr query.
-data SolrQuery expr
+data SolrQuery (expr :: SolrType -> *)
   = forall a. QDefaultField (expr a)
   | forall a. QField Text (expr a)
   | QAnd (SolrQuery expr) (SolrQuery expr)
@@ -45,8 +47,18 @@ data SolrQuery expr
   | QNot (SolrQuery expr) (SolrQuery expr)
   | QScore (SolrQuery expr) Float
   | QNeg (SolrQuery expr)
-  | QParams [Param SolrQuery] (SolrQuery expr)
   | QAppend (SolrQuery expr) (SolrQuery expr)
+
+instance Eq (SolrQuery Untyped.SolrExpr) where
+  QDefaultField a   == QDefaultField c   = coerce a == c
+  QField        a b == QField        c d =        a == c && coerce b == d
+  QAnd          a b == QAnd          c d =        a == c &&        b == d
+  QOr           a b == QOr           c d =        a == c &&        b == d
+  QNot          a b == QNot          c d =        a == c &&        b == d
+  QScore        a b == QScore        c d =        a == c &&        b == d
+  QNeg          a   == QNeg          c   =        a == c
+  QAppend       a b == QAppend       c d =        a == c &&        b == d
+  _                 == _                 = False
 
 -- This might be the ugliest Show instance I've ever written
 instance ForallF Show expr => Show (SolrQuery expr) where
@@ -63,7 +75,6 @@ instance ForallF Show expr => Show (SolrQuery expr) where
     QNot q1 q2    -> showParen (n >= 11) (showString "QNot "    . showsPrec 11 q1 . showSpace . showsPrec 11 q2)
     QScore q m    -> showParen (n >= 11) (showString "QScore "  . showsPrec 11 q  . showSpace . showsPrec 11 m)
     QNeg q        -> showParen (n >= 11) (showString "QNeg "    . showsPrec 11 q)
-    QParams ps q  -> showParen (n >= 11) (showString "QParams " . showsPrec 11 ps . showSpace . showsPrec 11 q)
     QAppend q1 q2 -> showParen (n >= 11) (showString "QAppend " . showsPrec 11 q1 . showSpace . showsPrec 11 q2)
 
 -- | Technically not a law-abiding 'Semigroup' instance, as you can observe the
@@ -82,7 +93,6 @@ instance Uniplate (SolrQuery expr) where
     QNot q1 q2      -> plate QNot |* q1 |* q2
     QScore q n      -> plate QScore |* q |- n
     QNeg q          -> plate QNeg |* q
-    QParams ps q    -> plate QParams |- ps |* q
     QAppend q1 q2   -> plate QAppend |* q1 |* q2
 
 instance SolrExprSYM expr => SolrQuerySYM expr SolrQuery where
@@ -93,7 +103,6 @@ instance SolrExprSYM expr => SolrQuerySYM expr SolrQuery where
   (-:)         = QNot
   (^=:)        = QScore
   neg          = QNeg
-  params       = QParams
 
 instance HasParamDefaultField SolrQuery
 instance HasParamOp           SolrQuery
@@ -122,10 +131,6 @@ typeCheckSolrQuery u0 =
       q <- typeCheckSolrQuery u
       pure (QNeg q)
 
-    QParams ps u -> do
-      q <- typeCheckSolrQuery u
-      pure (QParams ps q)
-
  where
   binop
     :: (SolrQuery Typed.SolrExpr -> SolrQuery Typed.SolrExpr -> SolrQuery Typed.SolrExpr)
@@ -137,34 +142,14 @@ typeCheckSolrQuery u0 =
     q2 <- typeCheckSolrQuery u2
     pure (con q1 q2)
 
--- | Attempt to factor a Solr query into a canonical form that irons out invalid
--- queries that are not caught by the type system (for example, double-negation,
--- or multiple nested applications of 'params').
---
--- Check the source code for all transformations performed.
+-- | Factor a Solr query into a canonical form (e.g. perform double-negation
+-- elimination). Check the source code for all transformations performed.
 factorSolrQuery :: SolrQuery expr -> SolrQuery expr
 factorSolrQuery =
     transform rightAssocAppend
   . transform doubleNegationElim
   . transform elimInnerScores
-  . rewrite pushUpParams
  where
-  -- Push all 'params' up to a big list at the top level.
-  pushUpParams :: SolrQuery expr -> Maybe (SolrQuery expr)
-  pushUpParams = \case
-    QAnd (QParams ps q1) q2    -> Just (QParams ps (QAnd q1 q2))
-    QAnd q1 (QParams ps q2)    -> Just (QParams ps (QAnd q1 q2))
-    QOr (QParams ps q1) q2     -> Just (QParams ps (QOr q1 q2))
-    QOr q1 (QParams ps q2)     -> Just (QParams ps (QOr q1 q2))
-    QNot (QParams ps q1) q2    -> Just (QParams ps (QNot q1 q2))
-    QNot q1 (QParams ps q2)    -> Just (QParams ps (QNot q1 q2))
-    QScore (QParams ps q) n    -> Just (QParams ps (QScore q n))
-    QNeg (QParams ps q)        -> Just (QParams ps (QNeg q))
-    QParams ps (QParams ps' q) -> Just (QParams (ps ++ ps') q) -- TODO: Merge params
-    QAppend (QParams ps q1) q2 -> Just (QParams ps (QAppend q1 q2))
-    QAppend q1 (QParams ps q2) -> Just (QParams ps (QAppend q1 q2))
-    _                          -> Nothing
-
   -- Eliminate all scores inside of a scored query (essentially, the outermost
   -- score takes precedence).
   elimInnerScores :: SolrQuery expr -> SolrQuery expr
@@ -181,8 +166,6 @@ factorSolrQuery =
       QNot q1 q2    -> QNot (unscore q1) (unscore q2)
       QScore q _    -> q -- note, not 'unscore q'
       QNeg q        -> QNeg (unscore q)
-      -- We shouldn't ever hit this case because we apply pushUpParams first
-      QParams ps q  -> QParams ps (unscore q)
       QAppend q1 q2 -> QAppend (unscore q1) (unscore q2)
       q             -> q
 
@@ -199,8 +182,7 @@ factorSolrQuery =
     q -> q
 
 
--- | Reinterpret an initially-encoded 'SolrQuery' to some other interpretation
--- that supports all of 'SolrQuery'\'s params.
+-- | Reinterpret an initially-encoded 'SolrQuery' to some other interpretation.
 --
 -- This may be useful for reinterpreting a 'SolrQuery' as a lazy
 -- 'Data.ByteString.Lazy.ByteString' after it's been type checked and factored
@@ -208,10 +190,6 @@ factorSolrQuery =
 reinterpretSolrQuery
   :: forall expr query.
      ( SolrQuerySYM expr query
-     , HasParamDefaultField query
-     , HasParamOp query
-     , HasParamRows query
-     , HasParamStart query
      , Semigroup (query expr)
      )
   => SolrQuery Typed.SolrExpr
@@ -224,17 +202,4 @@ reinterpretSolrQuery = fix $ \r -> \case
   QNot q1 q2      -> r q1 -: r q2
   QScore q n      -> r q ^=: n
   QNeg q          -> neg (r q)
-  QParams ps q    -> params (map f ps) (r q)
-   where
-    f :: Param SolrQuery -> Param query
-    f = \case
-      ParamDefaultField s -> paramDefaultField s
-      ParamOpAnd          -> paramOpAnd
-      ParamOpOr           -> paramOpOr
-      ParamRows n         -> paramRows n
-      ParamStart n        -> paramStart n
-
-      ParamCache _        -> error "Solr.Query.Initial.reinterpretSolrQuery: ParamCache"
-      ParamCost _         -> error "Solr.Query.Initial.reinterpretSolrQuery: ParamCost"
-
   QAppend q1 q2 -> r q1 <> r q2

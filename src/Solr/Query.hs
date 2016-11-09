@@ -8,16 +8,9 @@
 -- Not all type-correct expressions using the Solr DSL result in well-formed
 -- queries. For example,
 --
--- >>> type C query expr = (SolrQuerySYM expr query, HasParamDefaultField query, HasParamOp query)
--- >>> :{
---  let p1    = [paramDefaultField "foo"]
---      p2    = [paramOpAnd]
---      q0    = defaultField (word "bar")
---      query = params p1 (params p2 q0) :: C query expr => query expr
--- :}
---
--- >>> query :: SolrQuery SolrExpr
--- q={!df=foo}{!q.op=AND}bar
+-- >>> let query = (("foo" =: word "bar") ^=: 1.0) ^=: 2.0 :: SolrQuerySYM expr query => query expr
+-- >>> compileSolrQuery [] (query :: SolrQuery SolrExpr)
+-- "q=foo:bar^=1.0^=2.0"
 --
 -- For this reason, you may want to first interpret a query using
 -- "Solr.Query.Initial", manually fix up the AST
@@ -25,10 +18,9 @@
 -- lazy 'Data.ByteString.Lazy.ByteString' version using
 -- 'Solr.Query.Initial.reinterpretSolrQuery':
 --
--- >>> import qualified Solr.Query.Initial as Q
--- >>> import qualified Solr.Expr.Initial.Typed as E
--- >>> Q.reinterpretSolrQuery (Q.factorSolrQuery query) :: SolrQuery SolrExpr
--- q={!df=foo q.op=AND}bar
+-- >>> import Solr.Query.Initial (factorSolrQuery, reinterpretSolrQuery)
+-- >>> compileSolrQuery [] (reinterpretSolrQuery (factorSolrQuery query) :: SolrQuery SolrExpr)
+-- "q=foo:bar^=2.0"
 
 module Solr.Query
   (
@@ -48,7 +40,6 @@ module Solr.Query
   , (^=:)
   , score
   , neg
-  , params
     -- * Expression type
   , SolrExpr
     -- * Expression construction
@@ -94,18 +85,12 @@ import qualified Builder
 
 import Data.Semigroup (Semigroup(..))
 
-import qualified Data.ByteString.Lazy    as LByteString
-import qualified Data.Text.Encoding      as Text
-import qualified Data.Text.Lazy          as LText
-import qualified Data.Text.Lazy.Encoding as LText
+import qualified Data.ByteString.Lazy as LByteString
+import qualified Data.Text.Encoding   as Text
 
 
 -- | A Solr query.
 newtype SolrQuery (expr :: SolrType -> *) = Query { unQuery :: Builder }
-
--- | For debugging. Calls 'compileSolrQuery'.
-instance Show (SolrQuery expr) where
-  show = showb . compileSolrQuery
 
 -- | Appending Solr queries simply puts a space between them. To Solr, this is
 -- equivalent to combining them with \'OR\'. However, this behavior can be
@@ -131,8 +116,6 @@ instance SolrQuerySYM SolrExpr SolrQuery where
 
   neg q = Query ("-" <> unQuery q)
 
-  params ps q = Query ("{!" <> Builder.spaces (map compileParam ps) <> "}" <> unQuery q)
-
 instance HasParamDefaultField SolrQuery
 instance HasParamOp           SolrQuery
 instance HasParamRows         SolrQuery
@@ -144,10 +127,6 @@ instance HasParamStart        SolrQuery
 -- with both.
 newtype SolrFilterQuery expr = FQuery { unFQuery :: SolrQuery expr }
   deriving Semigroup
-
--- | For debugging. Calls 'compileSolrFilterQuery'.
-instance Show (SolrFilterQuery expr) where
-  show = showb . compileSolrFilterQuery
 
 instance SolrQuerySYM SolrExpr SolrFilterQuery where
   defaultField e = FQuery (defaultField e)
@@ -163,10 +142,6 @@ instance SolrQuerySYM SolrExpr SolrFilterQuery where
   q ^=: n = FQuery (unFQuery q ^=: n)
 
   neg q = FQuery (neg (unFQuery q))
-
-  -- Hm, for now it seems we have to duplicate this logic from SolrQuery.
-  params ps q =
-    FQuery (Query ("{!" <> Builder.spaces (map compileParam ps) <> "}" <> unQuery (unFQuery q)))
 
 instance HasParamCache        SolrFilterQuery
 instance HasParamCost         SolrFilterQuery
@@ -192,21 +167,26 @@ compileParam = \case
 -- if it compiles, it doesn't necessarily work. For example, multiple 'neg's on
 -- a query, multiple 'params', etc.
 --
--- >>> let ps = [paramDefaultField "body"]
--- >>> let q = "foo" =: phrase ["bar", "baz"] ~: 5 &&: defaultField (regex "wh?t") :: SolrQuery SolrExpr
--- >>> compileSolrQuery (params ps q)
+-- ==== __Examples__
+--
+-- >>> let query = "foo" =: phrase ["bar", "baz"] ~: 5 &&: defaultField (regex "wh?t") :: SolrQuery SolrExpr
+-- >>> compileSolrQuery [paramDefaultField "body"] query
 -- "q={!df=body}(foo:\"bar baz\"~5 AND /wh?t/)"
-compileSolrQuery :: SolrQuery expr -> LByteString.ByteString
-compileSolrQuery = Builder.toLazyByteString . ("q=" <>) . unQuery
+compileSolrQuery
+  :: [Param SolrQuery] -> SolrQuery expr -> LByteString.ByteString
+compileSolrQuery params (Query query) =
+  case params of
+    [] -> Builder.toLazyByteString ("q=" <> query)
+    _  ->
+      Builder.toLazyByteString
+        ("q={!" <> Builder.spaces (map compileParam params) <> "}" <> query)
 
 -- | Compile a 'SolrFilterQuery' to a lazy 'ByteString'.
-compileSolrFilterQuery :: SolrFilterQuery expr -> LByteString.ByteString
-compileSolrFilterQuery = Builder.toLazyByteString . ("fq=" <>) . unQuery . unFQuery
-
-
---------------------------------------------------------------------------------
--- Misc. helpers
-
--- Round-trip through UTF-8 encoded Text because ByteString.Char8 is BAD!
-showb :: LByteString.ByteString -> String
-showb = either show LText.unpack . LText.decodeUtf8'
+compileSolrFilterQuery
+  :: [Param SolrFilterQuery] -> SolrFilterQuery expr -> LByteString.ByteString
+compileSolrFilterQuery params (FQuery (Query query)) =
+  case params of
+    [] -> Builder.toLazyByteString ("fq=" <> query)
+    _ ->
+      Builder.toLazyByteString
+        ("fq={!" <> Builder.spaces (map compileParam params) <> "}" <> query)
