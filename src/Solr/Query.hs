@@ -1,5 +1,5 @@
 -- | Solr query construction and compilation. This is the simplest
--- interpretation of the Solr query language as a lazy 'LByteString.ByteString'.
+-- interpretation of the Solr query language as a lazy 'Text'.
 --
 -- This module re-exports the expression and query languages from
 -- "Solr.Internal.Class.Query" /inline/, for ease of browsing the haddocks.
@@ -15,8 +15,7 @@
 -- For this reason, you may want to first interpret a query using
 -- "Solr.Query.Initial", manually fix up the AST
 -- (perhaps with 'Solr.Query.Initial.factorSolrQuery'), and then reinterpret it as the
--- lazy 'Data.ByteString.Lazy.ByteString' version using
--- 'Solr.Query.Initial.reinterpretSolrQuery':
+-- lazy 'Text' version using 'Solr.Query.Initial.reinterpretSolrQuery':
 --
 -- >>> import Solr.Query.Initial (factorSolrQuery, reinterpretSolrQuery)
 -- >>> compileSolrQuery [] (reinterpretSolrQuery (factorSolrQuery query) :: SolrQuery SolrExpr)
@@ -75,18 +74,14 @@ module Solr.Query
   , compileSolrFilterQuery
   ) where
 
-import Builder                   (Builder)
+import Builder
 import Solr.Expr.Internal
 import Solr.Internal.Class.Query
 import Solr.Query.Param.Internal
 import Solr.Type
 
-import qualified Builder
-
 import Data.Semigroup (Semigroup(..))
-
-import qualified Data.ByteString.Lazy as LByteString
-import qualified Data.Text.Encoding   as Text
+import Data.Text.Lazy (Text)
 
 
 -- | A Solr query.
@@ -104,17 +99,17 @@ instance Semigroup (SolrQuery expr) where
 instance SolrQuerySYM SolrExpr SolrQuery where
   defaultField e = Query (unExpr e)
 
-  f =: e = Query (Text.encodeUtf8Builder f <> ":" <> unExpr e)
+  f =: e = Query (thaw' f <> char ':' <> unExpr e)
 
-  q1 &&: q2 = Query ("(" <> unQuery q1 <> " AND " <> unQuery q2 <> ")")
+  Query q1 &&: Query q2 = Query (parens (q1 <> " AND " <> q2))
 
-  q1 ||: q2 = Query ("(" <> unQuery q1 <> " OR " <> unQuery q2 <> ")")
+  Query q1 ||: Query q2 = Query (parens (q1 <> " OR " <> q2))
 
-  q1 -: q2 = Query ("(" <> unQuery q1 <> " NOT " <> unQuery q2 <> ")")
+  Query q1 -: Query q2 = Query (parens (q1 <> " NOT " <> q2))
 
-  q ^=: n = Query (unQuery q <> "^=" <> Builder.show n)
+  Query q ^=: n = Query (q <> "^=" <> bshow n)
 
-  neg q = Query ("-" <> unQuery q)
+  neg (Query q) = Query (char '-' <> q)
 
 instance HasParamDefaultField SolrQuery
 instance HasParamOp           SolrQuery
@@ -154,14 +149,14 @@ instance HasParamStart        SolrFilterQuery
 compileParam :: Param query -> Builder
 compileParam = \case
   ParamCache b        -> "cache=" <> if b then "true" else "false"
-  ParamCost n         -> "cost=" <> Builder.show n
-  ParamDefaultField v -> "df=" <> Text.encodeUtf8Builder v
+  ParamCost n         -> "cost=" <> bshow n
+  ParamDefaultField v -> "df=" <> thaw' v
   ParamOpAnd          -> "q.op=AND"
   ParamOpOr           -> "q.op=OR"
-  ParamRows n         -> "rows=" <> Builder.show n
-  ParamStart n        -> "start=" <> Builder.show n
+  ParamRows n         -> "rows=" <> bshow n
+  ParamStart n        -> "start=" <> bshow n
 
--- | Compile a 'SolrQuery' to a lazy 'ByteString'.
+-- | Compile a 'SolrQuery' to a lazy 'Text'.
 --
 -- Note that the DSL admits many ways to create an invalid Solr query; that is,
 -- if it compiles, it doesn't necessarily work. For example, multiple 'neg's on
@@ -173,20 +168,16 @@ compileParam = \case
 -- >>> compileSolrQuery [paramDefaultField "body"] query
 -- "q={!df=body}(foo:\"bar baz\"~5 AND /wh?t/)"
 compileSolrQuery
-  :: [Param SolrQuery] -> SolrQuery expr -> LByteString.ByteString
+  :: [Param SolrQuery] -> SolrQuery expr -> Text
 compileSolrQuery params (Query query) =
   case params of
-    [] -> Builder.toLazyByteString ("q=" <> query)
-    _  ->
-      Builder.toLazyByteString
-        ("q={!" <> Builder.spaces (map compileParam params) <> "}" <> query)
+    [] -> freeze ("q=" <> query)
+    _  -> freeze ("q={!" <> spaces (map compileParam params) <> "}" <> query)
 
--- | Compile a 'SolrFilterQuery' to a lazy 'ByteString'.
+-- | Compile a 'SolrFilterQuery' to a lazy 'Text'.
 compileSolrFilterQuery
-  :: [Param SolrFilterQuery] -> SolrFilterQuery expr -> LByteString.ByteString
+  :: [Param SolrFilterQuery] -> SolrFilterQuery expr -> Text
 compileSolrFilterQuery params (FQuery (Query query)) =
   case params of
-    [] -> Builder.toLazyByteString ("fq=" <> query)
-    _ ->
-      Builder.toLazyByteString
-        ("fq={!" <> Builder.spaces (map compileParam params) <> "}" <> query)
+    [] -> freeze ("fq=" <> query)
+    _ -> freeze ("fq={!" <> spaces (map compileParam params) <> "}" <> query)

@@ -1,3 +1,1 @@
 resolver: lts-7.8
-extra-deps:
-  - bytestring-show-0.3.5.6

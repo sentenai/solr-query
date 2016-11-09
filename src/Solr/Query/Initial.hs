@@ -185,8 +185,8 @@ factorSolrQuery =
 -- | Reinterpret an initially-encoded 'SolrQuery' to some other interpretation.
 --
 -- This may be useful for reinterpreting a 'SolrQuery' as a lazy
--- 'Data.ByteString.Lazy.ByteString' after it's been type checked and factored
--- with the machinery in this module.
+-- 'Data.Text.Lazy.Text' after it's been type checked and factored with the
+-- machinery in this module.
 reinterpretSolrQuery
   :: forall expr query.
      ( SolrQuerySYM expr query

@@ -4,7 +4,7 @@ import Solr.Internal.Class.Query
 import Solr.Query
 import Solr.Type
 
-import Data.ByteString.Lazy (ByteString)
+import Data.Text.Lazy (Text)
 import Test.Hspec
 
 spec :: Spec
@@ -48,5 +48,5 @@ spec =
   star' :: Boundary (SolrExpr 'TNum)
   star' = star
 
-test :: [Param SolrQuery] -> SolrQuery SolrExpr -> ByteString -> Expectation
+test :: [Param SolrQuery] -> SolrQuery SolrExpr -> Text -> Expectation
 test params query result = compileSolrQuery params query `shouldBe` result

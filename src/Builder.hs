@@ -1,26 +1,47 @@
-{-# LANGUAGE CPP #-}
-
 module Builder
-  ( module B
-  , Builder.show
+  ( Builder
+  , LText
+  , char
+  , bshow
   , spaces
+  , parens
+  , dquotes
+  , freeze
+  , thaw
+  , thaw'
   ) where
 
--- Data.ByteString.Lazy.Builder was renamed to Data.ByteString.Builder in 0.10.2.0
-#if MIN_VERSION_bytestring(0,10,2)
-import Data.ByteString.Builder as B
-#else
-import Data.ByteString.Lazy.Builder as B
-#endif
+import Data.Semigroup         (Semigroup(..))
+import Data.Text              (Text)
+import Data.Text.Lazy.Builder
+  (Builder, fromLazyText, fromString, fromText, singleton, toLazyText)
 
-import Data.Semigroup (Semigroup(..))
+import qualified Data.Text.Lazy as LText
 
-import qualified Text.Show.ByteString
+type LText = LText.Text
 
-show :: Text.Show.ByteString.Show a => a -> B.Builder
-show = B.lazyByteString . Text.Show.ByteString.show
+char :: Char -> Builder
+char = singleton
 
-spaces :: [B.Builder] -> B.Builder
+bshow :: Show a => a -> Builder
+bshow = fromString . show
+
+spaces :: [Builder] -> Builder
 spaces [] = ""
 spaces [w] = w
-spaces (w:ws) = w <> " " <> spaces ws
+spaces (w:ws) = w <> singleton ' ' <> spaces ws
+
+parens :: Builder -> Builder
+parens s = singleton '(' <> s <> singleton ')'
+
+dquotes :: Builder -> Builder
+dquotes s = singleton '"' <> s <> singleton '"'
+
+freeze :: Builder -> LText
+freeze = toLazyText
+
+thaw :: LText -> Builder
+thaw = fromLazyText
+
+thaw' :: Text -> Builder
+thaw' = fromText

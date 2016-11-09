@@ -1,16 +1,12 @@
 module Solr.Expr.Internal where
 
-import Builder                  (Builder)
+import Builder
 import Solr.Internal.Class.Expr
 import Solr.Type
 
-import qualified Builder
-
 import Data.Semigroup (Semigroup(..))
 import Data.String    (IsString(..))
-
-import qualified Data.Text          as Text
-import qualified Data.Text.Encoding as Text
+import Data.Text      (pack)
 
 
 -- |
@@ -20,42 +16,42 @@ import qualified Data.Text.Encoding as Text
 --
 -- An opaque Solr expression, indexed by its 'SolrType'. Its interpretation,
 -- accessed via e.g. 'Solr.Query.compileSolrQuery', is a lazy
--- 'Data.ByteString.Lazy.ByteString'.
+-- 'Data.Text.Lazy.Text'.
 --
 -- For an initially-encoded version, see "Solr.Expr.Initial.Untyped" or
 -- "Solr.Expr.Initial.Typed".
 newtype SolrExpr (t :: SolrType) = Expr { unExpr :: Builder }
 
 instance IsString (SolrExpr 'TWord) where
-  fromString s = word (Text.pack s)
+  fromString s = word (pack s)
 
 instance SolrExprSYM SolrExpr where
-  num n = Expr (Builder.show n)
+  num n = Expr (bshow n)
 
   true = Expr "true"
 
   false = Expr "false"
 
-  word s = Expr (Text.encodeUtf8Builder s)
+  word s = Expr (thaw' s)
 
-  wild s = Expr (Text.encodeUtf8Builder s)
+  wild s = Expr (thaw' s)
 
-  regex s = Expr ("/" <> Text.encodeUtf8Builder s <> "/")
+  regex s = Expr (char '/' <> thaw' s <> char '/')
 
-  phrase ss = Expr ("\"" <> Builder.spaces (map unExpr ss) <> "\"")
+  phrase ss = Expr (dquotes (spaces (map unExpr ss)))
 
-  e ~: n = Expr (unExpr e <> "~" <> Builder.show n)
+  e ~: n = Expr (unExpr e <> char '~' <> bshow n)
 
   to b1 b2 = Expr (lhs b1 <> " TO " <> rhs b2)
    where
     lhs :: Boundary (SolrExpr a) -> Builder
-    lhs (Inclusive e) = Builder.char8 '[' <> unExpr e
-    lhs (Exclusive e) = Builder.char8 '{' <> unExpr e
-    lhs Star          = Builder.lazyByteString "[*"
+    lhs (Inclusive e) = char '[' <> unExpr e
+    lhs (Exclusive e) = char '{' <> unExpr e
+    lhs Star          = "[*"
 
     rhs :: Boundary (SolrExpr a) -> Builder
-    rhs (Inclusive e) = unExpr e <> Builder.char8 ']'
-    rhs (Exclusive e) = unExpr e <> Builder.char8 '}'
-    rhs Star          = Builder.lazyByteString "*]"
+    rhs (Inclusive e) = unExpr e <> char ']'
+    rhs (Exclusive e) = unExpr e <> char '}'
+    rhs Star          = "*]"
 
-  e ^: n = Expr (unExpr e <> "^" <> Builder.show n)
+  e ^: n = Expr (unExpr e <> char '^' <> bshow n)
