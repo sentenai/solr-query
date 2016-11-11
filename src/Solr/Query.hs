@@ -70,6 +70,8 @@ module Solr.Query
   , paramDefaultField
   , paramOpAnd
   , paramOpOr
+  , paramRows
+  , paramStart
   -- * Query compilation
   , compileSolrQuery
   , compileSolrFilterQuery

@@ -8,6 +8,8 @@ module Solr.Param
   , paramDefaultField
   , paramOpAnd
   , paramOpOr
+  , paramRows
+  , paramStart
   ) where
 
 import Solr.Param.Internal
