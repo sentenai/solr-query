@@ -63,6 +63,29 @@ hashWithSalt :: Hashable a => Int -> a -> Int
 --   efficient implementation than the default implementation.
 hash :: Hashable a => a -> Int
 
+-- | Return a hash value for the argument, using the given salt.
+--   
+--   The general contract of <a>hashWithSalt</a> is:
+--   
+--   <ul>
+--   <li>If two values are equal according to the <a>==</a> method, then
+--   applying the <a>hashWithSalt</a> method on each of the two values
+--   <i>must</i> produce the same integer result if the same salt is used
+--   in each case.</li>
+--   <li>It is <i>not</i> required that if two values are unequal according
+--   to the <a>==</a> method, then applying the <a>hashWithSalt</a> method
+--   on each of the two values must produce distinct integer results.
+--   However, the programmer should be aware that producing distinct
+--   integer results for unequal values may improve the performance of
+--   hashing-based data structures.</li>
+--   <li>This method can be used to compute different hash values for the
+--   same input by providing a different salt in each application of the
+--   method. This implies that any instance that defines
+--   <a>hashWithSalt</a> <i>must</i> make use of the salt in its
+--   implementation.</li>
+--   </ul>
+hashWithSalt :: (Hashable a, Generic a, GHashable (Rep a)) => Int -> a -> Int
+
 -- | Transform a value into a <a>Hashable</a> value, then hash the
 --   transformed value using the given salt.
 --   

@@ -60,6 +60,7 @@ lookupDefault :: (Eq k, Hashable k) => v -> k -> HashMap k v -> v
 -- | <i>O(log n)</i> Return the value to which the specified key is mapped.
 --   Calls <a>error</a> if this map contains no mapping for the key.
 (!) :: (Eq k, Hashable k) => HashMap k v -> k -> v
+infixl 9 !
 
 -- | <i>O(log n)</i> Associate the specified value with the specified key
 --   in this map. If this map previously contained a mapping for the key,
@@ -168,7 +169,7 @@ filter :: (v -> Bool) -> HashMap k v -> HashMap k v
 
 -- | <i>O(n)</i> Filter this map by retaining only elements satisfying a
 --   predicate.
-filterWithKey :: (k -> v -> Bool) -> HashMap k v -> HashMap k v
+filterWithKey :: forall k v. (k -> v -> Bool) -> HashMap k v -> HashMap k v
 
 -- | <i>O(n)</i> Transform this map by applying a function to every value
 --   and retaining only some of them.
@@ -260,6 +261,7 @@ lookupDefault :: (Eq k, Hashable k) => v -> k -> HashMap k v -> v
 -- | <i>O(log n)</i> Return the value to which the specified key is mapped.
 --   Calls <a>error</a> if this map contains no mapping for the key.
 (!) :: (Eq k, Hashable k) => HashMap k v -> k -> v
+infixl 9 !
 
 -- | <i>O(log n)</i> Associate the specified value with the specified key
 --   in this map. If this map previously contained a mapping for the key,
@@ -368,7 +370,7 @@ filter :: (v -> Bool) -> HashMap k v -> HashMap k v
 
 -- | <i>O(n)</i> Filter this map by retaining only elements satisfying a
 --   predicate.
-filterWithKey :: (k -> v -> Bool) -> HashMap k v -> HashMap k v
+filterWithKey :: forall k v. (k -> v -> Bool) -> HashMap k v -> HashMap k v
 
 -- | <i>O(n)</i> Transform this map by applying a function to every value
 --   and retaining only some of them.
@@ -491,6 +493,7 @@ fromMap :: HashMap a () -> HashSet a
 instance Control.DeepSeq.NFData a => Control.DeepSeq.NFData (Data.HashSet.HashSet a)
 instance (Data.Hashable.Class.Hashable a, GHC.Classes.Eq a) => GHC.Classes.Eq (Data.HashSet.HashSet a)
 instance Data.Foldable.Foldable Data.HashSet.HashSet
+instance (Data.Hashable.Class.Hashable a, GHC.Classes.Eq a) => Data.Semigroup.Semigroup (Data.HashSet.HashSet a)
 instance (Data.Hashable.Class.Hashable a, GHC.Classes.Eq a) => GHC.Base.Monoid (Data.HashSet.HashSet a)
 instance (GHC.Classes.Eq a, Data.Hashable.Class.Hashable a, GHC.Read.Read a) => GHC.Read.Read (Data.HashSet.HashSet a)
 instance GHC.Show.Show a => GHC.Show.Show (Data.HashSet.HashSet a)

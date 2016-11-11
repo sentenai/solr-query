@@ -1,0 +1,37 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-comment">-- | This is the simplest interpretation of the Solr query language as a lazy</span><span>
+</span><a name="line-2"></a><span class="hs-comment">-- 'Text'.</span><span>
+</span><a name="line-3"></a><span class="hs-comment">--</span><span>
+</span><a name="line-4"></a><span class="hs-comment">-- Not all type-correct expressions using the Solr DSL result in well-formed</span><span>
+</span><a name="line-5"></a><span class="hs-comment">-- queries. For example,</span><span>
+</span><a name="line-6"></a><span class="hs-comment">--</span><span>
+</span><a name="line-7"></a><span class="hs-comment">-- &gt;&gt;&gt; let query = ((&quot;foo&quot; =: word &quot;bar&quot;) ^=: 1.0) ^=: 2.0 :: QuerySYM expr query =&gt; query expr</span><span>
+</span><a name="line-8"></a><span class="hs-comment">-- &gt;&gt;&gt; compile [] (query :: Query Expr)</span><span>
+</span><a name="line-9"></a><span class="hs-comment">-- &quot;q=foo:bar^=1.0^=2.0&quot;</span><span>
+</span><a name="line-10"></a><span class="hs-comment">--</span><span>
+</span><a name="line-11"></a><span class="hs-comment">-- For this reason, you may want to first interpret a query using</span><span>
+</span><a name="line-12"></a><span class="hs-comment">-- &quot;Solr.Query.Initial&quot;, manually fix up the AST</span><span>
+</span><a name="line-13"></a><span class="hs-comment">-- (perhaps with 'Solr.Query.Initial.factor'), and then reinterpret it as the</span><span>
+</span><a name="line-14"></a><span class="hs-comment">-- lazy 'Text' version using 'Solr.Query.Initial.reinterpret':</span><span>
+</span><a name="line-15"></a><span class="hs-comment">--</span><span>
+</span><a name="line-16"></a><span class="hs-comment">-- &gt;&gt;&gt; import Solr.Query.Initial (factor, reinterpret)</span><span>
+</span><a name="line-17"></a><span class="hs-comment">-- &gt;&gt;&gt; compile [] (reinterpret (factor query) :: Query Expr)</span><span>
+</span><a name="line-18"></a><span class="hs-comment">-- &quot;q=foo:bar^=2.0&quot;</span><span>
+</span><a name="line-19"></a><span>
+</span><a name="line-20"></a><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Solr</span><span class="hs-operator">.</span><span class="hs-identifier">Query</span><span>
+</span><a name="line-21"></a><span>  </span><span class="hs-special">(</span><span> </span><span class="hs-comment">-- * Query</span><span>
+</span><a name="line-22"></a><span>    </span><a href="Solr.Query.Internal.html#Query"><span class="hs-identifier hs-type">Query</span></a><span>
+</span><a name="line-23"></a><span>  </span><span class="hs-special">,</span><span> </span><a href="Solr.Query.Internal.html#compile"><span class="hs-identifier hs-var">compile</span></a><span>
+</span><a name="line-24"></a><span>    </span><span class="hs-comment">-- * Re-exports</span><span>
+</span><a name="line-25"></a><span>  </span><span class="hs-special">,</span><span> </span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Solr</span><span class="hs-operator">.</span><span class="hs-identifier">Expr</span><span>
+</span><a name="line-26"></a><span>  </span><span class="hs-special">,</span><span> </span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Solr</span><span class="hs-operator">.</span><span class="hs-identifier">Expr</span><span class="hs-operator">.</span><span class="hs-identifier">Class</span><span>
+</span><a name="line-27"></a><span>  </span><span class="hs-special">,</span><span> </span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Solr</span><span class="hs-operator">.</span><span class="hs-identifier">Query</span><span class="hs-operator">.</span><span class="hs-identifier">Class</span><span>
+</span><a name="line-28"></a><span>  </span><span class="hs-special">,</span><span> </span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Solr</span><span class="hs-operator">.</span><span class="hs-identifier">Param</span><span>
+</span><a name="line-29"></a><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
+</span><a name="line-30"></a><span>
+</span><a name="line-31"></a><span class="hs-keyword">import</span><span> </span><a href="Solr.Expr.html"><span class="hs-identifier">Solr</span><span class="hs-operator">.</span><span class="hs-identifier">Expr</span></a><span>
+</span><a name="line-32"></a><span class="hs-keyword">import</span><span> </span><a href="Solr.Expr.Class.html"><span class="hs-identifier">Solr</span><span class="hs-operator">.</span><span class="hs-identifier">Expr</span><span class="hs-operator">.</span><span class="hs-identifier">Class</span></a><span>
+</span><a name="line-33"></a><span class="hs-keyword">import</span><span> </span><a href="Solr.Param.html"><span class="hs-identifier">Solr</span><span class="hs-operator">.</span><span class="hs-identifier">Param</span></a><span>
+</span><a name="line-34"></a><span>  </span><span class="hs-special">(</span><a href="Solr.Param.Internal.html#Param"><span class="hs-identifier hs-type">Param</span></a><span class="hs-special">,</span><span> </span><a href="Solr.Param.Internal.html#paramDefaultField"><span class="hs-identifier hs-var">paramDefaultField</span></a><span class="hs-special">,</span><span> </span><a href="Solr.Param.Internal.html#paramOpAnd"><span class="hs-identifier hs-var">paramOpAnd</span></a><span class="hs-special">,</span><span> </span><a href="Solr.Param.Internal.html#paramOpOr"><span class="hs-identifier hs-var">paramOpOr</span></a><span class="hs-special">,</span><span> </span><a href="Solr.Param.Internal.html#paramRows"><span class="hs-identifier hs-var">paramRows</span></a><span class="hs-special">,</span><span> </span><a href="Solr.Param.Internal.html#paramStart"><span class="hs-identifier hs-var">paramStart</span></a><span class="hs-special">)</span><span>
+</span><a name="line-35"></a><span class="hs-keyword">import</span><span> </span><a href="Solr.Query.Class.html"><span class="hs-identifier">Solr</span><span class="hs-operator">.</span><span class="hs-identifier">Query</span><span class="hs-operator">.</span><span class="hs-identifier">Class</span></a><span>
+</span><a name="line-36"></a><span class="hs-keyword">import</span><span> </span><a href="Solr.Query.Internal.html"><span class="hs-identifier">Solr</span><span class="hs-operator">.</span><span class="hs-identifier">Query</span><span class="hs-operator">.</span><span class="hs-identifier">Internal</span></a><span>
+</span><a name="line-37"></a></pre></body></html>

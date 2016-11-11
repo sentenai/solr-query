@@ -35,6 +35,33 @@
 @version 1.2.2.1
 
 
+-- | <i>Warning</i>: this is an internal module, and does not have a stable
+--   API or name. Functions in this module may not check or enforce
+--   preconditions expected by public modules. Use at your own risk!
+--   
+--   A module containing <i>unsafe</i> operations, for <i>very very
+--   careful</i> use in <i>heavily tested</i> code.
+module Data.Text.Internal.Unsafe
+
+-- | Allow an <a>ST</a> computation to be deferred lazily. When passed an
+--   action of type <a>ST</a> <tt>s</tt> <tt>a</tt>, the action will only
+--   be performed when the value of <tt>a</tt> is demanded.
+--   
+--   This function is identical to the normal unsafeInterleaveST, but is
+--   inlined and hence faster.
+--   
+--   <i>Note</i>: This operation is highly unsafe, as it can introduce
+--   externally visible non-determinism into an <a>ST</a> action.
+inlineInterleaveST :: ST s a -> ST s a
+
+-- | Just like unsafePerformIO, but we inline it. Big performance gains as
+--   it exposes lots of things to further inlining. <i>Very unsafe</i>. In
+--   particular, you should do no memory allocation inside an
+--   <a>inlinePerformIO</a> block. On Hugs this is just
+--   <tt>unsafePerformIO</tt>.
+inlinePerformIO :: IO a -> a
+
+
 -- | Common internal functions for reading textual data.
 module Data.Text.Internal.Read
 type IReader t a = t -> Either String (a, t)
@@ -55,9 +82,12 @@ instance GHC.Base.Monad (Data.Text.Internal.Read.IParser t)
 --   API or name. Functions in this module may not check or enforce
 --   preconditions expected by public modules. Use at your own risk!
 --   
---   Basic UTF-32 validation.
-module Data.Text.Internal.Encoding.Utf32
-validate :: Word32 -> Bool
+--   Useful functions.
+module Data.Text.Internal.Functions
+
+-- | A lazier version of Data.List.intersperse. The other version causes
+--   space leaks!
+intersperse :: a -> [a] -> [a]
 
 
 -- | <i>Warning</i>: this is an internal module, and does not have a stable
@@ -153,22 +183,9 @@ instance Control.DeepSeq.NFData Data.Text.Encoding.Error.UnicodeException
 --   API or name. Functions in this module may not check or enforce
 --   preconditions expected by public modules. Use at your own risk!
 --   
---   Fast, unchecked bit shifting functions.
-module Data.Text.Internal.Unsafe.Shift
-
--- | This is a workaround for poor optimisation in GHC 6.8.2. It fails to
---   notice constant-width shifts, and adds a test and branch to every
---   shift. This imposes about a 10% performance hit.
---   
---   These functions are undefined when the amount being shifted by is
---   greater than the size in bits of a machine Int#.
-class UnsafeShift a
-shiftL :: UnsafeShift a => a -> Int -> a
-shiftR :: UnsafeShift a => a -> Int -> a
-instance Data.Text.Internal.Unsafe.Shift.UnsafeShift GHC.Word.Word16
-instance Data.Text.Internal.Unsafe.Shift.UnsafeShift GHC.Word.Word32
-instance Data.Text.Internal.Unsafe.Shift.UnsafeShift GHC.Word.Word64
-instance Data.Text.Internal.Unsafe.Shift.UnsafeShift GHC.Types.Int
+--   Basic UTF-32 validation.
+module Data.Text.Internal.Encoding.Utf32
+validate :: Word32 -> Bool
 
 
 -- | <i>Warning</i>: this is an internal module, and does not have a stable
@@ -186,39 +203,22 @@ validate2 :: Word16 -> Word16 -> Bool
 --   API or name. Functions in this module may not check or enforce
 --   preconditions expected by public modules. Use at your own risk!
 --   
---   Useful functions.
-module Data.Text.Internal.Functions
+--   Fast, unchecked bit shifting functions.
+module Data.Text.Internal.Unsafe.Shift
 
--- | A lazier version of Data.List.intersperse. The other version causes
---   space leaks!
-intersperse :: a -> [a] -> [a]
-
-
--- | <i>Warning</i>: this is an internal module, and does not have a stable
---   API or name. Functions in this module may not check or enforce
---   preconditions expected by public modules. Use at your own risk!
+-- | This is a workaround for poor optimisation in GHC 6.8.2. It fails to
+--   notice constant-width shifts, and adds a test and branch to every
+--   shift. This imposes about a 10% performance hit.
 --   
---   A module containing <i>unsafe</i> operations, for <i>very very
---   careful</i> use in <i>heavily tested</i> code.
-module Data.Text.Internal.Unsafe
-
--- | Allow an <a>ST</a> computation to be deferred lazily. When passed an
---   action of type <a>ST</a> <tt>s</tt> <tt>a</tt>, the action will only
---   be performed when the value of <tt>a</tt> is demanded.
---   
---   This function is identical to the normal unsafeInterleaveST, but is
---   inlined and hence faster.
---   
---   <i>Note</i>: This operation is highly unsafe, as it can introduce
---   externally visible non-determinism into an <a>ST</a> action.
-inlineInterleaveST :: ST s a -> ST s a
-
--- | Just like unsafePerformIO, but we inline it. Big performance gains as
---   it exposes lots of things to further inlining. <i>Very unsafe</i>. In
---   particular, you should do no memory allocation inside an
---   <a>inlinePerformIO</a> block. On Hugs this is just
---   <tt>unsafePerformIO</tt>.
-inlinePerformIO :: IO a -> a
+--   These functions are undefined when the amount being shifted by is
+--   greater than the size in bits of a machine Int#.
+class UnsafeShift a
+shiftL :: UnsafeShift a => a -> Int -> a
+shiftR :: UnsafeShift a => a -> Int -> a
+instance Data.Text.Internal.Unsafe.Shift.UnsafeShift GHC.Word.Word16
+instance Data.Text.Internal.Unsafe.Shift.UnsafeShift GHC.Word.Word32
+instance Data.Text.Internal.Unsafe.Shift.UnsafeShift GHC.Word.Word64
+instance Data.Text.Internal.Unsafe.Shift.UnsafeShift GHC.Types.Int
 
 
 -- | Packed, unboxed, heap-resident arrays. Suitable for performance
@@ -277,7 +277,7 @@ unsafeFreeze :: MArray s -> ST s Array
 unsafeIndex :: Array -> Int -> Word16
 
 -- | Create an uninitialized mutable array.
-new :: Int -> ST s (MArray s)
+new :: forall s. Int -> ST s (MArray s)
 
 -- | Unchecked write of a mutable array. May return garbage or crash on an
 --   out-of-bounds access.
@@ -298,6 +298,24 @@ unsafeChr32 :: Word32 -> Char
 -- | Write a character into the array at the given offset. Returns the
 --   number of <a>Word16</a>s written.
 unsafeWrite :: MArray s -> Int -> Char -> ST s Int
+
+
+-- | <i>Warning</i>: this is an internal module, and does not have a stable
+--   API or name. Functions in this module may not check or enforce
+--   preconditions expected by public modules. Use at your own risk!
+--   
+--   Basic UTF-8 validation and character manipulation.
+module Data.Text.Internal.Encoding.Utf8
+ord2 :: Char -> (Word8, Word8)
+ord3 :: Char -> (Word8, Word8, Word8)
+ord4 :: Char -> (Word8, Word8, Word8, Word8)
+chr2 :: Word8 -> Word8 -> Char
+chr3 :: Word8 -> Word8 -> Word8 -> Char
+chr4 :: Word8 -> Word8 -> Word8 -> Word8 -> Char
+validate1 :: Word8 -> Bool
+validate2 :: Word8 -> Word8 -> Bool
+validate3 :: Word8 -> Word8 -> Word8 -> Bool
+validate4 :: Word8 -> Word8 -> Word8 -> Word8 -> Bool
 
 
 -- | A module containing private <a>Text</a> internals. This exposes the
@@ -342,14 +360,17 @@ firstf :: (a -> c) -> Maybe (a, b) -> Maybe (c, b)
 -- | Checked multiplication. Calls <a>error</a> if the result would
 --   overflow.
 mul :: Int -> Int -> Int
+infixl 7 `mul`
 
 -- | Checked multiplication. Calls <a>error</a> if the result would
 --   overflow.
 mul32 :: Int32 -> Int32 -> Int32
+infixl 7 `mul32`
 
 -- | Checked multiplication. Calls <a>error</a> if the result would
 --   overflow.
 mul64 :: Int64 -> Int64 -> Int64
+infixl 7 `mul64`
 
 -- | A useful <a>show</a>-like function for debugging purposes.
 showText :: Text -> String
@@ -427,10 +448,10 @@ instance GHC.Classes.Eq a => GHC.Classes.Eq (Data.Text.Internal.Fusion.Types.Str
 instance GHC.Classes.Ord a => GHC.Classes.Ord (Data.Text.Internal.Fusion.Types.Stream a)
 
 module Data.Text.Internal.Fusion.CaseMapping
-upperMapping :: Char -> s -> Step (CC s) Char
-lowerMapping :: Char -> s -> Step (CC s) Char
-titleMapping :: Char -> s -> Step (CC s) Char
-foldMapping :: Char -> s -> Step (CC s) Char
+upperMapping :: forall s. Char -> s -> Step (CC s) Char
+lowerMapping :: forall s. Char -> s -> Step (CC s) Char
+titleMapping :: forall s. Char -> s -> Step (CC s) Char
+foldMapping :: forall s. Char -> s -> Step (CC s) Char
 
 
 -- | <i>Warning</i>: this is an internal module, and does not have a stable
@@ -673,6 +694,33 @@ countCharI :: Integral a => Char -> Stream Char -> a
 zipWith :: (a -> a -> b) -> Stream a -> Stream a -> Stream b
 
 
+-- | Fast substring search for <a>Text</a>, based on work by Boyer, Moore,
+--   Horspool, Sunday, and Lundh.
+--   
+--   References:
+--   
+--   <ul>
+--   <li>R. S. Boyer, J. S. Moore: A Fast String Searching Algorithm.
+--   Communications of the ACM, 20, 10, 762-772 (1977)</li>
+--   <li>R. N. Horspool: Practical Fast Searching in Strings. Software -
+--   Practice and Experience 10, 501-506 (1980)</li>
+--   <li>D. M. Sunday: A Very Fast Substring Search Algorithm.
+--   Communications of the ACM, 33, 8, 132-142 (1990)</li>
+--   <li>F. Lundh: The Fast Search Algorithm.
+--   <a>http://effbot.org/zone/stringlib.htm</a> (2006)</li>
+--   </ul>
+module Data.Text.Internal.Search
+
+-- | <i>O(n+m)</i> Find the offsets of all non-overlapping indices of
+--   <tt>needle</tt> within <tt>haystack</tt>. The offsets returned
+--   represent uncorrected indices in the low-level "needle" array, to
+--   which its offset must be added.
+--   
+--   In (unlikely) bad cases, this algorithm's complexity degrades towards
+--   <i>O(n*m)</i>.
+indices :: Text -> Text -> [Int]
+
+
 -- | A module containing unsafe <a>Text</a> operations, for very very
 --   careful use in heavily tested code.
 module Data.Text.Unsafe
@@ -703,7 +751,7 @@ inlinePerformIO :: IO a -> a
 --   same results each time. It may even happen that one of the duplicated
 --   IO actions is only run partially, and then interrupted in the middle
 --   without an exception being raised. Therefore, functions like
---   <a>bracket</a> cannot be used safely within
+--   <tt>bracket</tt> cannot be used safely within
 --   <a>unsafeDupablePerformIO</a>.
 unsafeDupablePerformIO :: IO a -> a
 data Iter
@@ -834,24 +882,6 @@ restreamUtf32BE :: Stream Char -> Stream Word8
 --   API or name. Functions in this module may not check or enforce
 --   preconditions expected by public modules. Use at your own risk!
 --   
---   Basic UTF-8 validation and character manipulation.
-module Data.Text.Internal.Encoding.Utf8
-ord2 :: Char -> (Word8, Word8)
-ord3 :: Char -> (Word8, Word8, Word8)
-ord4 :: Char -> (Word8, Word8, Word8, Word8)
-chr2 :: Word8 -> Word8 -> Char
-chr3 :: Word8 -> Word8 -> Word8 -> Char
-chr4 :: Word8 -> Word8 -> Word8 -> Word8 -> Char
-validate1 :: Word8 -> Bool
-validate2 :: Word8 -> Word8 -> Bool
-validate3 :: Word8 -> Word8 -> Word8 -> Bool
-validate4 :: Word8 -> Word8 -> Word8 -> Word8 -> Bool
-
-
--- | <i>Warning</i>: this is an internal module, and does not have a stable
---   API or name. Functions in this module may not check or enforce
---   preconditions expected by public modules. Use at your own risk!
---   
 --   Fusible <a>Stream</a>-oriented functions for converting between
 --   <tt>Text</tt> and several common encodings.
 module Data.Text.Internal.Encoding.Fusion
@@ -880,6 +910,39 @@ streamUtf32LE :: OnDecodeError -> ByteString -> Stream Char
 streamUtf32BE :: OnDecodeError -> ByteString -> Stream Char
 
 -- | <i>O(n)</i> Convert a <a>Stream</a> <a>Word8</a> to a
+--   <a>ByteString</a>.
+unstream :: Stream Word8 -> ByteString
+
+
+-- | <i>Warning</i>: this is an internal module, and does not have a stable
+--   API or name. Functions in this module may not check or enforce
+--   preconditions expected by public modules. Use at your own risk!
+--   
+--   Fusible <a>Stream</a>-oriented functions for converting between lazy
+--   <tt>Text</tt> and several common encodings.
+module Data.Text.Internal.Lazy.Encoding.Fusion
+
+-- | <i>O(n)</i> Convert a lazy <a>ByteString</a> into a 'Stream Char',
+--   using UTF-8 encoding.
+streamUtf8 :: OnDecodeError -> ByteString -> Stream Char
+
+-- | <i>O(n)</i> Convert a <a>ByteString</a> into a 'Stream Char', using
+--   little endian UTF-16 encoding.
+streamUtf16LE :: OnDecodeError -> ByteString -> Stream Char
+
+-- | <i>O(n)</i> Convert a <a>ByteString</a> into a 'Stream Char', using
+--   big endian UTF-16 encoding.
+streamUtf16BE :: OnDecodeError -> ByteString -> Stream Char
+
+-- | <i>O(n)</i> Convert a <a>ByteString</a> into a 'Stream Char', using
+--   little endian UTF-32 encoding.
+streamUtf32LE :: OnDecodeError -> ByteString -> Stream Char
+
+-- | <i>O(n)</i> Convert a <a>ByteString</a> into a 'Stream Char', using
+--   big endian UTF-32 encoding.
+streamUtf32BE :: OnDecodeError -> ByteString -> Stream Char
+
+-- | <i>O(n)</i> Convert a <a>Stream</a> <a>Word8</a> to a lazy
 --   <a>ByteString</a>.
 unstream :: Stream Word8 -> ByteString
 
@@ -1015,133 +1078,6 @@ instance GHC.Classes.Eq Data.Text.Encoding.CodePoint
 instance GHC.Show.Show Data.Text.Encoding.Decoding
 
 
--- | <i>Warning</i>: this is an internal module, and does not have a stable
---   API or name. Functions in this module may not check or enforce
---   preconditions expected by public modules. Use at your own risk!
---   
---   Fusible <a>Stream</a>-oriented functions for converting between lazy
---   <tt>Text</tt> and several common encodings.
-module Data.Text.Internal.Lazy.Encoding.Fusion
-
--- | <i>O(n)</i> Convert a lazy <a>ByteString</a> into a 'Stream Char',
---   using UTF-8 encoding.
-streamUtf8 :: OnDecodeError -> ByteString -> Stream Char
-
--- | <i>O(n)</i> Convert a <a>ByteString</a> into a 'Stream Char', using
---   little endian UTF-16 encoding.
-streamUtf16LE :: OnDecodeError -> ByteString -> Stream Char
-
--- | <i>O(n)</i> Convert a <a>ByteString</a> into a 'Stream Char', using
---   big endian UTF-16 encoding.
-streamUtf16BE :: OnDecodeError -> ByteString -> Stream Char
-
--- | <i>O(n)</i> Convert a <a>ByteString</a> into a 'Stream Char', using
---   little endian UTF-32 encoding.
-streamUtf32LE :: OnDecodeError -> ByteString -> Stream Char
-
--- | <i>O(n)</i> Convert a <a>ByteString</a> into a 'Stream Char', using
---   big endian UTF-32 encoding.
-streamUtf32BE :: OnDecodeError -> ByteString -> Stream Char
-
--- | <i>O(n)</i> Convert a <a>Stream</a> <a>Word8</a> to a lazy
---   <a>ByteString</a>.
-unstream :: Stream Word8 -> ByteString
-
-
--- | Fast substring search for <a>Text</a>, based on work by Boyer, Moore,
---   Horspool, Sunday, and Lundh.
---   
---   References:
---   
---   <ul>
---   <li>R. S. Boyer, J. S. Moore: A Fast String Searching Algorithm.
---   Communications of the ACM, 20, 10, 762-772 (1977)</li>
---   <li>R. N. Horspool: Practical Fast Searching in Strings. Software -
---   Practice and Experience 10, 501-506 (1980)</li>
---   <li>D. M. Sunday: A Very Fast Substring Search Algorithm.
---   Communications of the ACM, 33, 8, 132-142 (1990)</li>
---   <li>F. Lundh: The Fast Search Algorithm.
---   <a>http://effbot.org/zone/stringlib.htm</a> (2006)</li>
---   </ul>
-module Data.Text.Internal.Search
-
--- | <i>O(n+m)</i> Find the offsets of all non-overlapping indices of
---   <tt>needle</tt> within <tt>haystack</tt>. The offsets returned
---   represent uncorrected indices in the low-level "needle" array, to
---   which its offset must be added.
---   
---   In (unlikely) bad cases, this algorithm's complexity degrades towards
---   <i>O(n*m)</i>.
-indices :: Text -> Text -> [Int]
-
-
--- | Support for using <a>Text</a> data with native code via the Haskell
---   foreign function interface.
-module Data.Text.Foreign
-
--- | A type representing a number of UTF-16 code units.
-data I16
-
--- | <i>O(n)</i> Create a new <a>Text</a> from a <a>Ptr</a> <a>Word16</a>
---   by copying the contents of the array.
-fromPtr :: Ptr Word16 -> I16 -> IO Text
-
--- | <i>O(n)</i> Perform an action on a temporary, mutable copy of a
---   <a>Text</a>. The copy is freed as soon as the action returns.
-useAsPtr :: Text -> (Ptr Word16 -> I16 -> IO a) -> IO a
-
--- | <i>O(n)</i> Make a mutable copy of a <a>Text</a>.
-asForeignPtr :: Text -> IO (ForeignPtr Word16, I16)
-
--- | <i>O(n)</i> Decode a C string with explicit length, which is assumed
---   to have been encoded as UTF-8. If decoding fails, a
---   <tt>UnicodeException</tt> is thrown.
-peekCStringLen :: CStringLen -> IO Text
-
--- | Marshal a <a>Text</a> into a C string encoded as UTF-8 in temporary
---   storage, with explicit length information. The encoded string may
---   contain NUL bytes, and is not followed by a trailing NUL byte.
---   
---   The temporary storage is freed when the subcomputation terminates
---   (either normally or via an exception), so the pointer to the temporary
---   storage must <i>not</i> be used after this function returns.
-withCStringLen :: Text -> (CStringLen -> IO a) -> IO a
-
--- | <i>O(1)</i> Return the length of a <a>Text</a> in units of
---   <tt>Word16</tt>. This is useful for sizing a target array
---   appropriately before using <tt>unsafeCopyToPtr</tt>.
-lengthWord16 :: Text -> Int
-
--- | <i>O(n)</i> Copy a <a>Text</a> to an array. The array is assumed to be
---   big enough to hold the contents of the entire <a>Text</a>.
-unsafeCopyToPtr :: Text -> Ptr Word16 -> IO ()
-
--- | <i>O(1)</i> Return the suffix of the <a>Text</a>, with <tt>n</tt>
---   <a>Word16</a> units dropped from its beginning.
---   
---   If <tt>n</tt> would cause the <a>Text</a> to begin inside a surrogate
---   pair, the beginning of the suffix will be advanced by one additional
---   <a>Word16</a> unit to maintain its validity.
-dropWord16 :: I16 -> Text -> Text
-
--- | <i>O(1)</i> Return the prefix of the <a>Text</a> of <tt>n</tt>
---   <a>Word16</a> units in length.
---   
---   If <tt>n</tt> would cause the <a>Text</a> to end inside a surrogate
---   pair, the end of the prefix will be advanced by one additional
---   <a>Word16</a> unit to maintain its validity.
-takeWord16 :: I16 -> Text -> Text
-instance GHC.Show.Show Data.Text.Foreign.I16
-instance GHC.Real.Real Data.Text.Foreign.I16
-instance GHC.Read.Read Data.Text.Foreign.I16
-instance GHC.Classes.Ord Data.Text.Foreign.I16
-instance GHC.Num.Num Data.Text.Foreign.I16
-instance GHC.Real.Integral Data.Text.Foreign.I16
-instance GHC.Classes.Eq Data.Text.Foreign.I16
-instance GHC.Enum.Enum Data.Text.Foreign.I16
-instance GHC.Enum.Bounded Data.Text.Foreign.I16
-
-
 -- | A time and space-efficient implementation of Unicode text. Suitable
 --   for performance critical use, both in terms of large data quantities
 --   and high speed.
@@ -1185,6 +1121,7 @@ empty :: Text
 --   requires copying a new array. Subject to fusion. Performs replacement
 --   on invalid scalar values.
 cons :: Char -> Text -> Text
+infixr 5 `cons`
 
 -- | <i>O(n)</i> Adds a character to the end of a <a>Text</a>. This copies
 --   the entire array in the process, unless fused. Subject to fusion.
@@ -1893,6 +1830,7 @@ unpackCString# :: Addr# -> Text
 instance GHC.Classes.Eq Data.Text.Internal.Text
 instance GHC.Classes.Ord Data.Text.Internal.Text
 instance GHC.Read.Read Data.Text.Internal.Text
+instance Data.Semigroup.Semigroup Data.Text.Internal.Text
 instance GHC.Base.Monoid Data.Text.Internal.Text
 instance Data.String.IsString Data.Text.Internal.Text
 instance GHC.Exts.IsList Data.Text.Internal.Text
@@ -2095,6 +2033,152 @@ indices :: Text -> Text -> [Int64]
 module Data.Text.Lazy.Internal
 
 
+-- | Functions used frequently when reading textual data.
+module Data.Text.Read
+
+-- | Read some text. If the read succeeds, return its value and the
+--   remaining text, otherwise an error message.
+type Reader a = IReader Text a
+
+-- | Read a decimal integer. The input must begin with at least one decimal
+--   digit, and is consumed until a non-digit or end of string is reached.
+--   
+--   This function does not handle leading sign characters. If you need to
+--   handle signed input, use <tt><a>signed</a> <a>decimal</a></tt>.
+--   
+--   <i>Note</i>: For fixed-width integer types, this function does not
+--   attempt to detect overflow, so a sufficiently long input may give
+--   incorrect results. If you are worried about overflow, use
+--   <a>Integer</a> for your result type.
+decimal :: Integral a => Reader a
+
+-- | Read a hexadecimal integer, consisting of an optional leading
+--   <tt>"0x"</tt> followed by at least one decimal digit. Input is
+--   consumed until a non-hex-digit or end of string is reached. This
+--   function is case insensitive.
+--   
+--   This function does not handle leading sign characters. If you need to
+--   handle signed input, use <tt><a>signed</a> <a>hexadecimal</a></tt>.
+--   
+--   <i>Note</i>: For fixed-width integer types, this function does not
+--   attempt to detect overflow, so a sufficiently long input may give
+--   incorrect results. If you are worried about overflow, use
+--   <a>Integer</a> for your result type.
+hexadecimal :: Integral a => Reader a
+
+-- | Read an optional leading sign character (<tt>'-'</tt> or <tt>'+'</tt>)
+--   and apply it to the result of applying the given reader.
+signed :: Num a => Reader a -> Reader a
+
+-- | Read a rational number.
+--   
+--   This function accepts an optional leading sign character, followed by
+--   at least one decimal digit. The syntax similar to that accepted by the
+--   <a>read</a> function, with the exception that a trailing <tt>'.'</tt>
+--   or <tt>'e'</tt> <i>not</i> followed by a number is not consumed.
+--   
+--   Examples (with behaviour identical to <a>read</a>):
+--   
+--   <pre>
+--   rational "3"     == Right (3.0, "")
+--   rational "3.1"   == Right (3.1, "")
+--   rational "3e4"   == Right (30000.0, "")
+--   rational "3.1e4" == Right (31000.0, "")
+--   rational ".3"    == Left "input does not start with a digit"
+--   rational "e3"    == Left "input does not start with a digit"
+--   </pre>
+--   
+--   Examples of differences from <a>read</a>:
+--   
+--   <pre>
+--   rational "3.foo" == Right (3.0, ".foo")
+--   rational "3e"    == Right (3.0, "e")
+--   </pre>
+rational :: Fractional a => Reader a
+
+-- | Read a rational number.
+--   
+--   The syntax accepted by this function is the same as for
+--   <a>rational</a>.
+--   
+--   <i>Note</i>: This function is almost ten times faster than
+--   <a>rational</a>, but is slightly less accurate.
+--   
+--   The <a>Double</a> type supports about 16 decimal places of accuracy.
+--   For 94.2% of numbers, this function and <a>rational</a> give identical
+--   results, but for the remaining 5.8%, this function loses precision
+--   around the 15th decimal place. For 0.001% of numbers, this function
+--   will lose precision at the 13th or 14th decimal place.
+double :: Reader Double
+
+
+-- | Support for using <a>Text</a> data with native code via the Haskell
+--   foreign function interface.
+module Data.Text.Foreign
+
+-- | A type representing a number of UTF-16 code units.
+data I16
+
+-- | <i>O(n)</i> Create a new <a>Text</a> from a <a>Ptr</a> <a>Word16</a>
+--   by copying the contents of the array.
+fromPtr :: Ptr Word16 -> I16 -> IO Text
+
+-- | <i>O(n)</i> Perform an action on a temporary, mutable copy of a
+--   <a>Text</a>. The copy is freed as soon as the action returns.
+useAsPtr :: Text -> (Ptr Word16 -> I16 -> IO a) -> IO a
+
+-- | <i>O(n)</i> Make a mutable copy of a <a>Text</a>.
+asForeignPtr :: Text -> IO (ForeignPtr Word16, I16)
+
+-- | <i>O(n)</i> Decode a C string with explicit length, which is assumed
+--   to have been encoded as UTF-8. If decoding fails, a
+--   <tt>UnicodeException</tt> is thrown.
+peekCStringLen :: CStringLen -> IO Text
+
+-- | Marshal a <a>Text</a> into a C string encoded as UTF-8 in temporary
+--   storage, with explicit length information. The encoded string may
+--   contain NUL bytes, and is not followed by a trailing NUL byte.
+--   
+--   The temporary storage is freed when the subcomputation terminates
+--   (either normally or via an exception), so the pointer to the temporary
+--   storage must <i>not</i> be used after this function returns.
+withCStringLen :: Text -> (CStringLen -> IO a) -> IO a
+
+-- | <i>O(1)</i> Return the length of a <a>Text</a> in units of
+--   <tt>Word16</tt>. This is useful for sizing a target array
+--   appropriately before using <tt>unsafeCopyToPtr</tt>.
+lengthWord16 :: Text -> Int
+
+-- | <i>O(n)</i> Copy a <a>Text</a> to an array. The array is assumed to be
+--   big enough to hold the contents of the entire <a>Text</a>.
+unsafeCopyToPtr :: Text -> Ptr Word16 -> IO ()
+
+-- | <i>O(1)</i> Return the suffix of the <a>Text</a>, with <tt>n</tt>
+--   <a>Word16</a> units dropped from its beginning.
+--   
+--   If <tt>n</tt> would cause the <a>Text</a> to begin inside a surrogate
+--   pair, the beginning of the suffix will be advanced by one additional
+--   <a>Word16</a> unit to maintain its validity.
+dropWord16 :: I16 -> Text -> Text
+
+-- | <i>O(1)</i> Return the prefix of the <a>Text</a> of <tt>n</tt>
+--   <a>Word16</a> units in length.
+--   
+--   If <tt>n</tt> would cause the <a>Text</a> to end inside a surrogate
+--   pair, the end of the prefix will be advanced by one additional
+--   <a>Word16</a> unit to maintain its validity.
+takeWord16 :: I16 -> Text -> Text
+instance GHC.Show.Show Data.Text.Foreign.I16
+instance GHC.Real.Real Data.Text.Foreign.I16
+instance GHC.Read.Read Data.Text.Foreign.I16
+instance GHC.Classes.Ord Data.Text.Foreign.I16
+instance GHC.Num.Num Data.Text.Foreign.I16
+instance GHC.Real.Integral Data.Text.Foreign.I16
+instance GHC.Classes.Eq Data.Text.Foreign.I16
+instance GHC.Enum.Enum Data.Text.Foreign.I16
+instance GHC.Enum.Bounded Data.Text.Foreign.I16
+
+
 -- | Functions for converting lazy <a>Text</a> values to and from lazy
 --   <tt>ByteString</tt>, using several standard encodings.
 --   
@@ -2261,6 +2345,7 @@ foldlChunks :: (a -> Text -> a) -> a -> Text -> a
 --   function is more costly than its <tt>List</tt> counterpart because it
 --   requires copying a new array. Subject to fusion.
 cons :: Char -> Text -> Text
+infixr 5 `cons`
 
 -- | <i>O(n)</i> Adds a character to the end of a <a>Text</a>. This copies
 --   the entire array in the process, unless fused. Subject to fusion.
@@ -2982,6 +3067,7 @@ instance GHC.Classes.Eq Data.Text.Internal.Lazy.Text
 instance GHC.Classes.Ord Data.Text.Internal.Lazy.Text
 instance GHC.Show.Show Data.Text.Internal.Lazy.Text
 instance GHC.Read.Read Data.Text.Internal.Lazy.Text
+instance Data.Semigroup.Semigroup Data.Text.Internal.Lazy.Text
 instance GHC.Base.Monoid Data.Text.Internal.Lazy.Text
 instance Data.String.IsString Data.Text.Internal.Lazy.Text
 instance GHC.Exts.IsList Data.Text.Internal.Lazy.Text
@@ -3085,6 +3171,7 @@ ensureFree :: Int -> Builder
 -- | Ensure that <tt>n</tt> many elements are available, and then use
 --   <tt>f</tt> to write some elements into the memory.
 writeN :: Int -> (forall s. MArray s -> Int -> ST s ()) -> Builder
+instance Data.Semigroup.Semigroup Data.Text.Internal.Builder.Builder
 instance GHC.Base.Monoid Data.Text.Internal.Builder.Builder
 instance Data.String.IsString Data.Text.Internal.Builder.Builder
 instance GHC.Show.Show Data.Text.Internal.Builder.Builder
@@ -3194,6 +3281,7 @@ module Data.Text.Internal.Builder.Functions
 -- | The normal <a>mappend</a> function with right associativity instead of
 --   left.
 (<>) :: Builder -> Builder -> Builder
+infixr 4 <>
 
 -- | Unsafe conversion for decimal digits.
 i2d :: Int -> Char
@@ -3201,6 +3289,33 @@ i2d :: Int -> Char
 module Data.Text.Lazy.Builder.Int
 decimal :: Integral a => a -> Builder
 hexadecimal :: Integral a => a -> Builder
+
+
+-- | Write a floating point value to a <a>Builder</a>.
+module Data.Text.Lazy.Builder.RealFloat
+
+-- | Control the rendering of floating point numbers.
+data FPFormat
+
+-- | Scientific notation (e.g. <tt>2.3e123</tt>).
+Exponent :: FPFormat
+
+-- | Standard decimal notation.
+Fixed :: FPFormat
+
+-- | Use decimal notation for values between <tt>0.1</tt> and
+--   <tt>9,999,999</tt>, and scientific notation otherwise.
+Generic :: FPFormat
+
+-- | Show a signed <a>RealFloat</a> value to full precision, using standard
+--   decimal notation for arguments whose absolute value lies between
+--   <tt>0.1</tt> and <tt>9,999,999</tt>, and scientific notation
+--   otherwise.
+realFloat :: (RealFloat a) => a -> Builder
+formatRealFloat :: (RealFloat a) => FPFormat -> Maybe Int -> a -> Builder
+instance GHC.Show.Show Data.Text.Lazy.Builder.RealFloat.FPFormat
+instance GHC.Read.Read Data.Text.Lazy.Builder.RealFloat.FPFormat
+instance GHC.Enum.Enum Data.Text.Lazy.Builder.RealFloat.FPFormat
 
 
 -- | Efficient locale-sensitive support for lazy text I/O.
@@ -3297,112 +3412,6 @@ signed :: Num a => Reader a -> Reader a
 --   or <tt>'e'</tt> <i>not</i> followed by a number is not consumed.
 --   
 --   Examples:
---   
---   <pre>
---   rational "3"     == Right (3.0, "")
---   rational "3.1"   == Right (3.1, "")
---   rational "3e4"   == Right (30000.0, "")
---   rational "3.1e4" == Right (31000.0, "")
---   rational ".3"    == Left "input does not start with a digit"
---   rational "e3"    == Left "input does not start with a digit"
---   </pre>
---   
---   Examples of differences from <a>read</a>:
---   
---   <pre>
---   rational "3.foo" == Right (3.0, ".foo")
---   rational "3e"    == Right (3.0, "e")
---   </pre>
-rational :: Fractional a => Reader a
-
--- | Read a rational number.
---   
---   The syntax accepted by this function is the same as for
---   <a>rational</a>.
---   
---   <i>Note</i>: This function is almost ten times faster than
---   <a>rational</a>, but is slightly less accurate.
---   
---   The <a>Double</a> type supports about 16 decimal places of accuracy.
---   For 94.2% of numbers, this function and <a>rational</a> give identical
---   results, but for the remaining 5.8%, this function loses precision
---   around the 15th decimal place. For 0.001% of numbers, this function
---   will lose precision at the 13th or 14th decimal place.
-double :: Reader Double
-
-
--- | Write a floating point value to a <a>Builder</a>.
-module Data.Text.Lazy.Builder.RealFloat
-
--- | Control the rendering of floating point numbers.
-data FPFormat
-
--- | Scientific notation (e.g. <tt>2.3e123</tt>).
-Exponent :: FPFormat
-
--- | Standard decimal notation.
-Fixed :: FPFormat
-
--- | Use decimal notation for values between <tt>0.1</tt> and
---   <tt>9,999,999</tt>, and scientific notation otherwise.
-Generic :: FPFormat
-
--- | Show a signed <a>RealFloat</a> value to full precision, using standard
---   decimal notation for arguments whose absolute value lies between
---   <tt>0.1</tt> and <tt>9,999,999</tt>, and scientific notation
---   otherwise.
-realFloat :: (RealFloat a) => a -> Builder
-formatRealFloat :: (RealFloat a) => FPFormat -> Maybe Int -> a -> Builder
-instance GHC.Show.Show Data.Text.Lazy.Builder.RealFloat.FPFormat
-instance GHC.Read.Read Data.Text.Lazy.Builder.RealFloat.FPFormat
-instance GHC.Enum.Enum Data.Text.Lazy.Builder.RealFloat.FPFormat
-
-
--- | Functions used frequently when reading textual data.
-module Data.Text.Read
-
--- | Read some text. If the read succeeds, return its value and the
---   remaining text, otherwise an error message.
-type Reader a = IReader Text a
-
--- | Read a decimal integer. The input must begin with at least one decimal
---   digit, and is consumed until a non-digit or end of string is reached.
---   
---   This function does not handle leading sign characters. If you need to
---   handle signed input, use <tt><a>signed</a> <a>decimal</a></tt>.
---   
---   <i>Note</i>: For fixed-width integer types, this function does not
---   attempt to detect overflow, so a sufficiently long input may give
---   incorrect results. If you are worried about overflow, use
---   <a>Integer</a> for your result type.
-decimal :: Integral a => Reader a
-
--- | Read a hexadecimal integer, consisting of an optional leading
---   <tt>"0x"</tt> followed by at least one decimal digit. Input is
---   consumed until a non-hex-digit or end of string is reached. This
---   function is case insensitive.
---   
---   This function does not handle leading sign characters. If you need to
---   handle signed input, use <tt><a>signed</a> <a>hexadecimal</a></tt>.
---   
---   <i>Note</i>: For fixed-width integer types, this function does not
---   attempt to detect overflow, so a sufficiently long input may give
---   incorrect results. If you are worried about overflow, use
---   <a>Integer</a> for your result type.
-hexadecimal :: Integral a => Reader a
-
--- | Read an optional leading sign character (<tt>'-'</tt> or <tt>'+'</tt>)
---   and apply it to the result of applying the given reader.
-signed :: Num a => Reader a -> Reader a
-
--- | Read a rational number.
---   
---   This function accepts an optional leading sign character, followed by
---   at least one decimal digit. The syntax similar to that accepted by the
---   <a>read</a> function, with the exception that a trailing <tt>'.'</tt>
---   or <tt>'e'</tt> <i>not</i> followed by a number is not consumed.
---   
---   Examples (with behaviour identical to <a>read</a>):
 --   
 --   <pre>
 --   rational "3"     == Right (3.0, "")

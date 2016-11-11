@@ -14,47 +14,6 @@
 @version 0.6
 
 
--- | "Scrap your boilerplate" --- Generic programming in Haskell. See
---   <a>http://www.cs.uu.nl/wiki/GenericProgramming/SYB</a>. This module
---   provides the <a>Data</a> class with its primitives for generic
---   programming, which is now defined in <tt>Data.Data</tt>. Therefore
---   this module simply re-exports <tt>Data.Data</tt>.
-module Data.Generics.Basics
-
-
--- | Convenience alias for <a>Data.Generics.Basics</a>.
-module Generics.SYB.Basics
-
-
--- | "Scrap your boilerplate" --- Generic programming in Haskell See
---   <a>http://www.cs.uu.nl/wiki/GenericProgramming/SYB</a>. The present
---   module contains thirteen <a>Data</a> instances which are considered
---   dubious (either because the types are abstract or just not meant to be
---   traversed). Instances in this module might change or disappear in
---   future releases of this package.
---   
---   (This module does not export anything. It really just defines
---   instances.)
-module Data.Generics.Instances
-instance Data.Data.Data Data.Typeable.Internal.TypeRep
-instance Data.Data.Data Data.Typeable.Internal.TyCon
-instance Data.Data.Data Data.Data.DataType
-instance Data.Data.Data GHC.IO.Handle.Types.Handle
-instance Data.Typeable.Internal.Typeable a => Data.Data.Data (GHC.Stable.StablePtr a)
-instance Data.Data.Data GHC.Conc.Sync.ThreadId
-instance Data.Typeable.Internal.Typeable a => Data.Data.Data (GHC.Conc.Sync.TVar a)
-instance Data.Typeable.Internal.Typeable a => Data.Data.Data (GHC.MVar.MVar a)
-instance Data.Typeable.Internal.Typeable a => Data.Data.Data (GHC.Conc.Sync.STM a)
-instance (Data.Typeable.Internal.Typeable s, Data.Typeable.Internal.Typeable a) => Data.Data.Data (GHC.ST.ST s a)
-instance Data.Typeable.Internal.Typeable a => Data.Data.Data (GHC.IORef.IORef a)
-instance Data.Typeable.Internal.Typeable a => Data.Data.Data (GHC.Types.IO a)
-instance (Data.Data.Data a, Data.Data.Data b) => Data.Data.Data (a -> b)
-
-
--- | Convenience alias for <a>Data.Generics.Instances</a>.
-module Generics.SYB.Instances
-
-
 -- | "Scrap your boilerplate" --- Generic programming in Haskell See
 --   <a>http://www.cs.uu.nl/wiki/GenericProgramming/SYB</a>. The present
 --   module provides a number of declarations for typical generic function
@@ -301,7 +260,7 @@ gmapAccumQr :: Data d => (r' -> r -> r) -> r -> (forall e. Data e => a -> e -> (
 gmapAccumQ :: Data d => (forall e. Data e => a -> e -> (a, q)) -> a -> d -> (a, [q])
 
 -- | Applicative version
-gmapAccumA :: (Data d, Applicative a) => (forall e. Data e => b -> e -> (b, a e)) -> b -> d -> (b, a d)
+gmapAccumA :: forall b d a. (Data d, Applicative a) => (forall e. Data e => b -> e -> (b, a e)) -> b -> d -> (b, a d)
 
 -- | Twin map for transformation
 gzipWithT :: GenericQ (GenericT) -> GenericQ (GenericT)
@@ -332,12 +291,12 @@ module Data.Generics.Builders
 
 -- | Construct the empty value for a datatype. For algebraic datatypes, the
 --   leftmost constructor is chosen.
-empty :: Data a => a
+empty :: forall a. Data a => a
 
 -- | Return a list of values of a datatype. Each value is one of the
 --   possible constructors of the datatype, populated with <a>empty</a>
 --   values.
-constrs :: Data a => [a]
+constrs :: forall a. Data a => [a]
 
 
 -- | Convenience alias for <a>Data.Generics.Builders</a>.
@@ -346,6 +305,47 @@ module Generics.SYB.Builders
 
 -- | Convenience alias for <a>Data.Generics.Aliases</a>.
 module Generics.SYB.Aliases
+
+
+-- | "Scrap your boilerplate" --- Generic programming in Haskell See
+--   <a>http://www.cs.uu.nl/wiki/GenericProgramming/SYB</a>. The present
+--   module contains thirteen <a>Data</a> instances which are considered
+--   dubious (either because the types are abstract or just not meant to be
+--   traversed). Instances in this module might change or disappear in
+--   future releases of this package.
+--   
+--   (This module does not export anything. It really just defines
+--   instances.)
+module Data.Generics.Instances
+instance Data.Data.Data Data.Typeable.Internal.TypeRep
+instance Data.Data.Data GHC.Types.TyCon
+instance Data.Data.Data Data.Data.DataType
+instance Data.Data.Data GHC.IO.Handle.Types.Handle
+instance Data.Typeable.Internal.Typeable a => Data.Data.Data (GHC.Stable.StablePtr a)
+instance Data.Data.Data GHC.Conc.Sync.ThreadId
+instance Data.Typeable.Internal.Typeable a => Data.Data.Data (GHC.Conc.Sync.TVar a)
+instance Data.Typeable.Internal.Typeable a => Data.Data.Data (GHC.MVar.MVar a)
+instance Data.Typeable.Internal.Typeable a => Data.Data.Data (GHC.Conc.Sync.STM a)
+instance (Data.Typeable.Internal.Typeable s, Data.Typeable.Internal.Typeable a) => Data.Data.Data (GHC.ST.ST s a)
+instance Data.Typeable.Internal.Typeable a => Data.Data.Data (GHC.IORef.IORef a)
+instance Data.Typeable.Internal.Typeable a => Data.Data.Data (GHC.Types.IO a)
+instance (Data.Data.Data a, Data.Data.Data b) => Data.Data.Data (a -> b)
+
+
+-- | Convenience alias for <a>Data.Generics.Instances</a>.
+module Generics.SYB.Instances
+
+
+-- | "Scrap your boilerplate" --- Generic programming in Haskell. See
+--   <a>http://www.cs.uu.nl/wiki/GenericProgramming/SYB</a>. This module
+--   provides the <a>Data</a> class with its primitives for generic
+--   programming, which is now defined in <tt>Data.Data</tt>. Therefore
+--   this module simply re-exports <tt>Data.Data</tt>.
+module Data.Generics.Basics
+
+
+-- | Convenience alias for <a>Data.Generics.Basics</a>.
+module Generics.SYB.Basics
 
 
 -- | "Scrap your boilerplate" --- Generic programming in Haskell See
