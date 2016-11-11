@@ -1,6 +1,6 @@
 module Solr.Expr
   ( -- * Expression type
-    SolrExpr
+    Expr
     -- * Re-exports
   , module Solr.Expr.Class
   ) where

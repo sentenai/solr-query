@@ -7,6 +7,8 @@ import Data.Text (Text)
 -- $setup
 -- >>> import Data.Semigroup
 -- >>> import Solr.Query
+-- >>> import Solr.FilterQuery (FilterQuery)
+-- >>> import qualified Solr.FilterQuery as FilterQuery
 
 data Param query where
   ParamCache        :: HasParamCache        query => Bool -> Param query
@@ -23,8 +25,8 @@ deriving instance Show (Param query)
 --
 -- ==== __Examples__
 --
--- >>> let query = "foo" =: word "bar" :: SolrFilterQuery SolrExpr
--- >>> compileSolrFilterQuery [paramCache False] query
+-- >>> let query = "foo" =: word "bar" :: FilterQuery Expr
+-- >>> FilterQuery.compile [paramCache False] query
 -- "fq={!cache=false}foo:bar"
 paramCache :: HasParamCache query => Bool -> Param query
 paramCache = ParamCache
@@ -33,8 +35,8 @@ paramCache = ParamCache
 --
 -- ==== __Examples__
 --
--- >>> let query = "foo" =: word "bar" :: SolrFilterQuery SolrExpr
--- >>> compileSolrFilterQuery [paramCost 5] query
+-- >>> let query = "foo" =: word "bar" :: FilterQuery Expr
+-- >>> FilterQuery.compile [paramCost 5] query
 -- "fq={!cost=5}foo:bar"
 paramCost :: HasParamCost query => Int -> Param query
 paramCost = ParamCost
@@ -43,8 +45,8 @@ paramCost = ParamCost
 --
 -- ==== __Examples__
 --
--- >>> let query = defaultField (word "bar") :: SolrQuery SolrExpr
--- >>> compileSolrQuery [paramDefaultField "foo"] query
+-- >>> let query = defaultField (word "bar") :: Query Expr
+-- >>> compile [paramDefaultField "foo"] query
 -- "q={!df=foo}bar"
 paramDefaultField :: HasParamDefaultField query => Text -> Param query
 paramDefaultField = ParamDefaultField
@@ -53,8 +55,8 @@ paramDefaultField = ParamDefaultField
 --
 -- ==== __Examples__
 --
--- >>> let query = defaultField (word "foo") <> defaultField (word "bar") :: SolrQuery SolrExpr
--- >>> compileSolrQuery [paramOpAnd] query
+-- >>> let query = defaultField (word "foo") <> defaultField (word "bar") :: Query Expr
+-- >>> compile [paramOpAnd] query
 -- "q={!q.op=AND}foo bar"
 paramOpAnd :: HasParamOp query => Param query
 paramOpAnd = ParamOpAnd
@@ -63,8 +65,8 @@ paramOpAnd = ParamOpAnd
 --
 -- ==== __Examples__
 --
--- >>> let query = defaultField (word "foo") <> defaultField (word "bar") :: SolrQuery SolrExpr
--- >>> compileSolrQuery [paramOpOr] query
+-- >>> let query = defaultField (word "foo") <> defaultField (word "bar") :: Query Expr
+-- >>> compile [paramOpOr] query
 -- "q={!q.op=OR}foo bar"
 paramOpOr :: HasParamOp query => Param query
 paramOpOr = ParamOpOr
@@ -73,8 +75,8 @@ paramOpOr = ParamOpOr
 --
 -- ==== __Examples__
 --
--- >>> let query = "foo" =: word "bar" :: SolrQuery SolrExpr
--- >>> compileSolrQuery [paramRows 5] query
+-- >>> let query = "foo" =: word "bar" :: Query Expr
+-- >>> compile [paramRows 5] query
 -- "q={!rows=5}foo:bar"
 paramRows :: HasParamRows query => Int -> Param query
 paramRows = ParamRows
@@ -83,8 +85,8 @@ paramRows = ParamRows
 --
 -- ==== __Examples__
 --
--- >>> let query = "foo" =: word "bar" :: SolrQuery SolrExpr
--- >>> compileSolrQuery [paramStart 10] query
+-- >>> let query = "foo" =: word "bar" :: Query Expr
+-- >>> compile [paramStart 10] query
 -- "q={!start=10}foo:bar"
 paramStart :: HasParamStart query => Int -> Param query
 paramStart = ParamStart

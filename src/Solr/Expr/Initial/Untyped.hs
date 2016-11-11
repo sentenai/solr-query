@@ -1,6 +1,6 @@
 module Solr.Expr.Initial.Untyped
   ( -- * Expression type
-    SolrExpr(..)
+    Expr(..)
     -- * Re-exports
   , module Solr.Expr.Class
   ) where
@@ -13,21 +13,21 @@ import Data.Text   (Text)
 
 
 -- | An untyped, initially-encoded Solr expression.
-data SolrExpr (ty :: SolrType)
+data Expr (ty :: SolrType)
   = ENum Float
   | ETrue
   | EFalse
   | EWord Text
   | EWild Text
   | ERegex Text
-  | forall b. EPhrase [SolrExpr b]
-  | forall b. EFuzz (SolrExpr b) Int
-  | forall b. ETo (Boundary (SolrExpr b)) (Boundary (SolrExpr b))
-  | forall b. EBoost (SolrExpr b) Float
+  | forall b. EPhrase [Expr b]
+  | forall b. EFuzz (Expr b) Int
+  | forall b. ETo (Boundary (Expr b)) (Boundary (Expr b))
+  | forall b. EBoost (Expr b) Float
 
-deriving instance Show (SolrExpr ty)
+deriving instance Show (Expr ty)
 
-instance Eq (SolrExpr ty) where
+instance Eq (Expr ty) where
   ENum    a   == ENum    c   =        a == c
   ETrue       == ETrue       = True
   EFalse      == EFalse      = True
@@ -40,7 +40,7 @@ instance Eq (SolrExpr ty) where
   EBoost  a b == EBoost  c d = coerce a == c &&        b == d
   _           == _           = False
 
-instance SolrExprSYM SolrExpr where
+instance ExprSYM Expr where
   num    = ENum
   true   = ETrue
   false  = EFalse

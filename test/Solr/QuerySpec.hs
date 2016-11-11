@@ -8,7 +8,7 @@ import Test.Hspec
 
 spec :: Spec
 spec =
-  describe "compileSolrQuery" $ do
+  describe "compile" $ do
     it "defaultField"    (test []  (defaultField (word "foo"))                    "q=foo")
     it "=:"              (test []  ("foo" =: word "bar")                          "q=foo:bar")
     it "num"             (test []  ("foo" =: num 5)                               "q=foo:5.0")
@@ -44,8 +44,8 @@ spec =
   ps2 = [paramDefaultField "foo", paramOpAnd]
 
   -- Help type inference in [* TO *]
-  star' :: Boundary (SolrExpr 'TNum)
+  star' :: Boundary (Expr 'TNum)
   star' = star
 
-test :: [Param SolrQuery] -> SolrQuery SolrExpr -> Text -> Expectation
-test params query result = compileSolrQuery params query `shouldBe` result
+test :: [Param Query] -> Query Expr -> Text -> Expectation
+test params query result = compile params query `shouldBe` result

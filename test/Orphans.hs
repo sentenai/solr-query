@@ -29,7 +29,7 @@ instance Arbitrary a => Arbitrary (Boundary a) where
     Exclusive x -> [ Exclusive x' | x' <- shrink x ]
     Star        -> []
 
-instance Arbitrary (SolrExpr a) where
+instance Arbitrary (Expr a) where
   arbitrary = frequency
     [ (40, oneof
         [ ENum <$> arbitrary
@@ -61,7 +61,7 @@ instance Arbitrary (SolrExpr a) where
     ETo e1 e2 -> [ ETo e1' e2' | (e1', e2') <- shrink (e1, e2) ]
     EBoost e n -> coerce e : [ EBoost e' n' | (e', n') <- shrink (e, n) ]
 
-instance Arbitrary (SolrQuery SolrExpr) where
+instance Arbitrary (Query Expr) where
   arbitrary = frequency
     [ (40, oneof
         [ QDefaultField <$> arbitrary
@@ -89,7 +89,7 @@ instance Arbitrary (SolrQuery SolrExpr) where
     QNeg q          -> q : [ QNeg q' | q' <- shrink q ]
     QAppend q1 q2   -> q1 : q2 : [ QAppend q1' q2' | (q1', q2') <- shrink (q1, q2) ]
 
-instance Arbitrary (Param SolrQuery) where
+instance Arbitrary (Param Query) where
   arbitrary = oneof
     [ paramDefaultField <$> arbitrary
     , pure paramOpAnd

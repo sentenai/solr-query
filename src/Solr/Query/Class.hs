@@ -7,7 +7,7 @@
 
 module Solr.Query.Class
   ( -- * Solr query language
-    SolrQuerySYM(..)
+    QuerySYM(..)
     -- * Named operators
   , field
   , Solr.Query.Class.and
@@ -28,12 +28,12 @@ import Data.Text (Text)
 
 
 -- | Solr query language.
-class SolrExprSYM expr => SolrQuerySYM expr query where
+class ExprSYM expr => QuerySYM expr query where
   -- | A default field query.
   --
   -- ==== __Examples__
   --
-  -- >>> compileSolrQuery [] (defaultField (word "foo") :: SolrQuery SolrExpr)
+  -- >>> compile [] (defaultField (word "foo") :: Query Expr)
   -- "q=foo"
   defaultField :: expr a -> query expr
 
@@ -41,7 +41,7 @@ class SolrExprSYM expr => SolrQuerySYM expr query where
   --
   -- ==== __Examples__
   --
-  -- >>> compileSolrQuery [] ("foo" =: word "bar" :: SolrQuery SolrExpr)
+  -- >>> compile [] ("foo" =: word "bar" :: Query Expr)
   -- "q=foo:bar"
   (=:) :: Text -> expr a -> query expr
   infix 5 =:
@@ -50,7 +50,7 @@ class SolrExprSYM expr => SolrQuerySYM expr query where
   --
   -- ==== __Examples__
   --
-  -- >>> compileSolrQuery [] ("foo" =: word "bar" &&: "baz" =: word "qux" :: SolrQuery SolrExpr)
+  -- >>> compile [] ("foo" =: word "bar" &&: "baz" =: word "qux" :: Query Expr)
   -- "q=(foo:bar AND baz:qux)"
   (&&:) :: query expr -> query expr -> query expr
   infixr 3 &&:
@@ -59,7 +59,7 @@ class SolrExprSYM expr => SolrQuerySYM expr query where
   --
   -- ==== __Examples__
   --
-  -- >>> compileSolrQuery [] ("foo" =: word "bar" ||: "baz" =: word "qux" :: SolrQuery SolrExpr)
+  -- >>> compile [] ("foo" =: word "bar" ||: "baz" =: word "qux" :: Query Expr)
   -- "q=(foo:bar OR baz:qux)"
   (||:) :: query expr -> query expr -> query expr
   infixr 2 ||:
@@ -68,7 +68,7 @@ class SolrExprSYM expr => SolrQuerySYM expr query where
   --
   -- ==== __Examples__
   --
-  -- >>> compileSolrQuery [] ("foo" =: word "bar" -: "baz" =: word "qux" :: SolrQuery SolrExpr)
+  -- >>> compile [] ("foo" =: word "bar" -: "baz" =: word "qux" :: Query Expr)
   -- "q=(foo:bar NOT baz:qux)"
   (-:) :: query expr -> query expr -> query expr
   infixr 1 -:
@@ -79,7 +79,7 @@ class SolrExprSYM expr => SolrQuerySYM expr query where
   --
   -- ==== __Examples__
   --
-  -- >>> compileSolrQuery [] ("foo" =: word "bar" ^=: 3.5 :: SolrQuery SolrExpr)
+  -- >>> compile [] ("foo" =: word "bar" ^=: 3.5 :: Query Expr)
   -- "q=foo:bar^=3.5"
   (^=:) :: query expr -> Float -> query expr
   infixr 4 ^=:
@@ -88,31 +88,31 @@ class SolrExprSYM expr => SolrQuerySYM expr query where
   --
   -- ==== __Examples__
   --
-  -- >>> compileSolrQuery [] (neg ("foo" =: word "bar") :: SolrQuery SolrExpr)
+  -- >>> compile [] (neg ("foo" =: word "bar") :: Query Expr)
   -- "q=-foo:bar"
   neg :: query expr -> query expr
 
 
 -- | Named version of ('=:').
-field :: SolrQuerySYM expr query => Text -> expr a -> query expr
+field :: QuerySYM expr query => Text -> expr a -> query expr
 field = (=:)
 
 -- | Named version of ('&&:').
-and :: SolrQuerySYM expr query => query expr -> query expr -> query expr
+and :: QuerySYM expr query => query expr -> query expr -> query expr
 and = (&&:)
 infixr 3 `and`
 
 -- | Named version of ('||:').
-or :: SolrQuerySYM expr query => query expr -> query expr -> query expr
+or :: QuerySYM expr query => query expr -> query expr -> query expr
 or = (||:)
 infixr 2 `or`
 
 -- | Named version of ('-:').
-not :: SolrQuerySYM expr query => query expr -> query expr -> query expr
+not :: QuerySYM expr query => query expr -> query expr -> query expr
 not = (-:)
 infixr 1 `not`
 
 -- | Named version of ('^=:').
-score :: SolrQuerySYM expr query => query expr -> Float -> query expr
+score :: QuerySYM expr query => query expr -> Float -> query expr
 score = (^=:)
 infixr 4 `score`

@@ -10,47 +10,46 @@ import Data.Text      (pack)
 
 -- |
 -- @
--- 'SolrExpr' :: 'SolrType' -> *
+-- 'Expr' :: 'SolrType' -> *
 -- @
 --
 -- An opaque Solr expression, indexed by its 'SolrType'. Its interpretation,
--- accessed via e.g. 'Solr.Query.compileSolrQuery', is a lazy
--- 'Data.Text.Lazy.Text'.
+-- accessed via e.g. 'Solr.Query.compile', is a lazy 'Data.Text.Lazy.Text'.
 --
 -- For an initially-encoded version, see "Solr.Expr.Initial.Untyped" or
 -- "Solr.Expr.Initial.Typed".
-newtype SolrExpr (t :: SolrType) = Expr { unExpr :: Builder }
+newtype Expr (t :: SolrType) = E { unE :: Builder }
 
-instance IsString (SolrExpr 'TWord) where
+instance IsString (Expr 'TWord) where
   fromString s = word (pack s)
 
-instance SolrExprSYM SolrExpr where
-  num n = Expr (bshow n)
+instance ExprSYM Expr where
+  num n = E (bshow n)
 
-  true = Expr "true"
+  true = E "true"
 
-  false = Expr "false"
+  false = E "false"
 
-  word s = Expr (thaw' s)
+  word s = E (thaw' s)
 
-  wild s = Expr (thaw' s)
+  wild s = E (thaw' s)
 
-  regex s = Expr (char '/' <> thaw' s <> char '/')
+  regex s = E (char '/' <> thaw' s <> char '/')
 
-  phrase ss = Expr (dquotes (spaces (map unExpr ss)))
+  phrase ss = E (dquotes (spaces (map unE ss)))
 
-  e ~: n = Expr (unExpr e <> char '~' <> bshow n)
+  E e ~: n = E (e <> char '~' <> bshow n)
 
-  to b1 b2 = Expr (lhs b1 <> " TO " <> rhs b2)
+  to b1 b2 = E (lhs b1 <> " TO " <> rhs b2)
    where
-    lhs :: Boundary (SolrExpr a) -> Builder
-    lhs (Inclusive e) = char '[' <> unExpr e
-    lhs (Exclusive e) = char '{' <> unExpr e
+    lhs :: Boundary (Expr a) -> Builder
+    lhs (Inclusive e) = char '[' <> unE e
+    lhs (Exclusive e) = char '{' <> unE e
     lhs Star          = "[*"
 
-    rhs :: Boundary (SolrExpr a) -> Builder
-    rhs (Inclusive e) = unExpr e <> char ']'
-    rhs (Exclusive e) = unExpr e <> char '}'
+    rhs :: Boundary (Expr a) -> Builder
+    rhs (Inclusive e) = unE e <> char ']'
+    rhs (Exclusive e) = unE e <> char '}'
     rhs Star          = "*]"
 
-  e ^: n = Expr (unExpr e <> char '^' <> bshow n)
+  E e ^: n = E (e <> char '^' <> bshow n)

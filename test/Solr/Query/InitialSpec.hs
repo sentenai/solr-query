@@ -8,7 +8,7 @@ import Test.Hspec
 
 spec :: Spec
 spec = do
-  describe "factorSolrQuery" $
+  describe "factor" $
     it "eliminates double negations" $ do
       let q = QField "foo" ETrue
-      factorSolrQuery (QNeg (QNeg q)) `shouldBe` q
+      factor (QNeg (QNeg q)) `shouldBe` q

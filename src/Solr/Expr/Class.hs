@@ -1,6 +1,6 @@
 module Solr.Expr.Class
   ( -- * Solr expression language
-    SolrExprSYM(..)
+    ExprSYM(..)
     -- * Derived combinators
   , fuzzy
   , gt
@@ -27,12 +27,12 @@ import Data.Text (Text)
 
 
 -- | Solr expression.
-class SolrExprSYM expr where
+class ExprSYM expr where
   -- | A @num@ expression.
   --
   -- ==== __Examples__
   --
-  -- >>> compileSolrQuery [] ("foo" =: num 5 :: SolrQuery SolrExpr)
+  -- >>> compile [] ("foo" =: num 5 :: Query Expr)
   -- "q=foo:5.0"
   num :: Float -> expr 'TNum
 
@@ -40,7 +40,7 @@ class SolrExprSYM expr where
   --
   -- ==== __Examples__
   --
-  -- >>> compileSolrQuery [] ("foo" =: true :: SolrQuery SolrExpr)
+  -- >>> compile [] ("foo" =: true :: Query Expr)
   -- "q=foo:true"
   true :: expr 'TBool
 
@@ -48,7 +48,7 @@ class SolrExprSYM expr where
   --
   -- ==== __Examples__
   --
-  -- >>> compileSolrQuery [] ("foo" =: false :: SolrQuery SolrExpr)
+  -- >>> compile [] ("foo" =: false :: Query Expr)
   -- "q=foo:false"
   false :: expr 'TBool
 
@@ -57,12 +57,12 @@ class SolrExprSYM expr where
   -- the type system.
   --
   -- Note that sometimes you may use the 'Data.String.IsString' instance for
-  -- 'Solr.Query.SolrExpr' 'TWord', but usually an explicit type signature
+  -- 'Solr.Query.Expr' 'TWord', but usually an explicit type signature
   -- will be required (at the interpretation site or earlier).
   --
   -- ==== __Examples__
   --
-  -- >>> compileSolrQuery [] ("foo" =: word "bar" :: SolrQuery SolrExpr)
+  -- >>> compile [] ("foo" =: word "bar" :: Query Expr)
   -- "q=foo:bar"
   word :: Text -> expr 'TWord
 
@@ -73,7 +73,7 @@ class SolrExprSYM expr where
   --
   -- ==== __Examples__
   --
-  -- >>> compileSolrQuery [] ("foo" =: wild "b?r" :: SolrQuery SolrExpr)
+  -- >>> compile [] ("foo" =: wild "b?r" :: Query Expr)
   -- "q=foo:b?r"
   wild :: Text -> expr 'TWild
 
@@ -85,7 +85,7 @@ class SolrExprSYM expr where
   --
   -- ==== __Examples__
   --
-  -- >>> compileSolrQuery [] ("foo" =: regex "[mb]oat" :: SolrQuery SolrExpr)
+  -- >>> compile [] ("foo" =: regex "[mb]oat" :: Query Expr)
   -- "q=foo:/[mb]oat/"
   regex :: Text -> expr 'TRegex
 
@@ -96,7 +96,7 @@ class SolrExprSYM expr where
   --
   -- ==== __Examples__
   --
-  -- >>> compileSolrQuery [] ("foo" =: phrase ["bar", "baz"] :: SolrQuery SolrExpr)
+  -- >>> compile [] ("foo" =: phrase ["bar", "baz"] :: Query Expr)
   -- "q=foo:\"bar baz\""
   phrase :: [expr 'TWord] -> expr 'TPhrase
 
@@ -105,10 +105,10 @@ class SolrExprSYM expr where
   --
   -- ==== __Examples__
   --
-  -- >>> compileSolrQuery [] ("foo" =: word "bar" ~: 1 :: SolrQuery SolrExpr)
+  -- >>> compile [] ("foo" =: word "bar" ~: 1 :: Query Expr)
   -- "q=foo:bar~1"
   --
-  -- >>> compileSolrQuery [] ("foo" =: phrase ["bar", "baz", "qux"] ~: 10 :: SolrQuery SolrExpr)
+  -- >>> compile [] ("foo" =: phrase ["bar", "baz", "qux"] ~: 10 :: Query Expr)
   -- "q=foo:\"bar baz qux\"~10"
   (~:) :: Fuzzable a => expr a -> Int -> expr ('TFuzzed a)
   infix 6 ~:
@@ -117,14 +117,14 @@ class SolrExprSYM expr where
   --
   -- ==== __Examples__
   --
-  -- >>> compileSolrQuery [] ("foo" =: incl (num 5) `to` excl (num 10) :: SolrQuery SolrExpr)
+  -- >>> compile [] ("foo" =: incl (num 5) `to` excl (num 10) :: Query Expr)
   -- "q=foo:[5.0 TO 10.0}"
   --
-  -- >>> compileSolrQuery [] ("foo" =: excl (word "bar") `to` star :: SolrQuery SolrExpr)
+  -- >>> compile [] ("foo" =: excl (word "bar") `to` star :: Query Expr)
   -- "q=foo:{bar TO *]"
   --
   -- -- Note the explicit type signature required for @[* TO *]@ queries
-  -- >>> compileSolrQuery [] ("foo" =: star `to` (star :: Boundary (SolrExpr 'TNum)) :: SolrQuery SolrExpr)
+  -- >>> compile [] ("foo" =: star `to` (star :: Boundary (Expr 'TNum)) :: Query Expr)
   -- "q=foo:[* TO *]"
   to :: Rangeable a => Boundary (expr a) -> Boundary (expr a) -> expr ('TRanged a)
   infix 6 `to`
@@ -133,10 +133,10 @@ class SolrExprSYM expr where
   --
   -- ==== __Examples__
   --
-  -- >>> compileSolrQuery [] ("foo" =: word "bar" ^: 3.5 :: SolrQuery SolrExpr)
+  -- >>> compile [] ("foo" =: word "bar" ^: 3.5 :: Query Expr)
   -- "q=foo:bar^3.5"
   --
-  -- >>> compileSolrQuery [] ("foo" =: phrase ["bar", "baz"] ^: 3.5 :: SolrQuery SolrExpr)
+  -- >>> compile [] ("foo" =: phrase ["bar", "baz"] ^: 3.5 :: Query Expr)
   -- "q=foo:\"bar baz\"^3.5"
   (^:) :: Boostable a => expr a -> Float -> expr ('TBoosted a)
   infix 6 ^:
@@ -150,9 +150,9 @@ class SolrExprSYM expr where
 --
 -- ==== __Examples__
 --
--- >>> compileSolrQuery [] ("foo" =: fuzzy "bar" :: SolrQuery SolrExpr)
+-- >>> compile [] ("foo" =: fuzzy "bar" :: Query Expr)
 -- "q=foo:bar~2"
-fuzzy :: SolrExprSYM expr => expr 'TWord -> expr ('TFuzzed 'TWord)
+fuzzy :: ExprSYM expr => expr 'TWord -> expr ('TFuzzed 'TWord)
 fuzzy e = e ~: 2
 
 -- | Short-hand for a greater-than range query.
@@ -163,9 +163,9 @@ fuzzy e = e ~: 2
 --
 -- ==== __Examples__
 --
--- >>> compileSolrQuery [] ("foo" =: gt (num 5) :: SolrQuery SolrExpr)
+-- >>> compile [] ("foo" =: gt (num 5) :: Query Expr)
 -- "q=foo:{5.0 TO *]"
-gt :: (SolrExprSYM expr, Rangeable a) => expr a -> expr ('TRanged a)
+gt :: (ExprSYM expr, Rangeable a) => expr a -> expr ('TRanged a)
 gt e = excl e `to` star
 
 -- | Short-hand for a greater-than-or-equal-to range query.
@@ -176,9 +176,9 @@ gt e = excl e `to` star
 --
 -- ==== __Examples__
 --
--- >>> compileSolrQuery [] ("foo" =: gte (num 5) :: SolrQuery SolrExpr)
+-- >>> compile [] ("foo" =: gte (num 5) :: Query Expr)
 -- "q=foo:[5.0 TO *]"
-gte :: (SolrExprSYM expr, Rangeable a) => expr a -> expr ('TRanged a)
+gte :: (ExprSYM expr, Rangeable a) => expr a -> expr ('TRanged a)
 gte e = incl e `to` star
 
 -- | Short-hand for a less-than range query.
@@ -189,9 +189,9 @@ gte e = incl e `to` star
 --
 -- ==== __Examples__
 --
--- >>> compileSolrQuery [] ("foo" =: lt (num 5) :: SolrQuery SolrExpr)
+-- >>> compile [] ("foo" =: lt (num 5) :: Query Expr)
 -- "q=foo:[* TO 5.0}"
-lt :: (SolrExprSYM expr, Rangeable a) => expr a -> expr ('TRanged a)
+lt :: (ExprSYM expr, Rangeable a) => expr a -> expr ('TRanged a)
 lt e = star `to` excl e
 
 -- | Short-hand for a less-than-or-equal-to range query.
@@ -202,9 +202,9 @@ lt e = star `to` excl e
 --
 -- ==== __Examples__
 --
--- >>> compileSolrQuery [] ("foo" =: lte (num 5) :: SolrQuery SolrExpr)
+-- >>> compile [] ("foo" =: lte (num 5) :: Query Expr)
 -- "q=foo:[* TO 5.0]"
-lte :: (SolrExprSYM expr, Rangeable a) => expr a -> expr ('TRanged a)
+lte :: (ExprSYM expr, Rangeable a) => expr a -> expr ('TRanged a)
 lte e = star `to` incl e
 
 
@@ -219,23 +219,23 @@ data Boundary a
   deriving (Eq, Functor, Show)
 
 -- | Mark an expression as inclusive, for use in a range query.
-incl :: SolrExprSYM expr => expr a -> Boundary (expr a)
+incl :: ExprSYM expr => expr a -> Boundary (expr a)
 incl = Inclusive
 
 -- | Mark an expression as exclusive, for use in a range query.
-excl :: SolrExprSYM expr => expr a -> Boundary (expr a)
+excl :: ExprSYM expr => expr a -> Boundary (expr a)
 excl = Exclusive
 
 -- | @\'*\'@ operator, signifying the minimum or maximun bound of a range. A
 -- @[* TO *]@ query will require a type annotation.
-star :: SolrExprSYM expr => Boundary (expr a)
+star :: ExprSYM expr => Boundary (expr a)
 star = Star
 
 
 -- | Named version of ('~:').
-fuzz :: (SolrExprSYM expr, Fuzzable a) => expr a -> Int -> expr ('TFuzzed a)
+fuzz :: (ExprSYM expr, Fuzzable a) => expr a -> Int -> expr ('TFuzzed a)
 fuzz = (~:)
 
 -- | Named version of ('^:').
-boost :: (SolrExprSYM expr, Boostable a) => expr a -> Float -> expr ('TBoosted a)
+boost :: (ExprSYM expr, Boostable a) => expr a -> Float -> expr ('TBoosted a)
 boost = (^:)
