@@ -1,6 +1,5 @@
 module Solr.QuerySpec where
 
-import Solr.Internal.Class.Query
 import Solr.Query
 import Solr.Type
 

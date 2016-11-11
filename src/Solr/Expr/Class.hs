@@ -1,4 +1,4 @@
-module Solr.Internal.Class.Expr
+module Solr.Expr.Class
   ( -- * Solr expression language
     SolrExprSYM(..)
     -- * Derived combinators

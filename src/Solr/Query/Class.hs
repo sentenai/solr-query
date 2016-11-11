@@ -5,20 +5,20 @@
 --
 -- Ordinary users should not normally have to import this module.
 
-module Solr.Internal.Class.Query
+module Solr.Query.Class
   ( -- * Solr query language
     SolrQuerySYM(..)
     -- * Named operators
   , field
-  , Solr.Internal.Class.Query.and
-  , Solr.Internal.Class.Query.or
-  , Solr.Internal.Class.Query.not
+  , Solr.Query.Class.and
+  , Solr.Query.Class.or
+  , Solr.Query.Class.not
   , score
     -- * Re-exports
-  , module Solr.Internal.Class.Expr
+  , module Solr.Expr.Class
   ) where
 
-import Solr.Internal.Class.Expr
+import Solr.Expr.Class
 
 import Data.Text (Text)
 

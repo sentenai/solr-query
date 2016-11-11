@@ -14,15 +14,15 @@ module Solr.Query.Initial
     -- * Reinterpretation
   , reinterpretSolrQuery
     -- * Re-exports
-  , module Solr.Internal.Class.Query
-  , module Solr.Query.Param
+  , module Solr.Param
+  , module Solr.Query.Class
   ) where
 
-import Solr.Expr.Initial.Typed   (typeCheckSolrExpr)
-import Solr.Internal.Class.Query
-import Solr.Query.Param
-import Solr.Query.Param.Internal
-import Solr.Type                 (SolrType)
+import Solr.Expr.Initial.Typed (typeCheckSolrExpr)
+import Solr.Param
+import Solr.Param.Internal
+import Solr.Query.Class
+import Solr.Type               (SolrType)
 
 import qualified Solr.Expr.Initial.Untyped as Untyped
 import qualified Solr.Expr.Initial.Typed   as Typed

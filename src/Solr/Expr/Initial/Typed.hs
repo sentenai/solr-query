@@ -8,10 +8,10 @@ module Solr.Expr.Initial.Typed
     -- * Reinterpretation
   , reinterpretSolrExpr
     -- * Re-exports
-  , module Solr.Internal.Class.Expr
+  , module Solr.Expr.Class
   ) where
 
-import Solr.Internal.Class.Expr
+import Solr.Expr.Class
 import Solr.Type
 
 import qualified Solr.Expr.Initial.Untyped as Untyped

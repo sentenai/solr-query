@@ -34,18 +34,18 @@ library
     , uniplate        >= 1.3 && < 1.7
   exposed-modules:
       Solr.Expr
+      Solr.Expr.Class
       Solr.Expr.Initial.Typed
       Solr.Expr.Initial.Untyped
-      Solr.Internal.Class.Expr
-      Solr.Internal.Class.Query
+      Solr.Param
+      Solr.Param.Internal
       Solr.Query
+      Solr.Query.Class
       Solr.Query.Initial
-      Solr.Query.Param
       Solr.Type
   other-modules:
       Builder
       Solr.Expr.Internal
-      Solr.Query.Param.Internal
   default-language: Haskell2010
 
 test-suite doctest

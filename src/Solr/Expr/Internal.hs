@@ -1,13 +1,12 @@
 module Solr.Expr.Internal where
 
 import Builder
-import Solr.Internal.Class.Expr
+import Solr.Expr.Class
 import Solr.Type
 
 import Data.Semigroup (Semigroup(..))
 import Data.String    (IsString(..))
 import Data.Text      (pack)
-
 
 -- |
 -- @

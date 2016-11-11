@@ -31,11 +31,11 @@ module Solr.Query
   , (=:)
   , field
   , (&&:)
-  , Solr.Internal.Class.Query.and
+  , Solr.Query.Class.and
   , (||:)
-  , Solr.Internal.Class.Query.or
+  , Solr.Query.Class.or
   , (-:)
-  , Solr.Internal.Class.Query.not
+  , Solr.Query.Class.not
   , (^=:)
   , score
   , neg
@@ -53,6 +53,7 @@ module Solr.Query
   , fuzz
   , fuzzy
   , to
+  , Boundary
   , incl
   , excl
   , star
@@ -76,8 +77,8 @@ module Solr.Query
 
 import Builder
 import Solr.Expr.Internal
-import Solr.Internal.Class.Query
-import Solr.Query.Param.Internal
+import Solr.Param.Internal
+import Solr.Query.Class
 import Solr.Type
 
 import Data.Semigroup (Semigroup(..))

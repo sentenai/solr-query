@@ -1,6 +1,6 @@
 -- | Query parameters.
 
-module Solr.Query.Param
+module Solr.Param
   ( -- * Query parameters
     Param
   , paramCache
@@ -10,4 +10,4 @@ module Solr.Query.Param
   , paramOpOr
   ) where
 
-import Solr.Query.Param.Internal
+import Solr.Param.Internal

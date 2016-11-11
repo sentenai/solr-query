@@ -1,4 +1,4 @@
-module Solr.Query.Param.Internal where
+module Solr.Param.Internal where
 
 import Solr.Type
 
