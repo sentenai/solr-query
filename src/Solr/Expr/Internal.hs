@@ -7,6 +7,7 @@ import Solr.Type
 import Data.Semigroup (Semigroup(..))
 import Data.String    (IsString(..))
 import Data.Text      (pack)
+import Data.Time      (defaultTimeLocale, formatTime)
 
 -- |
 -- @
@@ -37,6 +38,9 @@ instance ExprSYM Expr where
   regex s = E (char '/' <> thaw' s <> char '/')
 
   phrase ss = E (dquotes (spaces (map unE ss)))
+
+  utctime t =
+    E (thawStr (formatTime defaultTimeLocale "%Y-%m-%dT%H:%M:%S%QZ" t))
 
   E e ~: n = E (e <> char '~' <> bshow n)
 

@@ -30,8 +30,9 @@ library
       base       >= 4      && < 5
     , semigroups >= 0.3    && < 0.19
     , text       >= 1.0    && < 1.3
-    , constraints     >= 0.6 && < 0.9
-    , uniplate        >= 1.3 && < 1.7
+    , time       >= 1.1.2.0 && < 1.7
+    , constraints >= 0.6     && < 0.9
+    , uniplate    >= 1.3     && < 1.7
   exposed-modules:
       Solr.Expr
       Solr.Expr.Class
@@ -59,6 +60,7 @@ test-suite doctest
       base       >= 4      && < 5
     , semigroups >= 0.3    && < 0.19
     , text       >= 1.0    && < 1.3
+    , time       >= 1.1.2.0 && < 1.7
     , doctest >= 0.11
     , solr-query
   default-language: Haskell2010
@@ -74,9 +76,11 @@ test-suite spec
       base       >= 4      && < 5
     , semigroups >= 0.3    && < 0.19
     , text       >= 1.0    && < 1.3
+    , time       >= 1.1.2.0 && < 1.7
     , hspec
     , mtl
     , QuickCheck
+    , quickcheck-instances
     , solr-query
     , uniplate
   other-modules:

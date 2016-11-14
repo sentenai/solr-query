@@ -14,32 +14,35 @@ import qualified Solr.Expr.Initial.Untyped as Untyped
 
 import Control.Monad (forM)
 import Data.Text     (Text)
+import Data.Time     (UTCTime)
 
 
 -- | A typed, initially-encoded Solr expression.
-data Expr :: SolrType -> * where
-  ENum    :: Float -> Expr 'TNum
-  ETrue   :: Expr 'TBool
-  EFalse  :: Expr 'TBool
-  EWord   :: Text -> Expr 'TWord
-  EWild   :: Text -> Expr 'TWild
-  ERegex  :: Text -> Expr 'TRegex
-  EPhrase :: [Expr 'TWord] -> Expr 'TPhrase
-  EFuzz   :: Fuzzable a => Expr a -> Int -> Expr ('TFuzzed a)
-  ETo     :: Rangeable a => Boundary (Expr a) -> Boundary (Expr a) -> Expr ('TRanged a)
-  EBoost  :: Boostable a => Expr a -> Float -> Expr ('TBoosted a)
+data Expr   :: SolrType -> * where
+  ENum      :: Float -> Expr 'TNum
+  ETrue     :: Expr 'TBool
+  EFalse    :: Expr 'TBool
+  EWord     :: Text -> Expr 'TWord
+  EWild     :: Text -> Expr 'TWild
+  ERegex    :: Text -> Expr 'TRegex
+  EPhrase   :: [Expr 'TWord] -> Expr 'TPhrase
+  EDateTime :: UTCTime -> Expr 'TDateTime
+  EFuzz     :: Fuzzable a => Expr a -> Int -> Expr ('TFuzzed a)
+  ETo       :: Rangeable a => Boundary (Expr a) -> Boundary (Expr a) -> Expr ('TRanged a)
+  EBoost    :: Boostable a => Expr a -> Float -> Expr ('TBoosted a)
 
 instance ExprSYM Expr where
-  num    = ENum
-  true   = ETrue
-  false  = EFalse
-  word   = EWord
-  wild   = EWild
-  regex  = ERegex
-  phrase = EPhrase
-  (~:)   = EFuzz
-  to     = ETo
-  (^:)   = EBoost
+  num     = ENum
+  true    = ETrue
+  false   = EFalse
+  word    = EWord
+  wild    = EWild
+  regex   = ERegex
+  utctime = EDateTime
+  phrase  = EPhrase
+  (~:)    = EFuzz
+  to      = ETo
+  (^:)    = EBoost
 
 
 -- | Existential wrapper around 'Expr'.
@@ -66,12 +69,13 @@ typeCheck u k =
 typeCheck' :: Untyped.Expr a -> Maybe SomeExpr
 typeCheck' u0 =
   case u0 of
-    Untyped.ENum n   -> pure (SomeExpr (ENum n))
-    Untyped.ETrue    -> pure (SomeExpr ETrue)
-    Untyped.EFalse   -> pure (SomeExpr EFalse)
-    Untyped.EWord s  -> pure (SomeExpr (EWord s))
-    Untyped.EWild s  -> pure (SomeExpr (EWild s))
-    Untyped.ERegex s -> pure (SomeExpr (ERegex s))
+    Untyped.ENum n      -> pure (SomeExpr (ENum n))
+    Untyped.ETrue       -> pure (SomeExpr ETrue)
+    Untyped.EFalse      -> pure (SomeExpr EFalse)
+    Untyped.EWord s     -> pure (SomeExpr (EWord s))
+    Untyped.EWild s     -> pure (SomeExpr (EWild s))
+    Untyped.ERegex s    -> pure (SomeExpr (ERegex s))
+    Untyped.EDateTime t -> pure (SomeExpr (EDateTime t))
 
     Untyped.EPhrase ss0 -> do
       es <- forM ss0 (\s -> do
@@ -145,13 +149,14 @@ noStar con1 con2 u1 u2 = do
 -- | Reinterpret a Solr expression.
 reinterpret :: ExprSYM expr => Expr ty -> expr ty
 reinterpret = \case
-  ENum n     -> num n
-  ETrue      -> true
-  EFalse     -> false
-  EWord s    -> word s
-  EWild s    -> wild s
-  ERegex s   -> regex s
-  EPhrase es -> phrase (map reinterpret es)
-  EFuzz e n  -> reinterpret e ~: n
-  ETo e1 e2  -> fmap reinterpret e1 `to` fmap reinterpret e2
-  EBoost e n -> reinterpret e ^: n
+  ENum n      -> num n
+  ETrue       -> true
+  EFalse      -> false
+  EWord s     -> word s
+  EWild s     -> wild s
+  ERegex s    -> regex s
+  EDateTime s -> utctime s
+  EPhrase es  -> phrase (map reinterpret es)
+  EFuzz e n   -> reinterpret e ~: n
+  ETo e1 e2   -> fmap reinterpret e1 `to` fmap reinterpret e2
+  EBoost e n  -> reinterpret e ^: n

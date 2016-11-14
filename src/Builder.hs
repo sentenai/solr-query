@@ -9,6 +9,7 @@ module Builder
   , freeze
   , thaw
   , thaw'
+  , thawStr
   ) where
 
 import Data.Semigroup         (Semigroup(..))
@@ -45,3 +46,6 @@ thaw = fromLazyText
 
 thaw' :: Text -> Builder
 thaw' = fromText
+
+thawStr :: String -> Builder
+thawStr = fromString

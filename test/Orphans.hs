@@ -6,16 +6,10 @@ import Solr.Query.Initial
 import Solr.Expr.Initial.Untyped
 
 import Data.Coerce               (coerce)
-import Data.Text                 (Text)
 import Test.QuickCheck.Arbitrary
 import Test.QuickCheck.Gen
+import Test.QuickCheck.Instances ()
 
-import qualified Data.Text as Text
-
-
-instance Arbitrary Text where
-  arbitrary = Text.pack <$> arbitrary
-  shrink = map Text.pack . shrink . Text.unpack
 
 instance Arbitrary a => Arbitrary (Boundary a) where
   arbitrary = oneof
@@ -38,6 +32,7 @@ instance Arbitrary (Expr a) where
         , EWord <$> arbitrary
         , EWild <$> arbitrary
         , ERegex <$> arbitrary
+        , EDateTime <$> arbitrary
         ])
     , (35, oneof
         [ EFuzz <$> scaleSub1 arbitrary <*> arbitrary
@@ -50,16 +45,17 @@ instance Arbitrary (Expr a) where
     ]
 
   shrink = \case
-    ENum n -> [ ENum n' | n' <- shrink n ]
-    ETrue  -> []
-    EFalse -> []
-    EWord s -> [ EWord s' | s' <- shrink s ]
-    EWild s -> [ EWild s' | s' <- shrink s ]
-    ERegex s -> [ ERegex s' | s' <- shrink s ]
-    EPhrase es -> coerce es ++ [ EPhrase es' | es' <- shrink es ]
-    EFuzz e n -> coerce e : [ EFuzz e' n' | (e', n') <- shrink (e, n) ]
-    ETo e1 e2 -> [ ETo e1' e2' | (e1', e2') <- shrink (e1, e2) ]
-    EBoost e n -> coerce e : [ EBoost e' n' | (e', n') <- shrink (e, n) ]
+    ENum n      -> [ ENum n' | n' <- shrink n ]
+    ETrue       -> []
+    EFalse      -> []
+    EWord s     -> [ EWord s' | s' <- shrink s ]
+    EWild s     -> [ EWild s' | s' <- shrink s ]
+    ERegex s    -> [ ERegex s' | s' <- shrink s ]
+    EDateTime _ -> []
+    EPhrase es  -> coerce es ++ [ EPhrase es' | es' <- shrink es ]
+    EFuzz e n   -> coerce e : [ EFuzz e' n' | (e', n') <- shrink (e, n) ]
+    ETo e1 e2   -> [ ETo e1' e2' | (e1', e2') <- shrink (e1, e2) ]
+    EBoost e n  -> coerce e : [ EBoost e' n' | (e', n') <- shrink (e, n) ]
 
 instance Arbitrary (Query Expr) where
   arbitrary = frequency

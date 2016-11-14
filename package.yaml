@@ -33,6 +33,7 @@ dependencies:
   - base       >= 4      && < 5
   - semigroups >= 0.3    && < 0.19
   - text       >= 1.0    && < 1.3
+  - time       >= 1.1.2.0 && < 1.7
 
 library:
   source-dirs: src
@@ -41,8 +42,8 @@ library:
     - Solr.Expr.Internal
     - Solr.Query.Internal
   dependencies:
-    - constraints     >= 0.6 && < 0.9
-    - uniplate        >= 1.3 && < 1.7
+    - constraints >= 0.6     && < 0.9
+    - uniplate    >= 1.3     && < 1.7
 
 tests:
   spec:
@@ -52,6 +53,7 @@ tests:
       - hspec
       - mtl
       - QuickCheck
+      - quickcheck-instances
       - solr-query
       - uniplate
 

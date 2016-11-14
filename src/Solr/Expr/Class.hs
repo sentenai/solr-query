@@ -20,10 +20,12 @@ module Solr.Expr.Class
 import Solr.Type
 
 import Data.Text (Text)
+import Data.Time (UTCTime)
 
 
 -- $setup
 -- >>> import Solr.Query
+-- >>> import Data.Time
 
 
 -- | Solr expression.
@@ -99,6 +101,16 @@ class ExprSYM expr where
   -- >>> compile [] ("foo" =: phrase ["bar", "baz"] :: Query Expr)
   -- "q=foo:\"bar baz\""
   phrase :: [expr 'TWord] -> expr 'TPhrase
+
+  -- | A 'UTCTime' datetime expression.
+  --
+  -- ==== __Examples__
+  --
+  -- >>> let date = fromGregorian 2016 1 1
+  -- >>> let time = fromIntegral 0
+  -- >>> compile [] ("foo" =: utctime (UTCTime date time) :: Query Expr)
+  -- "q=foo:2016-01-01T00:00:00Z"
+  utctime :: UTCTime -> expr 'TDateTime
 
   -- | The @\'~\'@ operator, which fuzzes its argument (either a word or phrase)
   -- by a numeric amount.

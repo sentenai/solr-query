@@ -10,6 +10,7 @@ import Solr.Type
 
 import Data.Coerce (coerce)
 import Data.Text   (Text)
+import Data.Time   (UTCTime)
 
 
 -- | An untyped, initially-encoded Solr expression.
@@ -20,6 +21,7 @@ data Expr (ty :: SolrType)
   | EWord Text
   | EWild Text
   | ERegex Text
+  | EDateTime UTCTime
   | forall b. EPhrase [Expr b]
   | forall b. EFuzz (Expr b) Int
   | forall b. ETo (Boundary (Expr b)) (Boundary (Expr b))
@@ -28,26 +30,28 @@ data Expr (ty :: SolrType)
 deriving instance Show (Expr ty)
 
 instance Eq (Expr ty) where
-  ENum    a   == ENum    c   =        a == c
-  ETrue       == ETrue       = True
-  EFalse      == EFalse      = True
-  EWord   a   == EWord   c   =        a == c
-  EWild   a   == EWild   c   =        a == c
-  ERegex  a   == ERegex  c   =        a == c
-  EPhrase a   == EPhrase c   = coerce a == c
-  EFuzz   a b == EFuzz   c d = coerce a == c &&        b == d
-  ETo     a b == ETo     c d = coerce a == c && coerce b == d
-  EBoost  a b == EBoost  c d = coerce a == c &&        b == d
-  _           == _           = False
+  ENum      a   == ENum      c   =        a == c
+  ETrue         == ETrue         = True
+  EFalse        == EFalse        = True
+  EWord     a   == EWord     c   =        a == c
+  EWild     a   == EWild     c   =        a == c
+  ERegex    a   == ERegex    c   =        a == c
+  EDateTime a   == EDateTime c   =        a == c
+  EPhrase   a   == EPhrase   c   = coerce a == c
+  EFuzz     a b == EFuzz     c d = coerce a == c &&        b == d
+  ETo       a b == ETo       c d = coerce a == c && coerce b == d
+  EBoost    a b == EBoost    c d = coerce a == c &&        b == d
+  _             == _             = False
 
 instance ExprSYM Expr where
-  num    = ENum
-  true   = ETrue
-  false  = EFalse
-  word   = EWord
-  wild   = EWild
-  regex  = ERegex
-  phrase = EPhrase
-  (~:)   = EFuzz
-  to     = ETo
-  (^:)   = EBoost
+  num     = ENum
+  true    = ETrue
+  false   = EFalse
+  word    = EWord
+  wild    = EWild
+  regex   = ERegex
+  utctime = EDateTime
+  phrase  = EPhrase
+  (~:)    = EFuzz
+  to      = ETo
+  (^:)    = EBoost

@@ -14,6 +14,7 @@ data SolrType
   | TWild
   | TRegex
   | TPhrase
+  | TDateTime
   | TFuzzed SolrType
   | TBoosted SolrType
   | TRanged SolrType
@@ -32,3 +33,4 @@ instance Boostable 'TPhrase
 class Rangeable (ty :: SolrType)
 instance Rangeable 'TNum
 instance Rangeable 'TWord
+instance Rangeable 'TDateTime
