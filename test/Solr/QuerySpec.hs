@@ -48,7 +48,7 @@ spec =
     it "date excl excl" (test []  ("foo" =: excl (utctime t1) `to` excl (utctime t2)) "q=foo:{2015-01-01T00:00:00Z TO 2016-01-01T00:00:00Z}")
     it "date star incl" (test []  ("foo" =: star `to` incl (utctime t1))              "q=foo:[* TO 2015-01-01T00:00:00Z]")
     it "date incl star" (test []  ("foo" =: incl (utctime t1) `to` star)              "q=foo:[2015-01-01T00:00:00Z TO *]")
-    it "date star star" (test []  ("foo" =: star `to` numStar)                        "q=foo:[* TO *]")
+    it "date star star" (test []  ("foo" =: star `to` dateStar)                       "q=foo:[* TO *]")
     it "date gt"        (test []  ("foo" =: gt (utctime t1))                          "q=foo:{2015-01-01T00:00:00Z TO *]")
     it "date gte"       (test []  ("foo" =: gte (utctime t1))                         "q=foo:[2015-01-01T00:00:00Z TO *]")
     it "date lt"        (test []  ("foo" =: lt (utctime t1))                          "q=foo:[* TO 2015-01-01T00:00:00Z}")
