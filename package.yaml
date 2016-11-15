@@ -62,9 +62,3 @@ tests:
     dependencies:
       - doctest >= 0.11
       - solr-query
-
-  should-not-typecheck:
-    main: test/ShouldNotTypecheck.hs
-    dependencies:
-      - doctest
-      - solr-query
