@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP                  #-}
 {-# LANGUAGE UndecidableInstances #-}
 
 -- | An initial encoding of a Solr query. This is an alternative interpretation
@@ -23,18 +24,22 @@ import Solr.Type               (SolrType)
 import qualified Solr.Expr.Initial.Untyped as UExpr
 import qualified Solr.Expr.Initial.Typed   as Expr
 
+import Control.Applicative           (pure)
 import Data.Coerce                   (coerce)
-import Data.Constraint               ((:-), (\\))
-import Data.Constraint.Forall
 import Data.Function                 (fix)
 import Data.Generics.Uniplate.Direct (Uniplate(..), (|-), (|*), plate, transform)
 import Data.Generics.Str             (Str)
 import Data.Semigroup                (Semigroup(..))
 import Data.Text (Text)
-import GHC.Show                      (showSpace)
 
+#if WITH_CONSTRAINTS
+import Data.Constraint        ((:-), (\\))
+import Data.Constraint.Forall
+import GHC.Show               (showSpace)
+#endif
 
--- | An initial encoding of a Solr query.
+-- | An initial encoding of a Solr query. To get a 'Show' instance, compile with
+-- @-fwith-constraints@.
 data Query (expr :: SolrType -> *)
   = forall a. QDefaultField (expr a)
   | forall a. QField Text (expr a)
@@ -56,6 +61,7 @@ instance Eq (Query UExpr.Expr) where
   QAppend       a b == QAppend       c d =        a == c &&        b == d
   _                 == _                 = False
 
+#if WITH_CONSTRAINTS
 -- This might be the ugliest Show instance I've ever written
 instance ForallF Show expr => Show (Query expr) where
   showsPrec n = \case
@@ -72,6 +78,8 @@ instance ForallF Show expr => Show (Query expr) where
     QScore q m    -> showParen (n >= 11) (showString "QScore "  . showsPrec 11 q  . showSpace . showsPrec 11 m)
     QNeg q        -> showParen (n >= 11) (showString "QNeg "    . showsPrec 11 q)
     QAppend q1 q2 -> showParen (n >= 11) (showString "QAppend " . showsPrec 11 q1 . showSpace . showsPrec 11 q2)
+
+#endif
 
 -- | Technically not a law-abiding 'Semigroup' instance, as you can observe the
 -- associativity of '<>'. It's up to interpreters to use this instance

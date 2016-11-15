@@ -1,6 +1,9 @@
-{-# language CPP                                #-}
-{-# language UndecidableInstances               #-}
+{-# language CPP                  #-}
+{-# language UndecidableInstances #-}
+
+#if MIN_VERSION_base(4,9,0)
 {-# options_ghc -fno-warn-redundant-constraints #-}
+#endif
 
 module Solr.Type
   ( -- * Solr types

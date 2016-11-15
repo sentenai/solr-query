@@ -12,9 +12,10 @@ import Solr.Type
 
 import qualified Solr.Expr.Initial.Untyped as Untyped
 
-import Control.Monad (forM)
-import Data.Text     (Text)
-import Data.Time     (UTCTime)
+import Control.Applicative (pure)
+import Control.Monad       (forM)
+import Data.Text           (Text)
+import Data.Time           (UTCTime)
 
 
 -- | A typed, initially-encoded Solr expression.

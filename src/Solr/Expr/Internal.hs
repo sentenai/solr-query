@@ -1,13 +1,21 @@
+{-# language CPP #-}
+
 module Solr.Expr.Internal where
 
 import Builder
 import Solr.Expr.Class
 import Solr.Type
 
-import Data.Semigroup (Semigroup(..))
-import Data.String    (IsString(..))
-import Data.Text      (pack)
-import Data.Time      (defaultTimeLocale, formatTime)
+import Data.Semigroup  (Semigroup(..))
+import Data.String     (IsString(..))
+import Data.Text       (pack)
+import Data.Time       (formatTime)
+
+#if MIN_VERSION_time(1,5,0)
+import Data.Time      (defaultTimeLocale)
+#else
+import System.Locale  (defaultTimeLocale)
+#endif
 
 -- |
 -- @

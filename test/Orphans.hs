@@ -5,6 +5,7 @@ module Orphans where
 import Solr.Query.Initial
 import Solr.Expr.Initial.Untyped
 
+import Control.Applicative       ((<$>), (<*>), pure)
 import Data.Coerce               (coerce)
 import Test.QuickCheck.Arbitrary
 import Test.QuickCheck.Gen

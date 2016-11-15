@@ -43,30 +43,30 @@ matrix:
 
   # The Stack builds. We can pass in arbitrary Stack arguments via the ARGS
   # variable, such as using --stack-yaml to point to a different file.
-  - env: BUILD=stack ARGS=""
+  - env: BUILD=stack ARGS="" BUILD_ARGS="--flag solr-query:with-constraints"
     compiler: ": #stack default"
-    addons: {apt: {packages: [ghc-7.10.3], sources: [hvr-ghc]}}
+    addons: {apt: {packages: [ghc-8.0.1], sources: [hvr-ghc]}}
 
-  - env: BUILD=stack ARGS="--stack-yaml stack-7.8.4.yaml"
+  - env: BUILD=stack ARGS="--stack-yaml .stack-7.8.4.yaml"
     compiler: ": #stack 7.8.4"
     addons: {apt: {packages: [ghc-7.8.4], sources: [hvr-ghc]}}
 
-  - env: BUILD=stack ARGS="--stack-yaml stack-7.10.2.yaml"
+  - env: BUILD=stack ARGS="--stack-yaml .stack-7.10.2.yaml" BUILD_ARGS="--flag solr-query:with-constraints"
     compiler: ": #stack 7.10.2"
     addons: {apt: {packages: [ghc-7.10.2], sources: [hvr-ghc]}}
 
-  - env: BUILD=stack ARGS="--resolver lts-6"
+  - env: BUILD=stack ARGS="--resolver lts-6" BUILD_ARGS="--flag solr-query:with-constraints"
     compiler: ": #stack 7.10.3"
     addons: {apt: {packages: [ghc-7.10.3], sources: [hvr-ghc]}}
 
   # Nightly builds are allowed to fail
-  - env: BUILD=stack ARGS="--resolver nightly"
+  - env: BUILD=stack ARGS="--resolver nightly" BUILD_ARGS="--flag solr-query:with-constraints"
     compiler: ": #stack nightly"
     addons: {apt: {packages: [libgmp,libgmp-dev]}}
 
   allow_failures:
   - env: BUILD=cabal GHCVER=head  CABALVER=head HAPPYVER=1.19.5 ALEXVER=3.1.7
-  - env: BUILD=stack ARGS="--resolver nightly"
+  - env: BUILD=stack ARGS="--resolver nightly" BUILD_ARGS="--flag solr-query:with-constraints"
 
 before_install:
 # Using compiler above sets CC to an invalid value, so unset it
@@ -80,12 +80,7 @@ before_install:
 - export PATH=/opt/ghc/$GHCVER/bin:/opt/cabal/$CABALVER/bin:$HOME/.local/bin:/opt/alex/$ALEXVER/bin:/opt/happy/$HAPPYVER/bin:$HOME/.cabal/bin:$PATH
 - mkdir -p ~/.local/bin
 - |
-  if [ `uname` = "Darwin" ]
-  then
-    travis_retry curl --insecure -L https://www.stackage.org/stack/osx-x86_64 | tar xz --strip-components=1 --include '*/stack' -C ~/.local/bin
-  else
-    travis_retry curl -L https://www.stackage.org/stack/linux-x86_64 | tar xz --wildcards --strip-components=1 -C ~/.local/bin '*/stack'
-  fi
+  travis_retry curl -L https://www.stackage.org/stack/linux-x86_64 | tar xz --wildcards --strip-components=1 -C ~/.local/bin '*/stack'
 
   # Use the more reliable S3 mirror of Hackage
   mkdir -p $HOME/.cabal
@@ -107,7 +102,7 @@ install:
   set -ex
   case "$BUILD" in
     stack)
-      stack --no-terminal --install-ghc $ARGS test --bench --only-dependencies
+      stack --no-terminal --install-ghc $ARGS test --bench --only-dependencies $BUILD_ARGS
       ;;
     cabal)
       cabal --version
@@ -122,7 +117,7 @@ script:
   set -ex
   case "$BUILD" in
     stack)
-      stack --no-terminal $ARGS test --bench --no-run-benchmarks --haddock --no-haddock-deps
+      stack --no-terminal $ARGS test --bench --no-run-benchmarks --haddock --no-haddock-deps $BUILD_ARGS
       ;;
     cabal)
       cabal install --enable-tests --enable-benchmarks --force-reinstalls --ghc-options=-O0 --reorder-goals --max-backjumps=-1 $CABALARGS $PACKAGES

@@ -1,4 +1,7 @@
 resolver: lts-2.22
 extra-deps:
   - base-compat-0.9.1
+  - binary-0.8.4.1
+  - constraints-0.8
   - doctest-0.11.0
+  - time-1.5.0.1
