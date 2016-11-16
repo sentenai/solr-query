@@ -109,7 +109,7 @@ class ExprSYM expr where
   -- >>> let date = fromGregorian 2016 1 1
   -- >>> let time = fromIntegral 0
   -- >>> compile [] ("foo" =: utctime (UTCTime date time) :: Query Expr)
-  -- "q=foo:2016-01-01T00:00:00Z"
+  -- "q=foo:\"2016-01-01T00:00:00Z\""
   utctime :: UTCTime -> expr 'TDateTime
 
   -- | The @\'~\'@ operator, which fuzzes its argument (either a word or phrase)

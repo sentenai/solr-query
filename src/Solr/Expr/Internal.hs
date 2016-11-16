@@ -48,7 +48,7 @@ instance ExprSYM Expr where
   phrase ss = E (dquotes (spaces (map unE ss)))
 
   utctime t =
-    E (thawStr (formatTime defaultTimeLocale "%Y-%m-%dT%H:%M:%S%QZ" t))
+    E (thawStr (formatTime defaultTimeLocale "\"%Y-%m-%dT%H:%M:%S%QZ\"" t))
 
   E e ~: n = E (e <> char '~' <> bshow n)
 
