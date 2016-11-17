@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP                  #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
 module Orphans where
@@ -52,6 +53,7 @@ instance Arbitrary (Expr a) where
     EWord s     -> [ EWord s' | s' <- shrink s ]
     EWild s     -> [ EWild s' | s' <- shrink s ]
     ERegex s    -> [ ERegex s' | s' <- shrink s ]
+    EUTCTime _  -> []
     EDateTime _ -> []
     EPhrase es  -> coerce es ++ [ EPhrase es' | es' <- shrink es ]
     EFuzz e n   -> coerce e : [ EFuzz e' n' | (e', n') <- shrink (e, n) ]
@@ -96,3 +98,8 @@ instance Arbitrary (Param Query) where
 -- Subtract by 1, but don't go below 0
 scaleSub1 :: Gen a -> Gen a
 scaleSub1 g = scale (max 0 . subtract 1) g
+
+#if !MIN_VERSION_QuickCheck(2,8,0)
+scale :: (Int -> Int) -> Gen a -> Gen a
+scale f g = sized (\n -> resize (f n) g)
+#endif

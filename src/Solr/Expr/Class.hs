@@ -17,10 +17,10 @@ module Solr.Expr.Class
   , boost
   ) where
 
+import Solr.DateTime.Internal
 import Solr.Type
 
 import Data.Text (Text)
-import Data.Time (UTCTime)
 
 
 -- $setup
@@ -102,15 +102,22 @@ class ExprSYM expr where
   -- "q=foo:\"bar baz\""
   phrase :: [expr 'TWord] -> expr 'TPhrase
 
-  -- | A 'UTCTime' datetime expression.
+  -- | A 'DateTime' expression. This may either be a timestamp ('UTCTime'), or a
+  -- "truncated" 'DateTime' such as @(2015, 5, 12)@.
   --
   -- ==== __Examples__
   --
   -- >>> let date = fromGregorian 2016 1 1
   -- >>> let time = fromIntegral 0
-  -- >>> compile [] ("foo" =: utctime (UTCTime date time) :: Query Expr)
+  -- >>> compile [] ("foo" =: datetime (UTCTime date time) :: Query Expr)
   -- "q=foo:\"2016-01-01T00:00:00Z\""
-  utctime :: UTCTime -> expr 'TDateTime
+  --
+  -- >>> compile [] ("foo" =: datetime (2015 :: Year) :: Query Expr)
+  -- "q=foo:\"2015\""
+  --
+  -- >>> compile [] ("foo" =: datetime (2015, 1, 15, 11) :: Query Expr)
+  -- "q=foo:\"2015-01-15T11\""
+  datetime :: IsDateTime a => a -> expr 'TDateTime
 
   -- | The @\'~\'@ operator, which fuzzes its argument (either a word or phrase)
   -- by a numeric amount.
@@ -242,7 +249,6 @@ excl = Exclusive
 -- @[* TO *]@ query will require a type annotation.
 star :: ExprSYM expr => Boundary (expr a)
 star = Star
-
 
 -- | Named version of ('~:').
 fuzz :: (ExprSYM expr, Fuzzable a) => expr a -> Int -> expr ('TFuzzed a)

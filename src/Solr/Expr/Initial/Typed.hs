@@ -4,9 +4,12 @@ module Solr.Expr.Initial.Typed
   , typeCheck
   , reinterpret
     -- * Re-exports
+  , module Solr.DateTime.Internal
   , module Solr.Expr.Class
   ) where
 
+import Solr.DateTime.Internal
+import Solr.DateTime.ReallyInternal
 import Solr.Expr.Class
 import Solr.Type
 
@@ -27,7 +30,8 @@ data Expr   :: SolrType -> * where
   EWild     :: Text -> Expr 'TWild
   ERegex    :: Text -> Expr 'TRegex
   EPhrase   :: [Expr 'TWord] -> Expr 'TPhrase
-  EDateTime :: UTCTime -> Expr 'TDateTime
+  EUTCTime  :: UTCTime -> Expr 'TDateTime
+  EDateTime :: TruncatedDateTime -> Expr 'TDateTime
   EFuzz     :: Fuzzable a => Expr a -> Int -> Expr ('TFuzzed a)
   ETo       :: Rangeable a => Boundary (Expr a) -> Boundary (Expr a) -> Expr ('TRanged a)
   EBoost    :: Boostable a => Expr a -> Float -> Expr ('TBoosted a)
@@ -39,11 +43,15 @@ instance ExprSYM Expr where
   word    = EWord
   wild    = EWild
   regex   = ERegex
-  utctime = EDateTime
   phrase  = EPhrase
   (~:)    = EFuzz
   to      = ETo
   (^:)    = EBoost
+
+  datetime t =
+    case toDateTime t of
+      UTC t'       -> EUTCTime t'
+      Truncated t' -> EDateTime t'
 
 
 -- | Existential wrapper around 'Expr'.
@@ -76,6 +84,7 @@ typeCheck' u0 =
     Untyped.EWord s     -> pure (SomeExpr (EWord s))
     Untyped.EWild s     -> pure (SomeExpr (EWild s))
     Untyped.ERegex s    -> pure (SomeExpr (ERegex s))
+    Untyped.EUTCTime  t -> pure (SomeExpr (EUTCTime t))
     Untyped.EDateTime t -> pure (SomeExpr (EDateTime t))
 
     Untyped.EPhrase ss0 -> do
@@ -156,8 +165,18 @@ reinterpret = \case
   EWord s     -> word s
   EWild s     -> wild s
   ERegex s    -> regex s
-  EDateTime s -> utctime s
+  EUTCTime s  -> datetime s
+  EDateTime s -> unTruncated s datetime
   EPhrase es  -> phrase (map reinterpret es)
   EFuzz e n   -> reinterpret e ~: n
   ETo e1 e2   -> fmap reinterpret e1 `to` fmap reinterpret e2
   EBoost e n  -> reinterpret e ^: n
+
+unTruncated :: TruncatedDateTime -> (forall a. IsDateTime a => a -> r) -> r
+unTruncated (a, Nothing)                                                   k = k a
+unTruncated (a, Just (b, Nothing))                                         k = k (a, b)
+unTruncated (a, Just (b, Just (c, Nothing)))                               k = k (a, b, c)
+unTruncated (a, Just (b, Just (c, Just (d, Nothing))))                     k = k (a, b, c, d)
+unTruncated (a, Just (b, Just (c, Just (d, Just (e, Nothing)))))           k = k (a, b, c, d, e)
+unTruncated (a, Just (b, Just (c, Just (d, Just (e, Just (f, Nothing)))))) k = k (a, b, c, d, e, f)
+unTruncated (a, Just (b, Just (c, Just (d, Just (e, Just (f, Just g))))))  k = k (a, b, c, d, e, f, g)

@@ -3,6 +3,7 @@
 module Solr.Expr.Internal where
 
 import Builder
+import Solr.DateTime.ReallyInternal
 import Solr.Expr.Class
 import Solr.Type
 
@@ -10,6 +11,7 @@ import Data.Semigroup  (Semigroup(..))
 import Data.String     (IsString(..))
 import Data.Text       (pack)
 import Data.Time       (formatTime)
+import Text.Printf     (printf)
 
 #if MIN_VERSION_time(1,5,0)
 import Data.Time      (defaultTimeLocale)
@@ -47,8 +49,10 @@ instance ExprSYM Expr where
 
   phrase ss = E (dquotes (spaces (map unE ss)))
 
-  utctime t =
-    E (thawStr (formatTime defaultTimeLocale "\"%Y-%m-%dT%H:%M:%S%QZ\"" t))
+  datetime t =
+    case toDateTime t of
+      UTC t' -> E (thawStr (formatTime defaultTimeLocale "\"%Y-%m-%dT%H:%M:%S%QZ\"" t'))
+      Truncated t' -> E (formatTruncated t')
 
   E e ~: n = E (e <> char '~' <> bshow n)
 
@@ -65,3 +69,22 @@ instance ExprSYM Expr where
     rhs Star          = "*]"
 
   E e ^: n = E (e <> char '^' <> bshow n)
+
+formatTruncated :: TruncatedDateTime -> Builder
+formatTruncated =
+  go '"' show
+    (go '-' fmt
+      (go '-' fmt
+        (go 'T' fmt
+          (go ':' fmt
+            (go ':' fmt formatMilli)))))
+  where
+  go :: Char -> (a -> String) -> (b -> Builder) -> (a, Maybe b) -> Builder
+  go c f g (a, b) = char c <> thawStr (f a) <> maybe (char '"') g b
+
+  fmt :: Int -> String
+  fmt = printf "%02d"
+
+  -- Format to 5 decimal places
+  formatMilli :: Millisecond -> Builder
+  formatMilli ml = thawStr (tail (printf "%.5f" (ml / 100))) <> "Z\""

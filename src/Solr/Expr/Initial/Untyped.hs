@@ -2,9 +2,12 @@ module Solr.Expr.Initial.Untyped
   ( -- * Expression type
     Expr(..)
     -- * Re-exports
+  , module Solr.DateTime.Internal
   , module Solr.Expr.Class
   ) where
 
+import Solr.DateTime.Internal
+import Solr.DateTime.ReallyInternal
 import Solr.Expr.Class
 import Solr.Type
 
@@ -21,7 +24,8 @@ data Expr (ty :: SolrType)
   | EWord Text
   | EWild Text
   | ERegex Text
-  | EDateTime UTCTime
+  | EUTCTime UTCTime
+  | EDateTime TruncatedDateTime
   | forall b. EPhrase [Expr b]
   | forall b. EFuzz (Expr b) Int
   | forall b. ETo (Boundary (Expr b)) (Boundary (Expr b))
@@ -36,6 +40,7 @@ instance Eq (Expr ty) where
   EWord     a   == EWord     c   =        a == c
   EWild     a   == EWild     c   =        a == c
   ERegex    a   == ERegex    c   =        a == c
+  EUTCTime  a   == EUTCTime  c   =        a == c
   EDateTime a   == EDateTime c   =        a == c
   EPhrase   a   == EPhrase   c   = coerce a == c
   EFuzz     a b == EFuzz     c d = coerce a == c &&        b == d
@@ -44,14 +49,17 @@ instance Eq (Expr ty) where
   _             == _             = False
 
 instance ExprSYM Expr where
-  num     = ENum
-  true    = ETrue
-  false   = EFalse
-  word    = EWord
-  wild    = EWild
-  regex   = ERegex
-  utctime = EDateTime
-  phrase  = EPhrase
-  (~:)    = EFuzz
-  to      = ETo
-  (^:)    = EBoost
+  num    = ENum
+  true   = ETrue
+  false  = EFalse
+  word   = EWord
+  wild   = EWild
+  regex  = ERegex
+  phrase = EPhrase
+  (~:)   = EFuzz
+  to     = ETo
+  (^:)   = EBoost
+  datetime t =
+    case toDateTime t of
+      UTC t'       -> EUTCTime t'
+      Truncated t' -> EDateTime t'
