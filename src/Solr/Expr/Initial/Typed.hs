@@ -23,7 +23,7 @@ import Data.Time           (UTCTime)
 
 -- | A typed, initially-encoded Solr expression.
 data Expr   :: SolrType -> * where
-  ENum      :: Float -> Expr 'TNum
+  ENum      :: Double -> Expr 'TNum
   ETrue     :: Expr 'TBool
   EFalse    :: Expr 'TBool
   EWord     :: Text -> Expr 'TWord

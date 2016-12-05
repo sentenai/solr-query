@@ -18,7 +18,7 @@ import Data.Time   (UTCTime)
 
 -- | An untyped, initially-encoded Solr expression.
 data Expr (ty :: SolrType)
-  = ENum Float
+  = ENum Double
   | ETrue
   | EFalse
   | EWord Text

@@ -36,7 +36,7 @@ class ExprSYM expr where
   --
   -- >>> compile [] ("foo" =: num 5 :: Query Expr)
   -- "q=foo:5.0"
-  num :: Float -> expr 'TNum
+  num :: Double -> expr 'TNum
 
   -- | A @true@ expression.
   --
