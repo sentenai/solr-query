@@ -28,7 +28,8 @@ instance Arbitrary a => Arbitrary (Boundary a) where
 instance Arbitrary (Expr a) where
   arbitrary = frequency
     [ (40, oneof
-        [ ENum <$> arbitrary
+        [ EInt <$> arbitrary
+        , EFloat <$> arbitrary
         , pure ETrue
         , pure EFalse
         , EWord <$> arbitrary
@@ -47,7 +48,8 @@ instance Arbitrary (Expr a) where
     ]
 
   shrink = \case
-    ENum n      -> [ ENum n' | n' <- shrink n ]
+    EInt n      -> [ EInt n' | n' <- shrink n ]
+    EFloat n    -> [ EFloat n' | n' <- shrink n ]
     ETrue       -> []
     EFalse      -> []
     EWord s     -> [ EWord s' | s' <- shrink s ]

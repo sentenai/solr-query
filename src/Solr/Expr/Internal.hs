@@ -35,7 +35,9 @@ instance IsString (Expr 'TWord) where
   fromString s = word (pack s)
 
 instance ExprSYM Expr where
-  num n = E (bshow n)
+  int n = E (bshow n)
+
+  float n = E (bshow n)
 
   true = E "true"
 

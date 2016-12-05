@@ -13,7 +13,8 @@ spec =
   describe "compile" $ do
     it "defaultField" (test []  (defaultField (word "foo"))      "q=foo")
     it "field"        (test []  ("foo" =: word "bar")            "q=foo:bar")
-    it "num"          (test []  ("foo" =: num 5)                 "q=foo:5.0")
+    it "int"          (test []  ("foo" =: int 5)                 "q=foo:5")
+    it "float"        (test []  ("foo" =: float 5)               "q=foo:5.0")
     it "true"         (test []  ("foo" =: true)                  "q=foo:true")
     it "false"        (test []  ("foo" =: false)                 "q=foo:false")
     it "wild"         (test []  ("foo" =: wild "b?r")            "q=foo:b?r")
@@ -47,18 +48,31 @@ spec =
       it "phrase" (test []  ("foo" =: phrase ["bar", "baz"] ~: 1) "q=foo:\"bar baz\"~1")
 
     describe "range" $ do
-      describe "num" $ do
-        it "[]" (test []  ("foo" =: incl (num 5) `to` incl (num 6)) "q=foo:[5.0 TO 6.0]")
-        it "{]" (test []  ("foo" =: excl (num 5) `to` incl (num 6)) "q=foo:{5.0 TO 6.0]")
-        it "[}" (test []  ("foo" =: incl (num 5) `to` excl (num 6)) "q=foo:[5.0 TO 6.0}")
-        it "{}" (test []  ("foo" =: excl (num 5) `to` excl (num 6)) "q=foo:{5.0 TO 6.0}")
-        it "*]" (test []  ("foo" =: star `to` incl (num 5))         "q=foo:[* TO 5.0]")
-        it "[*" (test []  ("foo" =: incl (num 5) `to` star)         "q=foo:[5.0 TO *]")
+      describe "int" $ do
+        it "[]" (test []  ("foo" =: incl (int 5) `to` incl (int 6)) "q=foo:[5 TO 6]")
+        it "{]" (test []  ("foo" =: excl (int 5) `to` incl (int 6)) "q=foo:{5 TO 6]")
+        it "[}" (test []  ("foo" =: incl (int 5) `to` excl (int 6)) "q=foo:[5 TO 6}")
+        it "{}" (test []  ("foo" =: excl (int 5) `to` excl (int 6)) "q=foo:{5 TO 6}")
+        it "*]" (test []  ("foo" =: star `to` incl (int 5))         "q=foo:[* TO 5]")
+        it "[*" (test []  ("foo" =: incl (int 5) `to` star)         "q=foo:[5 TO *]")
         it "**" (test []  ("foo" =: star `to` numStar)              "q=foo:[* TO *]")
-        it ">"  (test []  ("foo" =: gt (num 5))                     "q=foo:{5.0 TO *]")
-        it ">=" (test []  ("foo" =: gte (num 5))                    "q=foo:[5.0 TO *]")
-        it "<"  (test []  ("foo" =: lt (num 5))                     "q=foo:[* TO 5.0}")
-        it "<"  (test []  ("foo" =: lte (num 5))                    "q=foo:[* TO 5.0]")
+        it ">"  (test []  ("foo" =: gt (int 5))                     "q=foo:{5 TO *]")
+        it ">=" (test []  ("foo" =: gte (int 5))                    "q=foo:[5 TO *]")
+        it "<"  (test []  ("foo" =: lt (int 5))                     "q=foo:[* TO 5}")
+        it "<"  (test []  ("foo" =: lte (int 5))                    "q=foo:[* TO 5]")
+
+      describe "float" $ do
+        it "[]" (test []  ("foo" =: incl (float 5) `to` incl (float 6)) "q=foo:[5.0 TO 6.0]")
+        it "{]" (test []  ("foo" =: excl (float 5) `to` incl (float 6)) "q=foo:{5.0 TO 6.0]")
+        it "[}" (test []  ("foo" =: incl (float 5) `to` excl (float 6)) "q=foo:[5.0 TO 6.0}")
+        it "{}" (test []  ("foo" =: excl (float 5) `to` excl (float 6)) "q=foo:{5.0 TO 6.0}")
+        it "*]" (test []  ("foo" =: star `to` incl (float 5))           "q=foo:[* TO 5.0]")
+        it "[*" (test []  ("foo" =: incl (float 5) `to` star)           "q=foo:[5.0 TO *]")
+        it "**" (test []  ("foo" =: star `to` numStar)                  "q=foo:[* TO *]")
+        it ">"  (test []  ("foo" =: gt (float 5))                       "q=foo:{5.0 TO *]")
+        it ">=" (test []  ("foo" =: gte (float 5))                      "q=foo:[5.0 TO *]")
+        it "<"  (test []  ("foo" =: lt (float 5))                       "q=foo:[* TO 5.0}")
+        it "<"  (test []  ("foo" =: lte (float 5))                      "q=foo:[* TO 5.0]")
 
       describe "word" $ do
         it "[]" (test []  ("foo" =: incl (word "a") `to` incl (word "b")) "q=foo:[a TO b]")

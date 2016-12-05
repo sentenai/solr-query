@@ -12,13 +12,15 @@ import Solr.Expr.Class
 import Solr.Type
 
 import Data.Coerce (coerce)
+import Data.Int    (Int64)
 import Data.Text   (Text)
 import Data.Time   (UTCTime)
 
 
 -- | An untyped, initially-encoded Solr expression.
 data Expr (ty :: SolrType)
-  = ENum Double
+  = EInt Int64
+  | EFloat Double
   | ETrue
   | EFalse
   | EWord Text
@@ -34,7 +36,8 @@ data Expr (ty :: SolrType)
 deriving instance Show (Expr ty)
 
 instance Eq (Expr ty) where
-  ENum      a   == ENum      c   =        a == c
+  EInt      a   == EInt      c   =        a == c
+  EFloat    a   == EFloat    c   =        a == c
   ETrue         == ETrue         = True
   EFalse        == EFalse        = True
   EWord     a   == EWord     c   =        a == c
@@ -49,7 +52,8 @@ instance Eq (Expr ty) where
   _             == _             = False
 
 instance ExprSYM Expr where
-  num    = ENum
+  int    = EInt
+  float  = EFloat
   true   = ETrue
   false  = EFalse
   word   = EWord

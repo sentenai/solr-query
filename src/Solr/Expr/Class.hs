@@ -20,6 +20,7 @@ module Solr.Expr.Class
 import Solr.DateTime.Internal
 import Solr.Type
 
+import Data.Int  (Int64)
 import Data.Text (Text)
 
 
@@ -30,13 +31,21 @@ import Data.Text (Text)
 
 -- | Solr expression.
 class ExprSYM expr where
-  -- | A @num@ expression.
+  -- | An @int@ expression.
   --
   -- ==== __Examples__
   --
-  -- >>> compile [] ("foo" =: num 5 :: Query Expr)
+  -- >>> compile [] ("foo" =: int 5 :: Query Expr)
+  -- "q=foo:5"
+  int :: Int64 -> expr 'TNum
+
+  -- | A @float@ expression.
+  --
+  -- ==== __Examples__
+  --
+  -- >>> compile [] ("foo" =: float 5 :: Query Expr)
   -- "q=foo:5.0"
-  num :: Double -> expr 'TNum
+  float :: Double -> expr 'TNum
 
   -- | A @true@ expression.
   --
@@ -136,8 +145,8 @@ class ExprSYM expr where
   --
   -- ==== __Examples__
   --
-  -- >>> compile [] ("foo" =: incl (num 5) `to` excl (num 10) :: Query Expr)
-  -- "q=foo:[5.0 TO 10.0}"
+  -- >>> compile [] ("foo" =: incl (int 5) `to` excl (int 10) :: Query Expr)
+  -- "q=foo:[5 TO 10}"
   --
   -- >>> compile [] ("foo" =: excl (word "bar") `to` star :: Query Expr)
   -- "q=foo:{bar TO *]"
@@ -182,8 +191,8 @@ fuzzy e = e ~: 2
 --
 -- ==== __Examples__
 --
--- >>> compile [] ("foo" =: gt (num 5) :: Query Expr)
--- "q=foo:{5.0 TO *]"
+-- >>> compile [] ("foo" =: gt (int 5) :: Query Expr)
+-- "q=foo:{5 TO *]"
 gt :: (ExprSYM expr, Rangeable a) => expr a -> expr ('TRanged a)
 gt e = excl e `to` star
 
@@ -195,8 +204,8 @@ gt e = excl e `to` star
 --
 -- ==== __Examples__
 --
--- >>> compile [] ("foo" =: gte (num 5) :: Query Expr)
--- "q=foo:[5.0 TO *]"
+-- >>> compile [] ("foo" =: gte (int 5) :: Query Expr)
+-- "q=foo:[5 TO *]"
 gte :: (ExprSYM expr, Rangeable a) => expr a -> expr ('TRanged a)
 gte e = incl e `to` star
 
@@ -208,8 +217,8 @@ gte e = incl e `to` star
 --
 -- ==== __Examples__
 --
--- >>> compile [] ("foo" =: lt (num 5) :: Query Expr)
--- "q=foo:[* TO 5.0}"
+-- >>> compile [] ("foo" =: lt (int 5) :: Query Expr)
+-- "q=foo:[* TO 5}"
 lt :: (ExprSYM expr, Rangeable a) => expr a -> expr ('TRanged a)
 lt e = star `to` excl e
 
@@ -221,8 +230,8 @@ lt e = star `to` excl e
 --
 -- ==== __Examples__
 --
--- >>> compile [] ("foo" =: lte (num 5) :: Query Expr)
--- "q=foo:[* TO 5.0]"
+-- >>> compile [] ("foo" =: lte (int 5) :: Query Expr)
+-- "q=foo:[* TO 5]"
 lte :: (ExprSYM expr, Rangeable a) => expr a -> expr ('TRanged a)
 lte e = star `to` incl e
 

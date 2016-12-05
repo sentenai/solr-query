@@ -17,13 +17,15 @@ import qualified Solr.Expr.Initial.Untyped as Untyped
 
 import Control.Applicative (pure)
 import Control.Monad       (forM)
+import Data.Int            (Int64)
 import Data.Text           (Text)
 import Data.Time           (UTCTime)
 
 
 -- | A typed, initially-encoded Solr expression.
 data Expr   :: SolrType -> * where
-  ENum      :: Double -> Expr 'TNum
+  EInt      :: Int64  -> Expr 'TNum
+  EFloat    :: Double -> Expr 'TNum
   ETrue     :: Expr 'TBool
   EFalse    :: Expr 'TBool
   EWord     :: Text -> Expr 'TWord
@@ -37,7 +39,8 @@ data Expr   :: SolrType -> * where
   EBoost    :: Boostable a => Expr a -> Float -> Expr ('TBoosted a)
 
 instance ExprSYM Expr where
-  num     = ENum
+  int     = EInt
+  float   = EFloat
   true    = ETrue
   false   = EFalse
   word    = EWord
@@ -78,7 +81,8 @@ typeCheck u k =
 typeCheck' :: Untyped.Expr a -> Maybe SomeExpr
 typeCheck' u0 =
   case u0 of
-    Untyped.ENum n      -> pure (SomeExpr (ENum n))
+    Untyped.EInt n      -> pure (SomeExpr (EInt n))
+    Untyped.EFloat n    -> pure (SomeExpr (EFloat n))
     Untyped.ETrue       -> pure (SomeExpr ETrue)
     Untyped.EFalse      -> pure (SomeExpr EFalse)
     Untyped.EWord s     -> pure (SomeExpr (EWord s))
@@ -127,18 +131,20 @@ starLeft :: (forall x. x -> Boundary x) -> Untyped.Expr a -> Maybe SomeExpr
 starLeft con u = do
   SomeExpr e <- typeCheck' u
   case e of
-    ENum _  -> pure (SomeExpr (ETo Star (con e)))
-    EWord _ -> pure (SomeExpr (ETo Star (con e)))
-    _       -> Nothing
+    EInt _   -> pure (SomeExpr (ETo Star (con e)))
+    EFloat _ -> pure (SomeExpr (ETo Star (con e)))
+    EWord _  -> pure (SomeExpr (ETo Star (con e)))
+    _        -> Nothing
 
 -- Type check a EXPR-to-*
 starRight :: (forall x. x -> Boundary x) -> Untyped.Expr a -> Maybe SomeExpr
 starRight con u = do
   SomeExpr e <- typeCheck' u
   case e of
-    ENum _  -> pure (SomeExpr (ETo (con e) Star))
-    EWord _ -> pure (SomeExpr (ETo (con e) Star))
-    _       -> Nothing
+    EInt _   -> pure (SomeExpr (ETo (con e) Star))
+    EFloat _ -> pure (SomeExpr (ETo (con e) Star))
+    EWord _  -> pure (SomeExpr (ETo (con e) Star))
+    _        -> Nothing
 
 -- Type check a EXPR-to-EXPR
 noStar
@@ -151,15 +157,19 @@ noStar con1 con2 u1 u2 = do
   SomeExpr e1 <- typeCheck' u1
   SomeExpr e2 <- typeCheck' u2
   case (e1, e2) of
-    (ENum _,  ENum _)  -> pure (SomeExpr (ETo (con1 e1) (con2 e2)))
-    (EWord _, EWord _) -> pure (SomeExpr (ETo (con1 e1) (con2 e2)))
-    _                  -> Nothing
+    (EInt   _, EInt   _) -> pure (SomeExpr (ETo (con1 e1) (con2 e2)))
+    (EInt   _, EFloat _) -> pure (SomeExpr (ETo (con1 e1) (con2 e2)))
+    (EFloat _, EInt   _) -> pure (SomeExpr (ETo (con1 e1) (con2 e2)))
+    (EFloat _, EFloat _) -> pure (SomeExpr (ETo (con1 e1) (con2 e2)))
+    (EWord  _, EWord  _) -> pure (SomeExpr (ETo (con1 e1) (con2 e2)))
+    _                    -> Nothing
 
 
 -- | Reinterpret a Solr expression.
 reinterpret :: ExprSYM expr => Expr ty -> expr ty
 reinterpret = \case
-  ENum n      -> num n
+  EInt n      -> int n
+  EFloat n    -> float n
   ETrue       -> true
   EFalse      -> false
   EWord s     -> word s
