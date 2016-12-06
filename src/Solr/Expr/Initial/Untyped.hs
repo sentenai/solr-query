@@ -28,28 +28,35 @@ data Expr (ty :: SolrType)
   | ERegex Text
   | EUTCTime UTCTime
   | EDateTime TruncatedDateTime
-  | forall b. EPhrase [Expr b]
-  | forall b. EFuzz (Expr b) Int
-  | forall b. ETo (Boundary (Expr b)) (Boundary (Expr b))
-  | forall b. EBoost (Expr b) Float
+  | forall a. EPhrase [Expr a]
+  | forall a. EFuzz (Expr a) Int
+  | forall a b. ETo (Boundary Expr a) (Boundary Expr b)
+  | forall a. EBoost (Expr a) Float
 
 deriving instance Show (Expr ty)
 
 instance Eq (Expr ty) where
-  EInt      a   == EInt      c   =        a == c
-  EFloat    a   == EFloat    c   =        a == c
-  ETrue         == ETrue         = True
-  EFalse        == EFalse        = True
-  EWord     a   == EWord     c   =        a == c
-  EWild     a   == EWild     c   =        a == c
-  ERegex    a   == ERegex    c   =        a == c
-  EUTCTime  a   == EUTCTime  c   =        a == c
-  EDateTime a   == EDateTime c   =        a == c
-  EPhrase   a   == EPhrase   c   = coerce a == c
-  EFuzz     a b == EFuzz     c d = coerce a == c &&        b == d
-  ETo       a b == ETo       c d = coerce a == c && coerce b == d
-  EBoost    a b == EBoost    c d = coerce a == c &&        b == d
-  _             == _             = False
+  EInt a == EInt c = a == c
+  EFloat a == EFloat c = a == c
+  ETrue == ETrue = True
+  EFalse == EFalse = True
+  EWord a == EWord c = a == c
+  EWild a == EWild c = a == c
+  ERegex a == ERegex c = a == c
+  EUTCTime a == EUTCTime c = a == c
+  EDateTime a == EDateTime c = a == c
+  EPhrase a == EPhrase c = coerce a == c
+  EFuzz a b == EFuzz c d = coerce a == c && b == d
+  ETo a b == ETo c d = eqRange a c && eqRange b d
+   where
+    eqRange :: Boundary Expr a -> Boundary Expr b -> Bool
+    eqRange (Inclusive x) (Inclusive y) = coerce x == y
+    eqRange (Exclusive x) (Exclusive y) = coerce x == y
+    eqRange Star          Star          = True
+    eqRange _             _             = False
+  EBoost a b == EBoost c d = coerce a == c && b == d
+  _ == _ = False
+
 
 instance ExprSYM Expr where
   int    = EInt

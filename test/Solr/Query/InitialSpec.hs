@@ -15,7 +15,9 @@ spec = do
     it "eliminates double negations" $ do
       let q = QField "foo" ETrue
 
-      compile (reinterpret (factor (QNeg (QNeg q))))
+      compile (reinterpret (factor
+        (QNot (QField "*" (ETo Star Star))
+          (QNot (QField "*" (ETo Star Star)) q))))
         `shouldBe` "q=foo:true"
 
 compile :: Final.Query Final.Expr -> Text

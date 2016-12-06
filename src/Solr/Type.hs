@@ -18,16 +18,17 @@ import GHC.TypeLits (TypeError, ErrorMessage(..))
 #endif
 
 data SolrType
-  = TNum
+  = TAny
+  | TNum
   | TBool
   | TWord
   | TWild
   | TRegex
   | TPhrase
   | TDateTime
-  | TFuzzed SolrType
-  | TBoosted SolrType
-  | TRanged SolrType
+  | TFuzzy
+  | TBoosted
+  | TRange
 
 -- | Types that can be fuzzed by a @\'~\'@ operator.
 class Fuzzable (ty :: SolrType)
@@ -40,35 +41,20 @@ instance Boostable 'TWord
 instance Boostable 'TPhrase
 
 -- | Types that can appear in a @'TO'@ range expression.
-class Rangeable (ty :: SolrType)
-instance Rangeable 'TNum
-instance Rangeable 'TWord
-instance Rangeable 'TDateTime
+class Rangeable (a :: SolrType) (b :: SolrType)
+instance Rangeable 'TNum      'TNum
+instance Rangeable 'TNum      'TAny
+instance Rangeable 'TWord     'TWord
+instance Rangeable 'TWord     'TAny
+instance Rangeable 'TDateTime 'TDateTime
+instance Rangeable 'TDateTime 'TAny
+instance Rangeable 'TAny      'TNum
+instance Rangeable 'TAny      'TWord
+instance Rangeable 'TAny      'TDateTime
+instance Rangeable 'TAny      'TAny
 
 #if MIN_VERSION_base(4,9,0)
-instance TypeError ('Text "You can only fuzz words and phrases") => Fuzzable 'TNum
-instance TypeError ('Text "You can only fuzz words and phrases") => Fuzzable 'TBool
-instance TypeError ('Text "You can only fuzz words and phrases") => Fuzzable 'TWild
-instance TypeError ('Text "You can only fuzz words and phrases") => Fuzzable 'TRegex
-instance TypeError ('Text "You can only fuzz words and phrases") => Fuzzable 'TDateTime
-instance TypeError ('Text "You can only fuzz words and phrases") => Fuzzable ('TFuzzed ty)
-instance TypeError ('Text "You can only fuzz words and phrases") => Fuzzable ('TBoosted ty)
-instance TypeError ('Text "You can only fuzz words and phrases") => Fuzzable ('TRanged ty)
-
-instance TypeError ('Text "You can only boost words and phrases") => Boostable 'TNum
-instance TypeError ('Text "You can only boost words and phrases") => Boostable 'TBool
-instance TypeError ('Text "You can only boost words and phrases") => Boostable 'TWild
-instance TypeError ('Text "You can only boost words and phrases") => Boostable 'TRegex
-instance TypeError ('Text "You can only boost words and phrases") => Boostable 'TDateTime
-instance TypeError ('Text "You can only boost words and phrases") => Boostable ('TFuzzed ty)
-instance TypeError ('Text "You can only boost words and phrases") => Boostable ('TBoosted ty)
-instance TypeError ('Text "You can only boost words and phrases") => Boostable ('TRanged ty)
-
-instance TypeError ('Text "You can only use numbers, words, and dates in a range expression") => Rangeable 'TBool
-instance TypeError ('Text "You can only use numbers, words, and dates in a range expression") => Rangeable 'TWild
-instance TypeError ('Text "You can only use numbers, words, and dates in a range expression") => Rangeable 'TRegex
-instance TypeError ('Text "You can only use numbers, words, and dates in a range expression") => Rangeable 'TPhrase
-instance TypeError ('Text "You can only use numbers, words, and dates in a range expression") => Rangeable ('TFuzzed ty)
-instance TypeError ('Text "You can only use numbers, words, and dates in a range expression") => Rangeable ('TBoosted ty)
-instance TypeError ('Text "You can only use numbers, words, and dates in a range expression") => Rangeable ('TRanged ty)
+instance {-# OVERLAPPABLE #-} TypeError ('Text "You can only fuzz words and phrases") => Fuzzable a
+instance {-# OVERLAPPABLE #-} TypeError ('Text "You can only boost words and phrases") => Boostable a
+instance {-# OVERLAPPABLE #-} TypeError ('Text "You can only use numbers, words, and dates in a range expression") => Rangeable a b
 #endif

@@ -138,7 +138,7 @@ class ExprSYM expr where
   --
   -- >>> compile [] ("foo" =: phrase ["bar", "baz", "qux"] ~: 10 :: Query Expr)
   -- "q=foo:\"bar baz qux\"~10"
-  (~:) :: Fuzzable a => expr a -> Int -> expr ('TFuzzed a)
+  (~:) :: Fuzzable a => expr a -> Int -> expr 'TFuzzy
   infix 6 ~:
 
   -- | A range expression.
@@ -151,10 +151,9 @@ class ExprSYM expr where
   -- >>> compile [] ("foo" =: excl (word "bar") `to` star :: Query Expr)
   -- "q=foo:{bar TO *]"
   --
-  -- -- Note the explicit type signature required for @[* TO *]@ queries
-  -- >>> compile [] ("foo" =: star `to` (star :: Boundary (Expr 'TNum)) :: Query Expr)
+  -- >>> compile [] ("foo" =: star `to` star :: Query Expr)
   -- "q=foo:[* TO *]"
-  to :: Rangeable a => Boundary (expr a) -> Boundary (expr a) -> expr ('TRanged a)
+  to :: Rangeable a b => Boundary expr a -> Boundary expr b -> expr 'TRange
   infix 6 `to`
 
   -- | The @\'^\'@ operator, which boosts its argument.
@@ -166,7 +165,7 @@ class ExprSYM expr where
   --
   -- >>> compile [] ("foo" =: phrase ["bar", "baz"] ^: 3.5 :: Query Expr)
   -- "q=foo:\"bar baz\"^3.5"
-  (^:) :: Boostable a => expr a -> Float -> expr ('TBoosted a)
+  (^:) :: Boostable a => expr a -> Float -> expr 'TBoosted
   infix 6 ^:
 
 -- | Short-hand for fuzzing a word by 2. This is the default behavior of a
@@ -180,7 +179,7 @@ class ExprSYM expr where
 --
 -- >>> compile [] ("foo" =: fuzzy "bar" :: Query Expr)
 -- "q=foo:bar~2"
-fuzzy :: ExprSYM expr => expr 'TWord -> expr ('TFuzzed 'TWord)
+fuzzy :: ExprSYM expr => expr 'TWord -> expr 'TFuzzy
 fuzzy e = e ~: 2
 
 -- | Short-hand for a greater-than range query.
@@ -193,7 +192,7 @@ fuzzy e = e ~: 2
 --
 -- >>> compile [] ("foo" =: gt (int 5) :: Query Expr)
 -- "q=foo:{5 TO *]"
-gt :: (ExprSYM expr, Rangeable a) => expr a -> expr ('TRanged a)
+gt :: (ExprSYM expr, Rangeable a 'TAny) => expr a -> expr 'TRange
 gt e = excl e `to` star
 
 -- | Short-hand for a greater-than-or-equal-to range query.
@@ -206,7 +205,7 @@ gt e = excl e `to` star
 --
 -- >>> compile [] ("foo" =: gte (int 5) :: Query Expr)
 -- "q=foo:[5 TO *]"
-gte :: (ExprSYM expr, Rangeable a) => expr a -> expr ('TRanged a)
+gte :: (ExprSYM expr, Rangeable a 'TAny) => expr a -> expr 'TRange
 gte e = incl e `to` star
 
 -- | Short-hand for a less-than range query.
@@ -219,7 +218,7 @@ gte e = incl e `to` star
 --
 -- >>> compile [] ("foo" =: lt (int 5) :: Query Expr)
 -- "q=foo:[* TO 5}"
-lt :: (ExprSYM expr, Rangeable a) => expr a -> expr ('TRanged a)
+lt :: (ExprSYM expr, Rangeable 'TAny a) => expr a -> expr 'TRange
 lt e = star `to` excl e
 
 -- | Short-hand for a less-than-or-equal-to range query.
@@ -232,7 +231,7 @@ lt e = star `to` excl e
 --
 -- >>> compile [] ("foo" =: lte (int 5) :: Query Expr)
 -- "q=foo:[* TO 5]"
-lte :: (ExprSYM expr, Rangeable a) => expr a -> expr ('TRanged a)
+lte :: (ExprSYM expr, Rangeable 'TAny a) => expr a -> expr 'TRange
 lte e = star `to` incl e
 
 
@@ -240,29 +239,30 @@ lte e = star `to` incl e
 -- either 'incl', 'excl', or 'star'.
 --
 -- The constructors are exported for use in interpreters.
-data Boundary a
-  = Inclusive a
-  | Exclusive a
-  | Star
-  deriving (Eq, Functor, Show)
+data Boundary expr ty where
+  Inclusive :: expr ty -> Boundary expr ty
+  Exclusive :: expr ty -> Boundary expr ty
+  Star :: Boundary expr 'TAny
+
+deriving instance Eq   (expr ty) => Eq   (Boundary expr ty)
+deriving instance Show (expr ty) => Show (Boundary expr ty)
 
 -- | Mark an expression as inclusive, for use in a range query.
-incl :: ExprSYM expr => expr a -> Boundary (expr a)
+incl :: ExprSYM expr => expr a -> Boundary expr a
 incl = Inclusive
 
 -- | Mark an expression as exclusive, for use in a range query.
-excl :: ExprSYM expr => expr a -> Boundary (expr a)
+excl :: ExprSYM expr => expr a -> Boundary expr a
 excl = Exclusive
 
--- | @\'*\'@ operator, signifying the minimum or maximun bound of a range. A
--- @[* TO *]@ query will require a type annotation.
-star :: ExprSYM expr => Boundary (expr a)
+-- | @\'*\'@ operator, signifying the minimum or maximun bound of a range.
+star :: ExprSYM expr => Boundary expr 'TAny
 star = Star
 
 -- | Named version of ('~:').
-fuzz :: (ExprSYM expr, Fuzzable a) => expr a -> Int -> expr ('TFuzzed a)
+fuzz :: (ExprSYM expr, Fuzzable a) => expr a -> Int -> expr 'TFuzzy
 fuzz = (~:)
 
 -- | Named version of ('^:').
-boost :: (ExprSYM expr, Boostable a) => expr a -> Float -> expr ('TBoosted a)
+boost :: (ExprSYM expr, Boostable a) => expr a -> Float -> expr 'TBoosted
 boost = (^:)

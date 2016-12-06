@@ -1,6 +1,8 @@
 {-# LANGUAGE CPP                  #-}
 {-# LANGUAGE UndecidableInstances #-}
 
+{-# LANGUAGE PatternSynonyms #-}
+
 -- | An initial encoding of a Solr query. This is an alternative interpretation
 -- of the Solr language that is more amenable to parsing from arbitrary user
 -- input and applying query transformations.
@@ -47,7 +49,6 @@ data Query (expr :: SolrType -> *)
   | QOr (Query expr) (Query expr)
   | QNot (Query expr) (Query expr)
   | QScore (Query expr) Float
-  | QNeg (Query expr)
   | QAppend (Query expr) (Query expr)
 
 instance Eq (Query UExpr.Expr) where
@@ -57,7 +58,6 @@ instance Eq (Query UExpr.Expr) where
   QOr           a b == QOr           c d =        a == c &&        b == d
   QNot          a b == QNot          c d =        a == c &&        b == d
   QScore        a b == QScore        c d =        a == c &&        b == d
-  QNeg          a   == QNeg          c   =        a == c
   QAppend       a b == QAppend       c d =        a == c &&        b == d
   _                 == _                 = False
 
@@ -76,9 +76,7 @@ instance ForallF Show expr => Show (Query expr) where
     QOr q1 q2     -> showParen (n >= 11) (showString "QOr "     . showsPrec 11 q1 . showSpace . showsPrec 11 q2)
     QNot q1 q2    -> showParen (n >= 11) (showString "QNot "    . showsPrec 11 q1 . showSpace . showsPrec 11 q2)
     QScore q m    -> showParen (n >= 11) (showString "QScore "  . showsPrec 11 q  . showSpace . showsPrec 11 m)
-    QNeg q        -> showParen (n >= 11) (showString "QNeg "    . showsPrec 11 q)
     QAppend q1 q2 -> showParen (n >= 11) (showString "QAppend " . showsPrec 11 q1 . showSpace . showsPrec 11 q2)
-
 #endif
 
 -- | Technically not a law-abiding 'Semigroup' instance, as you can observe the
@@ -96,7 +94,6 @@ instance Uniplate (Query expr) where
     QOr q1 q2       -> plate QOr |* q1 |* q2
     QNot q1 q2      -> plate QNot |* q1 |* q2
     QScore q n      -> plate QScore |* q |- n
-    QNeg q          -> plate QNeg |* q
     QAppend q1 q2   -> plate QAppend |* q1 |* q2
 
 instance ExprSYM expr => QuerySYM expr Query where
@@ -106,15 +103,17 @@ instance ExprSYM expr => QuerySYM expr Query where
   (||:)        = QOr
   (-:)         = QNot
   (^=:)        = QScore
-  neg          = QNeg
 
 instance HasParamDefaultField Query
 instance HasParamOp           Query
 instance HasParamRows         Query
 instance HasParamStart        Query
 
--- | Type check an untyped Solr query. Note the untyped 'UExpr.Expr' on
--- the way in is not the same as the typed 'Expr.Expr' on the way out.
+pattern QNeg :: Query Expr.Expr -> Query Expr.Expr
+pattern QNeg q = QNot (QField "*" (Expr.ETo Star Star)) q
+
+-- | Type check an untyped Solr query. Note the untyped 'UExpr.Expr' input is
+-- not the same as the typed 'Expr.Expr' output.
 typeCheck :: Query UExpr.Expr -> Maybe (Query Expr.Expr)
 typeCheck u0 =
   case u0 of
@@ -131,10 +130,6 @@ typeCheck u0 =
       q <- typeCheck u
       pure (QScore q n)
 
-    QNeg u -> do
-      q <- typeCheck u
-      pure (QNeg q)
-
  where
   binop
     :: (Query Expr.Expr -> Query Expr.Expr -> Query Expr.Expr)
@@ -146,9 +141,10 @@ typeCheck u0 =
     q2 <- typeCheck u2
     pure (con q1 q2)
 
--- | Factor a Solr query into a canonical form (e.g. perform double-negation
--- elimination). Check the source code for all transformations performed.
-factor :: Query expr -> Query expr
+-- | Factor a type-safe 'Query' 'Expr.Expr' into a canonical form (e.g. perform
+-- double-negation elimination). Check the source code for all transformations
+-- performed.
+factor :: Query Expr.Expr -> Query Expr.Expr
 factor =
     transform rightAssocAppend
   . transform doubleNegationElim
@@ -169,12 +165,11 @@ factor =
       QOr q1 q2     -> QOr (unscore q1) (unscore q2)
       QNot q1 q2    -> QNot (unscore q1) (unscore q2)
       QScore q _    -> q -- note, not 'unscore q'
-      QNeg q        -> QNeg (unscore q)
       QAppend q1 q2 -> QAppend (unscore q1) (unscore q2)
       q             -> q
 
   -- Rewrite -(-q) as q
-  doubleNegationElim :: Query expr -> Query expr
+  doubleNegationElim :: Query Expr.Expr -> Query Expr.Expr
   doubleNegationElim = \case
     QNeg (QNeg q) -> q
     q -> q
@@ -205,5 +200,4 @@ reinterpret = fix $ \r -> \case
   QOr q1 q2       -> r q1 ||: r q2
   QNot q1 q2      -> r q1 -: r q2
   QScore q n      -> r q ^=: n
-  QNeg q          -> neg (r q)
-  QAppend q1 q2 -> r q1 <> r q2
+  QAppend q1 q2   -> r q1 <> r q2

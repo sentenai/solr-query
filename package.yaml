@@ -22,6 +22,7 @@ default-extensions:
   - DataKinds
   - DeriveFunctor
   - ExistentialQuantification
+  - FlexibleContexts
   - FlexibleInstances
   - GADTs
   - GeneralizedNewtypeDeriving

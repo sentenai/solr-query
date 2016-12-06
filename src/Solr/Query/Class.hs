@@ -8,6 +8,7 @@
 module Solr.Query.Class
   ( -- * Solr query language
     QuerySYM(..)
+  , neg
     -- * Named operators
   , field
   , Solr.Query.Class.and
@@ -84,14 +85,14 @@ class ExprSYM expr => QuerySYM expr query where
   (^=:) :: query expr -> Float -> query expr
   infixr 4 ^=:
 
-  -- | Negate a query.
-  --
-  -- ==== __Examples__
-  --
-  -- >>> compile [] (neg ("foo" =: word "bar") :: Query Expr)
-  -- "q=-foo:bar"
-  neg :: query expr -> query expr
-
+-- | Negate a query.
+--
+-- ==== __Examples__
+--
+-- >>> compile [] (neg ("foo" =: word "bar") :: Query Expr)
+-- "q=(*:[* TO *] NOT foo:bar)"
+neg :: QuerySYM expr query => query expr -> query expr
+neg = (-:) ("*" =: star `to` star)
 
 -- | Named version of ('=:').
 field :: QuerySYM expr query => Text -> expr a -> query expr

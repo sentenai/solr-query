@@ -60,12 +60,12 @@ instance ExprSYM Expr where
 
   to b1 b2 = E (lhs b1 <> " TO " <> rhs b2)
    where
-    lhs :: Boundary (Expr a) -> Builder
+    lhs :: Boundary Expr a -> Builder
     lhs (Inclusive e) = char '[' <> unE e
     lhs (Exclusive e) = char '{' <> unE e
     lhs Star          = "[*"
 
-    rhs :: Boundary (Expr a) -> Builder
+    rhs :: Boundary Expr a -> Builder
     rhs (Inclusive e) = unE e <> char ']'
     rhs (Exclusive e) = unE e <> char '}'
     rhs Star          = "*]"

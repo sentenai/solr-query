@@ -38,8 +38,6 @@ instance QuerySYM Expr FilterQuery where
 
   FQ q ^=: n = FQ (q ^=: n)
 
-  neg (FQ q) = FQ (neg q)
-
 instance HasParamCache        FilterQuery
 instance HasParamCost         FilterQuery
 instance HasParamDefaultField FilterQuery

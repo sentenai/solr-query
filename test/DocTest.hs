@@ -6,6 +6,7 @@ main = doctest
   , "-XDataKinds"
   , "-XDeriveFunctor"
   , "-XExistentialQuantification"
+  , "-XFlexibleContexts"
   , "-XFlexibleInstances"
   , "-XGADTs"
   , "-XGeneralizedNewtypeDeriving"

@@ -34,8 +34,6 @@ instance QuerySYM Expr Query where
 
   Q q ^=: n = Q (q <> "^=" <> bshow n)
 
-  neg (Q q) = Q (char '-' <> q)
-
 instance HasParamDefaultField Query
 instance HasParamOp           Query
 instance HasParamRows         Query

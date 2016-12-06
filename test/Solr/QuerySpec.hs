@@ -2,7 +2,6 @@ module Solr.QuerySpec where
 
 import Solr.DateTime
 import Solr.Query
-import Solr.Type
 
 import Data.Text.Lazy (Text)
 import Data.Time
@@ -48,6 +47,8 @@ spec =
       it "phrase" (test []  ("foo" =: phrase ["bar", "baz"] ~: 1) "q=foo:\"bar baz\"~1")
 
     describe "range" $ do
+      it "**" (test [] ("foo" =: star `to` star) "q=foo:[* TO *]")
+
       describe "int" $ do
         it "[]" (test []  ("foo" =: incl (int 5) `to` incl (int 6)) "q=foo:[5 TO 6]")
         it "{]" (test []  ("foo" =: excl (int 5) `to` incl (int 6)) "q=foo:{5 TO 6]")
@@ -55,7 +56,6 @@ spec =
         it "{}" (test []  ("foo" =: excl (int 5) `to` excl (int 6)) "q=foo:{5 TO 6}")
         it "*]" (test []  ("foo" =: star `to` incl (int 5))         "q=foo:[* TO 5]")
         it "[*" (test []  ("foo" =: incl (int 5) `to` star)         "q=foo:[5 TO *]")
-        it "**" (test []  ("foo" =: star `to` numStar)              "q=foo:[* TO *]")
         it ">"  (test []  ("foo" =: gt (int 5))                     "q=foo:{5 TO *]")
         it ">=" (test []  ("foo" =: gte (int 5))                    "q=foo:[5 TO *]")
         it "<"  (test []  ("foo" =: lt (int 5))                     "q=foo:[* TO 5}")
@@ -68,7 +68,6 @@ spec =
         it "{}" (test []  ("foo" =: excl (float 5) `to` excl (float 6)) "q=foo:{5.0 TO 6.0}")
         it "*]" (test []  ("foo" =: star `to` incl (float 5))           "q=foo:[* TO 5.0]")
         it "[*" (test []  ("foo" =: incl (float 5) `to` star)           "q=foo:[5.0 TO *]")
-        it "**" (test []  ("foo" =: star `to` numStar)                  "q=foo:[* TO *]")
         it ">"  (test []  ("foo" =: gt (float 5))                       "q=foo:{5.0 TO *]")
         it ">=" (test []  ("foo" =: gte (float 5))                      "q=foo:[5.0 TO *]")
         it "<"  (test []  ("foo" =: lt (float 5))                       "q=foo:[* TO 5.0}")
@@ -81,7 +80,6 @@ spec =
         it "{}" (test []  ("foo" =: excl (word "a") `to` excl (word "b")) "q=foo:{a TO b}")
         it "*]" (test []  ("foo" =: star `to` incl (word "a"))            "q=foo:[* TO a]")
         it "[*" (test []  ("foo" =: incl (word "a") `to` star)            "q=foo:[a TO *]")
-        it "**" (test []  ("foo" =: star `to` wordStar)                   "q=foo:[* TO *]")
         it ">"  (test []  ("foo" =: gt (word "a"))                        "q=foo:{a TO *]")
         it ">=" (test []  ("foo" =: gte (word "a"))                       "q=foo:[a TO *]")
         it "<"  (test []  ("foo" =: lt (word "a"))                        "q=foo:[* TO a}")
@@ -94,7 +92,7 @@ spec =
         it "{}" (test []  ("foo" =: excl (datetime t1) `to` excl (datetime t2)) "q=foo:{\"2015-01-01T00:00:00Z\" TO \"2016-01-01T00:00:00Z\"}")
         it "*]" (test []  ("foo" =: star `to` incl (datetime t1))               "q=foo:[* TO \"2015-01-01T00:00:00Z\"]")
         it "[*" (test []  ("foo" =: incl (datetime t1) `to` star)               "q=foo:[\"2015-01-01T00:00:00Z\" TO *]")
-        it "**" (test []  ("foo" =: star `to` dateStar)                         "q=foo:[* TO *]")
+        it "**" (test []  ("foo" =: star `to` star)                         "q=foo:[* TO *]")
         it ">"  (test []  ("foo" =: gt (datetime t1))                           "q=foo:{\"2015-01-01T00:00:00Z\" TO *]")
         it ">=" (test []  ("foo" =: gte (datetime t1))                          "q=foo:[\"2015-01-01T00:00:00Z\" TO *]")
         it "<"  (test []  ("foo" =: lt (datetime t1))                           "q=foo:[* TO \"2015-01-01T00:00:00Z\"}")
@@ -112,7 +110,7 @@ spec =
       it "word"   (test []  ("foo" =: word "bar" ^=: 3.5)            "q=foo:bar^=3.5")
       it "phrase" (test []  ("foo" =: phrase ["bar", "baz"] ^=: 3.5) "q=foo:\"bar baz\"^=3.5")
 
-    it "neg" (test []  (neg ("foo" =: word "bar")) "q=-foo:bar")
+    it "neg" (test [] (neg ("foo" =: word "bar")) "q=(*:[* TO *] NOT foo:bar)")
 
     describe "params" $ do
       it "one" (test ps1 (defaultField (word "bar")) "q={!df=foo}bar")
@@ -123,15 +121,6 @@ spec =
 
   t1 = UTCTime (fromGregorian 2015 1 1) 0
   t2 = UTCTime (fromGregorian 2016 1 1) 0
-
-  numStar :: Boundary (Expr 'TNum)
-  numStar = star
-
-  wordStar :: Boundary (Expr 'TWord)
-  wordStar = star
-
-  dateStar :: Boundary (Expr 'TDateTime)
-  dateStar = star
 
 test :: [Param Query] -> Query Expr -> Text -> Expectation
 test params query result = compile params query `shouldBe` result

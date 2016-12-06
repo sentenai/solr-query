@@ -34,9 +34,9 @@ data Expr   :: SolrType -> * where
   EPhrase   :: [Expr 'TWord] -> Expr 'TPhrase
   EUTCTime  :: UTCTime -> Expr 'TDateTime
   EDateTime :: TruncatedDateTime -> Expr 'TDateTime
-  EFuzz     :: Fuzzable a => Expr a -> Int -> Expr ('TFuzzed a)
-  ETo       :: Rangeable a => Boundary (Expr a) -> Boundary (Expr a) -> Expr ('TRanged a)
-  EBoost    :: Boostable a => Expr a -> Float -> Expr ('TBoosted a)
+  EFuzz     :: Fuzzable a => Expr a -> Int -> Expr 'TFuzzy
+  ETo       :: Rangeable a b => Boundary Expr a -> Boundary Expr b -> Expr 'TRange
+  EBoost    :: Boostable a => Expr a -> Float -> Expr 'TBoosted
 
 instance ExprSYM Expr where
   int     = EInt
@@ -104,10 +104,7 @@ typeCheck' u0 =
         EPhrase _ -> pure (SomeExpr (EFuzz e n))
         _         -> Nothing
 
-    -- FIXME: Hm, when type checking a [* TO *], do I really have to just pick a
-    -- type here? Seems wrong...
-    Untyped.ETo Star Star ->
-      pure (SomeExpr (ETo (Star :: Boundary (Expr 'TNum)) Star))
+    Untyped.ETo Star Star -> pure (SomeExpr (ETo Star Star))
 
     Untyped.ETo Star (Inclusive u)            -> starLeft  Inclusive u
     Untyped.ETo Star (Exclusive u)            -> starLeft  Exclusive u
@@ -127,7 +124,9 @@ typeCheck' u0 =
         _         -> Nothing
 
 -- Type check a *-to-EXPR
-starLeft :: (forall x. x -> Boundary x) -> Untyped.Expr a -> Maybe SomeExpr
+starLeft
+  :: (forall expr x. expr x -> Boundary expr x) -> Untyped.Expr a
+  -> Maybe SomeExpr
 starLeft con u = do
   SomeExpr e <- typeCheck' u
   case e of
@@ -137,7 +136,9 @@ starLeft con u = do
     _        -> Nothing
 
 -- Type check a EXPR-to-*
-starRight :: (forall x. x -> Boundary x) -> Untyped.Expr a -> Maybe SomeExpr
+starRight
+  :: (forall expr x. expr x -> Boundary expr x) -> Untyped.Expr a
+  -> Maybe SomeExpr
 starRight con u = do
   SomeExpr e <- typeCheck' u
   case e of
@@ -148,10 +149,10 @@ starRight con u = do
 
 -- Type check a EXPR-to-EXPR
 noStar
-  :: (forall x. x -> Boundary x)
-  -> (forall x. x -> Boundary x)
+  :: (forall expr x. expr x -> Boundary expr x)
+  -> (forall expr x. expr x -> Boundary expr x)
   -> Untyped.Expr a
-  -> Untyped.Expr a
+  -> Untyped.Expr b
   -> Maybe SomeExpr
 noStar con1 con2 u1 u2 = do
   SomeExpr e1 <- typeCheck' u1
@@ -179,8 +180,19 @@ reinterpret = \case
   EDateTime s -> unTruncated s datetime
   EPhrase es  -> phrase (map reinterpret es)
   EFuzz e n   -> reinterpret e ~: n
-  ETo e1 e2   -> fmap reinterpret e1 `to` fmap reinterpret e2
   EBoost e n  -> reinterpret e ^: n
+
+  ETo e1 e2 ->
+    case (e1, e2) of
+      (Inclusive e1', Inclusive e2') -> incl (reinterpret e1') `to` incl (reinterpret e2')
+      (Inclusive e1', Exclusive e2') -> incl (reinterpret e1') `to` excl (reinterpret e2')
+      (Inclusive e1', Star)          -> incl (reinterpret e1') `to` star
+      (Exclusive e1', Inclusive e2') -> excl (reinterpret e1') `to` incl (reinterpret e2')
+      (Exclusive e1', Exclusive e2') -> excl (reinterpret e1') `to` excl (reinterpret e2')
+      (Exclusive e1', Star)          -> excl (reinterpret e1') `to` star
+      (Star,          Inclusive e2') -> star                   `to` incl (reinterpret e2')
+      (Star,          Exclusive e2') -> star                   `to` excl (reinterpret e2')
+      (Star,          Star)          -> star                   `to` star
 
 unTruncated :: TruncatedDateTime -> (forall a. IsDateTime a => a -> r) -> r
 unTruncated (a, Nothing)                                                   k = k a
