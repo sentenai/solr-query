@@ -119,5 +119,5 @@ spec =
   t1 = UTCTime (fromGregorian 2015 1 1) 0
   t2 = UTCTime (fromGregorian 2016 1 1) 0
 
-test :: [Param Query] -> Query Expr -> Text -> Expectation
-test params query result = compile params query `shouldBe` result
+test :: [LocalParam Query] -> Query Expr -> Text -> Expectation
+test locals query result = compile [] locals query `shouldBe` result

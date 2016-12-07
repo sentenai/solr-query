@@ -49,9 +49,9 @@ library
       Solr.Expr.Class
       Solr.Expr.Initial.Typed
       Solr.Expr.Initial.Untyped
-      Solr.FilterQuery
+      Solr.LocalParam
+      Solr.LocalParam.Internal
       Solr.Param
-      Solr.Param.Internal
       Solr.Query
       Solr.Query.Class
       Solr.Query.Initial
@@ -60,6 +60,7 @@ library
       Builder
       Solr.DateTime.ReallyInternal
       Solr.Expr.Internal
+      Solr.FilterQuery
       Solr.Query.Internal
   default-language: Haskell2010
 

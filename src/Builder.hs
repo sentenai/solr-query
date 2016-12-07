@@ -3,7 +3,8 @@ module Builder
   , LText
   , char
   , bshow
-  , spaces
+  , intersperse
+  -- , spaces
   , parens
   , dquotes
   , freeze
@@ -12,8 +13,8 @@ module Builder
   , thawStr
   ) where
 
-import Data.Semigroup         (Semigroup(..))
-import Data.Text              (Text)
+import Data.Semigroup (Semigroup(..))
+import Data.Text (Text)
 import Data.Text.Lazy.Builder
   (Builder, fromLazyText, fromString, fromText, singleton, toLazyText)
 
@@ -31,6 +32,13 @@ spaces :: [Builder] -> Builder
 spaces [] = ""
 spaces [w] = w
 spaces (w:ws) = w <> singleton ' ' <> spaces ws
+
+intersperse :: Char -> [Builder] -> Builder
+intersperse c0 = go (singleton c0)
+ where
+  go _ []     = mempty
+  go _ [w]    = w
+  go c (w:ws) = w <> c <> go c ws
 
 parens :: Builder -> Builder
 parens s = singleton '(' <> s <> singleton ')'

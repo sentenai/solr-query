@@ -35,7 +35,7 @@ class ExprSYM expr where
   --
   -- ==== __Examples__
   --
-  -- >>> compile [] ("foo" =: int 5 :: Query Expr)
+  -- >>> compile [] [] ("foo" =: int 5 :: Query Expr)
   -- "q=foo:5"
   int :: Int64 -> expr 'TNum
 
@@ -43,7 +43,7 @@ class ExprSYM expr where
   --
   -- ==== __Examples__
   --
-  -- >>> compile [] ("foo" =: float 5 :: Query Expr)
+  -- >>> compile [] [] ("foo" =: float 5 :: Query Expr)
   -- "q=foo:5.0"
   float :: Double -> expr 'TNum
 
@@ -51,7 +51,7 @@ class ExprSYM expr where
   --
   -- ==== __Examples__
   --
-  -- >>> compile [] ("foo" =: true :: Query Expr)
+  -- >>> compile [] [] ("foo" =: true :: Query Expr)
   -- "q=foo:true"
   true :: expr 'TBool
 
@@ -59,7 +59,7 @@ class ExprSYM expr where
   --
   -- ==== __Examples__
   --
-  -- >>> compile [] ("foo" =: false :: Query Expr)
+  -- >>> compile [] [] ("foo" =: false :: Query Expr)
   -- "q=foo:false"
   false :: expr 'TBool
 
@@ -73,7 +73,7 @@ class ExprSYM expr where
   --
   -- ==== __Examples__
   --
-  -- >>> compile [] ("foo" =: word "bar" :: Query Expr)
+  -- >>> compile [] [] ("foo" =: word "bar" :: Query Expr)
   -- "q=foo:bar"
   word :: Text -> expr 'TWord
 
@@ -84,7 +84,7 @@ class ExprSYM expr where
   --
   -- ==== __Examples__
   --
-  -- >>> compile [] ("foo" =: wild "b?r" :: Query Expr)
+  -- >>> compile [] [] ("foo" =: wild "b?r" :: Query Expr)
   -- "q=foo:b?r"
   wild :: Text -> expr 'TWild
 
@@ -96,7 +96,7 @@ class ExprSYM expr where
   --
   -- ==== __Examples__
   --
-  -- >>> compile [] ("foo" =: regex "[mb]oat" :: Query Expr)
+  -- >>> compile [] [] ("foo" =: regex "[mb]oat" :: Query Expr)
   -- "q=foo:/[mb]oat/"
   regex :: Text -> expr 'TRegex
 
@@ -107,7 +107,7 @@ class ExprSYM expr where
   --
   -- ==== __Examples__
   --
-  -- >>> compile [] ("foo" =: phrase ["bar", "baz"] :: Query Expr)
+  -- >>> compile [] [] ("foo" =: phrase ["bar", "baz"] :: Query Expr)
   -- "q=foo:\"bar baz\""
   phrase :: [expr 'TWord] -> expr 'TPhrase
 
@@ -118,13 +118,13 @@ class ExprSYM expr where
   --
   -- >>> let date = fromGregorian 2016 1 1
   -- >>> let time = fromIntegral 0
-  -- >>> compile [] ("foo" =: datetime (UTCTime date time) :: Query Expr)
+  -- >>> compile [] [] ("foo" =: datetime (UTCTime date time) :: Query Expr)
   -- "q=foo:\"2016-01-01T00:00:00Z\""
   --
-  -- >>> compile [] ("foo" =: datetime (2015 :: Year) :: Query Expr)
+  -- >>> compile [] [] ("foo" =: datetime (2015 :: Year) :: Query Expr)
   -- "q=foo:\"2015\""
   --
-  -- >>> compile [] ("foo" =: datetime (2015, 1, 15, 11) :: Query Expr)
+  -- >>> compile [] [] ("foo" =: datetime (2015, 1, 15, 11) :: Query Expr)
   -- "q=foo:\"2015-01-15T11\""
   datetime :: IsDateTime a => a -> expr 'TDateTime
 
@@ -133,10 +133,10 @@ class ExprSYM expr where
   --
   -- ==== __Examples__
   --
-  -- >>> compile [] ("foo" =: word "bar" ~: 1 :: Query Expr)
+  -- >>> compile [] [] ("foo" =: word "bar" ~: 1 :: Query Expr)
   -- "q=foo:bar~1"
   --
-  -- >>> compile [] ("foo" =: phrase ["bar", "baz", "qux"] ~: 10 :: Query Expr)
+  -- >>> compile [] [] ("foo" =: phrase ["bar", "baz", "qux"] ~: 10 :: Query Expr)
   -- "q=foo:\"bar baz qux\"~10"
   (~:) :: Fuzzable a => expr a -> Int -> expr 'TFuzzy
   infix 6 ~:
@@ -145,13 +145,13 @@ class ExprSYM expr where
   --
   -- ==== __Examples__
   --
-  -- >>> compile [] ("foo" =: incl (int 5) `to` excl (int 10) :: Query Expr)
+  -- >>> compile [] [] ("foo" =: incl (int 5) `to` excl (int 10) :: Query Expr)
   -- "q=foo:[5 TO 10}"
   --
-  -- >>> compile [] ("foo" =: excl (word "bar") `to` star :: Query Expr)
+  -- >>> compile [] [] ("foo" =: excl (word "bar") `to` star :: Query Expr)
   -- "q=foo:{bar TO *]"
   --
-  -- >>> compile [] ("foo" =: star `to` star :: Query Expr)
+  -- >>> compile [] [] ("foo" =: star `to` star :: Query Expr)
   -- "q=foo:[* TO *]"
   to :: Rangeable a b => Boundary expr a -> Boundary expr b -> expr 'TRange
   infix 6 `to`
@@ -160,10 +160,10 @@ class ExprSYM expr where
   --
   -- ==== __Examples__
   --
-  -- >>> compile [] ("foo" =: word "bar" ^: 3.5 :: Query Expr)
+  -- >>> compile [] [] ("foo" =: word "bar" ^: 3.5 :: Query Expr)
   -- "q=foo:bar^3.5"
   --
-  -- >>> compile [] ("foo" =: phrase ["bar", "baz"] ^: 3.5 :: Query Expr)
+  -- >>> compile [] [] ("foo" =: phrase ["bar", "baz"] ^: 3.5 :: Query Expr)
   -- "q=foo:\"bar baz\"^3.5"
   (^:) :: Boostable a => expr a -> Float -> expr 'TBoosted
   infix 6 ^:
@@ -177,7 +177,7 @@ class ExprSYM expr where
 --
 -- ==== __Examples__
 --
--- >>> compile [] ("foo" =: fuzzy "bar" :: Query Expr)
+-- >>> compile [] [] ("foo" =: fuzzy "bar" :: Query Expr)
 -- "q=foo:bar~2"
 fuzzy :: ExprSYM expr => expr 'TWord -> expr 'TFuzzy
 fuzzy e = e ~: 2
@@ -190,7 +190,7 @@ fuzzy e = e ~: 2
 --
 -- ==== __Examples__
 --
--- >>> compile [] ("foo" =: gt (int 5) :: Query Expr)
+-- >>> compile [] [] ("foo" =: gt (int 5) :: Query Expr)
 -- "q=foo:{5 TO *]"
 gt :: (ExprSYM expr, Rangeable a 'TAny) => expr a -> expr 'TRange
 gt e = excl e `to` star
@@ -203,7 +203,7 @@ gt e = excl e `to` star
 --
 -- ==== __Examples__
 --
--- >>> compile [] ("foo" =: gte (int 5) :: Query Expr)
+-- >>> compile [] [] ("foo" =: gte (int 5) :: Query Expr)
 -- "q=foo:[5 TO *]"
 gte :: (ExprSYM expr, Rangeable a 'TAny) => expr a -> expr 'TRange
 gte e = incl e `to` star
@@ -216,7 +216,7 @@ gte e = incl e `to` star
 --
 -- ==== __Examples__
 --
--- >>> compile [] ("foo" =: lt (int 5) :: Query Expr)
+-- >>> compile [] [] ("foo" =: lt (int 5) :: Query Expr)
 -- "q=foo:[* TO 5}"
 lt :: (ExprSYM expr, Rangeable 'TAny a) => expr a -> expr 'TRange
 lt e = star `to` excl e
@@ -229,7 +229,7 @@ lt e = star `to` excl e
 --
 -- ==== __Examples__
 --
--- >>> compile [] ("foo" =: lte (int 5) :: Query Expr)
+-- >>> compile [] [] ("foo" =: lte (int 5) :: Query Expr)
 -- "q=foo:[* TO 5]"
 lte :: (ExprSYM expr, Rangeable 'TAny a) => expr a -> expr 'TRange
 lte e = star `to` incl e

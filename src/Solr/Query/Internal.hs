@@ -1,13 +1,21 @@
+{-# language CPP                  #-}
+{-# language UndecidableInstances #-}
+
 module Solr.Query.Internal where
 
 import Builder
 import Solr.Expr.Internal
-import Solr.Param.Internal
+import Solr.LocalParam.Internal
+import Solr.Param
 import Solr.Query.Class
 import Solr.Type
 
 import Data.Semigroup (Semigroup(..))
 import Data.Text.Lazy (Text)
+
+#if MIN_VERSION_base(4,9,0)
+import GHC.TypeLits (TypeError, ErrorMessage(..))
+#endif
 
 -- | A Solr query.
 newtype Query (expr :: SolrType -> *) = Q { unQ :: Builder }
@@ -34,20 +42,12 @@ instance QuerySYM Expr Query where
 
   Q q ^=: n = Q (q <> "^=" <> bshow n)
 
-instance HasParamDefaultField Query
-instance HasParamOp           Query
-instance HasParamRows         Query
-instance HasParamStart        Query
-
-compileParam :: Param query -> Builder
-compileParam = \case
-  ParamCache b        -> "cache=" <> if b then "true" else "false"
-  ParamCost n         -> "cost=" <> bshow n
-  ParamDefaultField v -> "df=" <> thaw' v
-  ParamOpAnd          -> "q.op=AND"
-  ParamOpOr           -> "q.op=OR"
-  ParamRows n         -> "rows=" <> bshow n
-  ParamStart n        -> "start=" <> bshow n
+instance HasLocalParamDf Query
+instance HasLocalParamOp Query
+#if MIN_VERSION_base(4,9,0)
+instance TypeError ('Text "Query cannot have a 'cache' local parameter") => HasLocalParamCache Query
+instance TypeError ('Text "Query cannot have a 'cost' local parameter")  => HasLocalParamCost  Query
+#endif
 
 -- | Compile a 'Query' to a lazy 'Text'.
 --
@@ -57,11 +57,27 @@ compileParam = \case
 -- ==== __Examples__
 --
 -- >>> let query = "foo" =: phrase ["bar", "baz"] ~: 5 &&: defaultField (regex "wh?t") :: Query Expr
--- >>> compile [df "body"] query
+-- >>> compile [] [df "body"] query
 -- "q={!df=body}(foo:\"bar baz\"~5 AND /wh?t/)"
 compile
-  :: [Param Query] -> Query expr -> Text
-compile params (Q query) =
-  case params of
-    [] -> freeze ("q=" <> query)
-    _  -> freeze ("q={!" <> spaces (map compileParam params) <> "}" <> query)
+  :: [Param] -> [LocalParam Query] -> Query expr -> Text
+compile params locals (Q query) = freeze (params' <> "q=" <> locals' <> query)
+ where
+  params' = intersperse '&' (map compileParam params)
+  locals' =
+    case locals of
+      [] -> mempty
+      _  -> "{!" <> intersperse ' ' (map compileLocalParam locals) <> "}"
+
+compileParam :: Param -> Builder
+compileParam = \case
+  ParamRows n  -> "rows=" <> bshow n
+  ParamStart n -> "start=" <> bshow n
+
+compileLocalParam :: LocalParam query -> Builder
+compileLocalParam = \case
+  LocalParamCache b -> "cache=" <> if b then "true" else "false"
+  LocalParamCost n  -> "cost=" <> bshow n
+  LocalParamDf v    -> "df=" <> thaw' v
+  LocalParamOpAnd   -> "q.op=AND"
+  LocalParamOpOr    -> "q.op=OR"

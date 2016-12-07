@@ -34,7 +34,7 @@ class ExprSYM expr => QuerySYM expr query where
   --
   -- ==== __Examples__
   --
-  -- >>> compile [] (defaultField (word "foo") :: Query Expr)
+  -- >>> compile [] [] (defaultField (word "foo") :: Query Expr)
   -- "q=foo"
   defaultField :: expr a -> query expr
 
@@ -42,7 +42,7 @@ class ExprSYM expr => QuerySYM expr query where
   --
   -- ==== __Examples__
   --
-  -- >>> compile [] ("foo" =: word "bar" :: Query Expr)
+  -- >>> compile [] [] ("foo" =: word "bar" :: Query Expr)
   -- "q=foo:bar"
   (=:) :: Text -> expr a -> query expr
   infix 5 =:
@@ -51,7 +51,7 @@ class ExprSYM expr => QuerySYM expr query where
   --
   -- ==== __Examples__
   --
-  -- >>> compile [] ("foo" =: word "bar" &&: "baz" =: word "qux" :: Query Expr)
+  -- >>> compile [] [] ("foo" =: word "bar" &&: "baz" =: word "qux" :: Query Expr)
   -- "q=(foo:bar AND baz:qux)"
   (&&:) :: query expr -> query expr -> query expr
   infixr 3 &&:
@@ -60,7 +60,7 @@ class ExprSYM expr => QuerySYM expr query where
   --
   -- ==== __Examples__
   --
-  -- >>> compile [] ("foo" =: word "bar" ||: "baz" =: word "qux" :: Query Expr)
+  -- >>> compile [] [] ("foo" =: word "bar" ||: "baz" =: word "qux" :: Query Expr)
   -- "q=(foo:bar OR baz:qux)"
   (||:) :: query expr -> query expr -> query expr
   infixr 2 ||:
@@ -69,7 +69,7 @@ class ExprSYM expr => QuerySYM expr query where
   --
   -- ==== __Examples__
   --
-  -- >>> compile [] ("foo" =: word "bar" -: "baz" =: word "qux" :: Query Expr)
+  -- >>> compile [] [] ("foo" =: word "bar" -: "baz" =: word "qux" :: Query Expr)
   -- "q=(foo:bar NOT baz:qux)"
   (-:) :: query expr -> query expr -> query expr
   infixr 1 -:
@@ -80,7 +80,7 @@ class ExprSYM expr => QuerySYM expr query where
   --
   -- ==== __Examples__
   --
-  -- >>> compile [] ("foo" =: word "bar" ^=: 3.5 :: Query Expr)
+  -- >>> compile [] [] ("foo" =: word "bar" ^=: 3.5 :: Query Expr)
   -- "q=foo:bar^=3.5"
   (^=:) :: query expr -> Float -> query expr
   infixr 4 ^=:
@@ -89,7 +89,7 @@ class ExprSYM expr => QuerySYM expr query where
 --
 -- ==== __Examples__
 --
--- >>> compile [] (neg ("foo" =: word "bar") :: Query Expr)
+-- >>> compile [] [] (neg ("foo" =: word "bar") :: Query Expr)
 -- "q=(*:[* TO *] NOT foo:bar)"
 neg :: QuerySYM expr query => query expr -> query expr
 neg = (-:) ("*" =: star `to` star)

@@ -49,7 +49,7 @@ instance ExprSYM Expr where
 
   regex s = E (char '/' <> thaw' s <> char '/')
 
-  phrase ss = E (dquotes (spaces (map unE ss)))
+  phrase ss = E (dquotes (intersperse ' ' (map unE ss)))
 
   datetime t =
     case toDateTime t of

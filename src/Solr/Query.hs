@@ -5,7 +5,7 @@
 -- queries. For example,
 --
 -- >>> let query = (("foo" =: word "bar") ^=: 1.0) ^=: 2.0 :: QuerySYM expr query => query expr
--- >>> compile [] (query :: Query Expr)
+-- >>> compile [] [] (query :: Query Expr)
 -- "q=foo:bar^=1.0^=2.0"
 --
 -- For this reason, you may want to first interpret a query using
@@ -14,7 +14,7 @@
 -- lazy 'Text' version using 'Solr.Query.Initial.reinterpret':
 --
 -- >>> import Solr.Query.Initial (factor, reinterpret)
--- >>> compile [] (reinterpret (factor query) :: Query Expr)
+-- >>> compile [] [] (reinterpret (factor query) :: Query Expr)
 -- "q=foo:bar^=2.0"
 
 module Solr.Query
@@ -24,12 +24,14 @@ module Solr.Query
     -- * Re-exports
   , module Solr.Expr
   , module Solr.Expr.Class
-  , module Solr.Query.Class
+  , module Solr.LocalParam
   , module Solr.Param
+  , module Solr.Query.Class
   ) where
 
 import Solr.Expr
 import Solr.Expr.Class
-import Solr.Param (Param, df, opAnd, opOr, rows, start)
+import Solr.LocalParam (LocalParam, df, opAnd, opOr)
+import Solr.Param
 import Solr.Query.Class
 import Solr.Query.Internal

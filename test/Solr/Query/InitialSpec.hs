@@ -21,4 +21,4 @@ spec = do
         `shouldBe` "q=foo:true"
 
 compile :: Final.Query Final.Expr -> Text
-compile = Final.compile []
+compile = Final.compile [] []

@@ -94,13 +94,11 @@ instance Arbitrary (Query Expr) where
     QScore q n      -> q : [ QScore q' n' | (q', n') <- shrink (q, n) ]
     QAppend q1 q2   -> q1 : q2 : [ QAppend q1' q2' | (q1', q2') <- shrink (q1, q2) ]
 
-instance Arbitrary (Param Query) where
+instance Arbitrary (LocalParam Query) where
   arbitrary = oneof
     [ df <$> arbitrary
     , pure opAnd
     , pure opOr
-    , rows <$> arbitrary
-    , start <$> arbitrary
     ]
 
 -- Subtract by 1, but don't go below 0

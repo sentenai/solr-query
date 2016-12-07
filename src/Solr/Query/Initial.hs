@@ -1,7 +1,6 @@
 {-# LANGUAGE CPP                  #-}
+{-# LANGUAGE PatternSynonyms      #-}
 {-# LANGUAGE UndecidableInstances #-}
-
-{-# LANGUAGE PatternSynonyms #-}
 
 -- | An initial encoding of a Solr query. This is an alternative interpretation
 -- of the Solr language that is more amenable to parsing from arbitrary user
@@ -14,30 +13,36 @@ module Solr.Query.Initial
   , factor
   , reinterpret
     -- * Re-exports
+  , module Solr.LocalParam
   , module Solr.Param
   , module Solr.Query.Class
   ) where
 
+import Solr.LocalParam (LocalParam, df, opAnd, opOr)
+import Solr.LocalParam.Internal
 import Solr.Param
-import Solr.Param.Internal
 import Solr.Query.Class
-import Solr.Type               (SolrType)
+import Solr.Type (SolrType)
 
 import qualified Solr.Expr.Initial.Untyped as UExpr
 import qualified Solr.Expr.Initial.Typed   as Expr
 
-import Control.Applicative           (pure)
-import Data.Coerce                   (coerce)
-import Data.Function                 (fix)
+import Control.Applicative (pure)
+import Data.Coerce (coerce)
+import Data.Function (fix)
 import Data.Generics.Uniplate.Direct (Uniplate(..), (|-), (|*), plate, transform)
-import Data.Generics.Str             (Str)
-import Data.Semigroup                (Semigroup(..))
+import Data.Generics.Str (Str)
+import Data.Semigroup (Semigroup(..))
 import Data.Text (Text)
 
+#if MIN_VERSION_base(4,9,0)
+import GHC.TypeLits (TypeError, ErrorMessage(..))
+#endif
+
 #if WITH_CONSTRAINTS
-import Data.Constraint        ((:-), (\\))
+import Data.Constraint ((:-), (\\))
 import Data.Constraint.Forall
-import GHC.Show               (showSpace)
+import GHC.Show (showSpace)
 #endif
 
 -- | An initial encoding of a Solr query. To get a 'Show' instance, compile with
@@ -104,10 +109,12 @@ instance ExprSYM expr => QuerySYM expr Query where
   (-:)         = QNot
   (^=:)        = QScore
 
-instance HasParamDefaultField Query
-instance HasParamOp           Query
-instance HasParamRows         Query
-instance HasParamStart        Query
+instance HasLocalParamDf Query
+instance HasLocalParamOp Query
+#if MIN_VERSION_base(4,9,0)
+instance TypeError ('Text "Query cannot have a 'cache' local parameter") => HasLocalParamCache Query
+instance TypeError ('Text "Query cannot have a 'cost' local parameter")  => HasLocalParamCost  Query
+#endif
 
 pattern QNeg :: Query Expr.Expr -> Query Expr.Expr
 pattern QNeg q = QNot (QField "*" (Expr.ETo Star Star)) q
