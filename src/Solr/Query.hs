@@ -31,7 +31,7 @@ module Solr.Query
 
 import Solr.Expr
 import Solr.Expr.Class
-import Solr.LocalParam (LocalParam, df, opAnd, opOr)
+import Solr.LocalParam
 import Solr.Param
 import Solr.Query.Class
 import Solr.Query.Internal

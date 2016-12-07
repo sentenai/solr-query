@@ -13,6 +13,7 @@ module Builder
   , thawStr
   ) where
 
+import Data.Monoid (mempty)
 import Data.Semigroup (Semigroup(..))
 import Data.Text (Text)
 import Data.Text.Lazy.Builder

@@ -18,7 +18,7 @@ module Solr.Query.Initial
   , module Solr.Query.Class
   ) where
 
-import Solr.LocalParam (LocalParam, df, opAnd, opOr)
+import Solr.LocalParam
 import Solr.LocalParam.Internal
 import Solr.Param
 import Solr.Query.Class
@@ -116,7 +116,9 @@ instance TypeError ('Text "Query cannot have a 'cache' local parameter") => HasL
 instance TypeError ('Text "Query cannot have a 'cost' local parameter")  => HasLocalParamCost  Query
 #endif
 
+#if MIN_VERSION_base(4,8,0)
 pattern QNeg :: Query Expr.Expr -> Query Expr.Expr
+#endif
 pattern QNeg q = QNot (QField "*" (Expr.ETo Star Star)) q
 
 -- | Type check an untyped Solr query. Note the untyped 'UExpr.Expr' input is

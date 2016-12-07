@@ -7,8 +7,6 @@ import Data.Text (Text)
 -- $setup
 -- >>> import Data.Semigroup
 -- >>> import Solr.Query
--- >>> import Solr.FilterQuery (FilterQuery)
--- >>> import qualified Solr.FilterQuery as FilterQuery
 
 data LocalParam query where
   LocalParamCache :: HasLocalParamCache query => Bool -> LocalParam query
@@ -21,21 +19,11 @@ deriving instance Show (LocalParam query)
 
 -- | The @\'cache\'@ local parameter.
 --
--- ==== __Examples__
---
--- >>> let query = "foo" =: word "bar" :: FilterQuery Expr
--- >>> FilterQuery.compile [] [cache False] query
--- "fq={!cache=false}foo:bar"
 cache :: HasLocalParamCache query => Bool -> LocalParam query
 cache = LocalParamCache
 
 -- | The @\'cost\'@ local parameter.
 --
--- ==== __Examples__
---
--- >>> let query = "foo" =: word "bar" :: FilterQuery Expr
--- >>> FilterQuery.compile [] [cost 5] query
--- "fq={!cost=5}foo:bar"
 cost :: HasLocalParamCost query => Int -> LocalParam query
 cost = LocalParamCost
 

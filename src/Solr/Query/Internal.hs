@@ -10,6 +10,7 @@ import Solr.Param
 import Solr.Query.Class
 import Solr.Type
 
+import Data.Monoid (mempty)
 import Data.Semigroup (Semigroup(..))
 import Data.Text.Lazy (Text)
 
@@ -49,6 +50,18 @@ instance TypeError ('Text "Query cannot have a 'cache' local parameter") => HasL
 instance TypeError ('Text "Query cannot have a 'cost' local parameter")  => HasLocalParamCost  Query
 #endif
 
+
+-- | A Solr filter query. This is like 'Query', but with more 'LocalParam's
+-- available. All functions polymorphic over 'QuerySYM' will work with both.
+newtype FilterQuery expr = FQ (Query expr)
+  deriving (Semigroup, QuerySYM Expr)
+
+instance HasLocalParamCache FilterQuery
+instance HasLocalParamCost  FilterQuery
+instance HasLocalParamDf    FilterQuery
+instance HasLocalParamOp    FilterQuery
+
+
 -- | Compile a 'Query' to a lazy 'Text'.
 --
 -- Note that the DSL admits many ways to create an invalid Solr query (e.g.
@@ -59,25 +72,32 @@ instance TypeError ('Text "Query cannot have a 'cost' local parameter")  => HasL
 -- >>> let query = "foo" =: phrase ["bar", "baz"] ~: 5 &&: defaultField (regex "wh?t") :: Query Expr
 -- >>> compile [] [df "body"] query
 -- "q={!df=body}(foo:\"bar baz\"~5 AND /wh?t/)"
-compile
-  :: [Param] -> [LocalParam Query] -> Query expr -> Text
-compile params locals (Q query) = freeze (params' <> "q=" <> locals' <> query)
+compile :: [Param] -> [LocalParam Query] -> Query expr -> Text
+compile params locals (Q query) =
+  freeze (compileParams params <> "q=" <> locals' <> query)
  where
-  params' = intersperse '&' (map compileParam params)
   locals' =
     case locals of
       [] -> mempty
-      _  -> "{!" <> intersperse ' ' (map compileLocalParam locals) <> "}"
+      _  -> "{!" <> compileLocalParams locals <> "}"
 
-compileParam :: Param -> Builder
-compileParam = \case
-  ParamRows n  -> "rows=" <> bshow n
-  ParamStart n -> "start=" <> bshow n
+compileFilterQuery :: [LocalParam FilterQuery] -> FilterQuery Expr -> Builder
+compileFilterQuery locals (FQ (Q query)) = compileLocalParams locals <> query
 
-compileLocalParam :: LocalParam query -> Builder
-compileLocalParam = \case
-  LocalParamCache b -> "cache=" <> if b then "true" else "false"
-  LocalParamCost n  -> "cost=" <> bshow n
-  LocalParamDf v    -> "df=" <> thaw' v
-  LocalParamOpAnd   -> "q.op=AND"
-  LocalParamOpOr    -> "q.op=OR"
+compileParams :: [Param] -> Builder
+compileParams = foldr (\p b -> go p <> char '&' <> b) mempty
+ where
+  go = \case
+    ParamFq locals query -> "fq=" <> compileFilterQuery locals query
+    ParamRows n  -> "rows=" <> bshow n
+    ParamStart n -> "start=" <> bshow n
+
+compileLocalParams :: [LocalParam query] -> Builder
+compileLocalParams = intersperse ' ' . map go
+ where
+  go = \case
+    LocalParamCache b -> "cache=" <> if b then "true" else "false"
+    LocalParamCost n  -> "cost=" <> bshow n
+    LocalParamDf v    -> "df=" <> thaw' v
+    LocalParamOpAnd   -> "q.op=AND"
+    LocalParamOpOr    -> "q.op=OR"
