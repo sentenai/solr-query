@@ -96,9 +96,11 @@ instance Arbitrary (Query Expr) where
 
 instance Arbitrary (Param Query) where
   arbitrary = oneof
-    [ paramDefaultField <$> arbitrary
-    , pure paramOpAnd
-    , pure paramOpOr
+    [ df <$> arbitrary
+    , pure opAnd
+    , pure opOr
+    , rows <$> arbitrary
+    , start <$> arbitrary
     ]
 
 -- Subtract by 1, but don't go below 0

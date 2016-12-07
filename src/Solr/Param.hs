@@ -3,13 +3,13 @@
 module Solr.Param
   ( -- * Query parameters
     Param
-  , paramCache
-  , paramCost
-  , paramDefaultField
-  , paramOpAnd
-  , paramOpOr
-  , paramRows
-  , paramStart
+  , cache
+  , cost
+  , df
+  , opAnd
+  , opOr
+  , rows
+  , start
   ) where
 
 import Solr.Param.Internal

@@ -57,7 +57,7 @@ compileParam = \case
 -- ==== __Examples__
 --
 -- >>> let query = "foo" =: phrase ["bar", "baz"] ~: 5 &&: defaultField (regex "wh?t") :: Query Expr
--- >>> compile [paramDefaultField "body"] query
+-- >>> compile [df "body"] query
 -- "q={!df=body}(foo:\"bar baz\"~5 AND /wh?t/)"
 compile
   :: [Param Query] -> Query expr -> Text

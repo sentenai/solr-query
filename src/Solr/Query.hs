@@ -30,7 +30,6 @@ module Solr.Query
 
 import Solr.Expr
 import Solr.Expr.Class
-import Solr.Param
-  (Param, paramDefaultField, paramOpAnd, paramOpOr, paramRows, paramStart)
+import Solr.Param (Param, df, opAnd, opOr, rows, start)
 import Solr.Query.Class
 import Solr.Query.Internal

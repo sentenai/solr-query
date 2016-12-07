@@ -26,70 +26,70 @@ deriving instance Show (Param query)
 -- ==== __Examples__
 --
 -- >>> let query = "foo" =: word "bar" :: FilterQuery Expr
--- >>> FilterQuery.compile [paramCache False] query
+-- >>> FilterQuery.compile [cache False] query
 -- "fq={!cache=false}foo:bar"
-paramCache :: HasParamCache query => Bool -> Param query
-paramCache = ParamCache
+cache :: HasParamCache query => Bool -> Param query
+cache = ParamCache
 
 -- | The @\'cost\'@ local parameter.
 --
 -- ==== __Examples__
 --
 -- >>> let query = "foo" =: word "bar" :: FilterQuery Expr
--- >>> FilterQuery.compile [paramCost 5] query
+-- >>> FilterQuery.compile [cost 5] query
 -- "fq={!cost=5}foo:bar"
-paramCost :: HasParamCost query => Int -> Param query
-paramCost = ParamCost
+cost :: HasParamCost query => Int -> Param query
+cost = ParamCost
 
 -- | The @\'df\'@ local parameter.
 --
 -- ==== __Examples__
 --
 -- >>> let query = defaultField (word "bar") :: Query Expr
--- >>> compile [paramDefaultField "foo"] query
+-- >>> compile [df "foo"] query
 -- "q={!df=foo}bar"
-paramDefaultField :: HasParamDefaultField query => Text -> Param query
-paramDefaultField = ParamDefaultField
+df :: HasParamDefaultField query => Text -> Param query
+df = ParamDefaultField
 
 -- | The @\'op=AND\'@ local parameter.
 --
 -- ==== __Examples__
 --
 -- >>> let query = defaultField (word "foo") <> defaultField (word "bar") :: Query Expr
--- >>> compile [paramOpAnd] query
+-- >>> compile [opAnd] query
 -- "q={!q.op=AND}foo bar"
-paramOpAnd :: HasParamOp query => Param query
-paramOpAnd = ParamOpAnd
+opAnd :: HasParamOp query => Param query
+opAnd = ParamOpAnd
 
 -- | The @\'op=OR\'@ local parameter.
 --
 -- ==== __Examples__
 --
 -- >>> let query = defaultField (word "foo") <> defaultField (word "bar") :: Query Expr
--- >>> compile [paramOpOr] query
+-- >>> compile [opOr] query
 -- "q={!q.op=OR}foo bar"
-paramOpOr :: HasParamOp query => Param query
-paramOpOr = ParamOpOr
+opOr :: HasParamOp query => Param query
+opOr = ParamOpOr
 
 -- | The @\'rows\'@ local parameter.
 --
 -- ==== __Examples__
 --
 -- >>> let query = "foo" =: word "bar" :: Query Expr
--- >>> compile [paramRows 5] query
+-- >>> compile [rows 5] query
 -- "q={!rows=5}foo:bar"
-paramRows :: HasParamRows query => Int -> Param query
-paramRows = ParamRows
+rows :: HasParamRows query => Int -> Param query
+rows = ParamRows
 
 -- | The @\'start\'@ local parameter.
 --
 -- ==== __Examples__
 --
 -- >>> let query = "foo" =: word "bar" :: Query Expr
--- >>> compile [paramStart 10] query
+-- >>> compile [start 10] query
 -- "q={!start=10}foo:bar"
-paramStart :: HasParamStart query => Int -> Param query
-paramStart = ParamStart
+start :: HasParamStart query => Int -> Param query
+start = ParamStart
 
 class HasParamCache        (query :: (SolrType -> *) -> *)
 class HasParamCost         (query :: (SolrType -> *) -> *)

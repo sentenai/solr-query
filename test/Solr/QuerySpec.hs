@@ -113,12 +113,9 @@ spec =
     it "neg" (test [] (neg ("foo" =: word "bar")) "q=(*:[* TO *] NOT foo:bar)")
 
     describe "params" $ do
-      it "one" (test ps1 (defaultField (word "bar")) "q={!df=foo}bar")
-      it "two" (test ps2 (defaultField (word "bar")) "q={!df=foo q.op=AND}bar")
+      it "one" (test [df "foo"] (defaultField (word "bar")) "q={!df=foo}bar")
+      it "two" (test [df "foo", opAnd] (defaultField (word "bar")) "q={!df=foo q.op=AND}bar")
  where
-  ps1 = [paramDefaultField "foo"]
-  ps2 = [paramDefaultField "foo", paramOpAnd]
-
   t1 = UTCTime (fromGregorian 2015 1 1) 0
   t2 = UTCTime (fromGregorian 2016 1 1) 0
 
