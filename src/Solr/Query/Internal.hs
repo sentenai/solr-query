@@ -88,6 +88,7 @@ compileParams :: [Param] -> Builder
 compileParams = foldr (\p b -> go p <> char '&' <> b) mempty
  where
   go = \case
+    ParamFl s -> "fl=" <> thaw' s
     ParamFq locals query -> "fq=" <> compileFilterQuery locals query
     ParamRows n  -> "rows=" <> bshow n
     ParamStart n -> "start=" <> bshow n

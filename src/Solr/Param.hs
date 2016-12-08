@@ -4,6 +4,7 @@ module Solr.Param
   ( -- * Query parameters
     Param(..)
   , IsFilterQuery
+  , fl
   , fq
   , rows
   , start
@@ -11,6 +12,8 @@ module Solr.Param
 
 import Solr.LocalParam.Internal
 import Solr.Query.Class
+
+import Data.Text (Text)
 
 -- $setup
 -- >>> import Data.Semigroup
@@ -23,11 +26,22 @@ type IsFilterQuery query
       HasLocalParamOp query)
 
 data Param
-  = ParamFq
+  = ParamFl Text
+  | ParamFq
       (forall query. IsFilterQuery query => [LocalParam query])
       (forall expr query. QuerySYM expr query => query expr)
   | ParamRows Int
   | ParamStart Int
+
+-- | The @\'fl\'@ query parameter.
+--
+-- ==== __Examples__
+--
+-- >>> let query = "foo" =: word "bar" :: Query Expr
+-- >>> compile [fl "baz", fl "qux"] [] query
+-- "fl=baz&fl=qux&q=foo:bar"
+fl :: Text -> Param
+fl = ParamFl
 
 -- | The @\'fq\'@ query parameter.
 --
