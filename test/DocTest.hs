@@ -1,3 +1,4 @@
+import Prelude
 import Test.DocTest
 
 main :: IO ()
@@ -15,6 +16,7 @@ main = doctest
   , "-XKindSignatures"
   , "-XMultiParamTypeClasses"
   , "-XOverloadedStrings"
+  , "-XPatternSynonyms"
   , "-XRankNTypes"
   , "-XScopedTypeVariables"
   , "-XStandaloneDeriving"

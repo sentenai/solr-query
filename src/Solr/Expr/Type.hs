@@ -5,19 +5,13 @@
 {-# options_ghc -fno-warn-redundant-constraints #-}
 #endif
 
-module Solr.Type
-  ( -- * Solr types
-    SolrType(..)
-  , Fuzzable
-  , Boostable
-  , Rangeable
-  ) where
+module Solr.Expr.Type where
 
 #if MIN_VERSION_base(4,9,0)
 import GHC.TypeLits (TypeError, ErrorMessage(..))
 #endif
 
-data SolrType
+data ExprTy
   = TAny
   | TNum
   | TBool
@@ -30,18 +24,18 @@ data SolrType
   | TBoosted
   | TRange
 
--- | Types that can be fuzzed by a @\'~\'@ operator.
-class Fuzzable (ty :: SolrType)
+-- | 'word's and 'phrase's can fuzzed by the '~:' operator.
+class Fuzzable (ty :: ExprTy)
 instance Fuzzable 'TWord
 instance Fuzzable 'TPhrase
 
--- | Types that can be boosted by a @\'^\'@ operator.
-class Boostable (ty :: SolrType)
+-- | 'word's and 'phrase's can be boosted by the '^:' operator.
+class Boostable (ty :: ExprTy)
 instance Boostable 'TWord
 instance Boostable 'TPhrase
 
--- | Types that can appear in a @'TO'@ range expression.
-class Rangeable (a :: SolrType) (b :: SolrType)
+-- | 'int's, 'float's, 'word's, and 'datetime's can 'to' range expression.
+class Rangeable (a :: ExprTy) (b :: ExprTy)
 instance Rangeable 'TNum      'TNum
 instance Rangeable 'TNum      'TAny
 instance Rangeable 'TWord     'TWord

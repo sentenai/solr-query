@@ -1,41 +1,27 @@
-module Solr.Expr.Class
-  ( -- * Solr expression language
-    ExprSYM(..)
-    -- * Derived combinators
-  , fuzzy
-  , gt
-  , gte
-  , lt
-  , lte
-    -- * Range expression helpers
-  , Boundary(..)
-  , incl
-  , excl
-  , star
-    -- * Named operators
-  , fuzz
-  , boost
-  ) where
+{-# language CPP #-}
 
-import Solr.DateTime.Internal
-import Solr.Type
+#if MIN_VERSION_base(4,9,0)
+{-# options_ghc -fno-warn-redundant-constraints #-}
+#endif
 
-import Data.Int  (Int64)
-import Data.Text (Text)
+module Solr.Expr.Class where
 
+import Solr.Expr.Type
+import Solr.Prelude
+
+import Data.String (IsString)
 
 -- $setup
+-- >>> import Data.Time (UTCTime(..), fromGregorian)
 -- >>> import Solr.Query
--- >>> import Data.Time
 
-
--- | Solr expression.
-class ExprSYM expr where
+-- | The Solr expression language.
+class IsString (expr 'TWord) => ExprSYM expr where
   -- | An @int@ expression.
   --
   -- ==== __Examples__
   --
-  -- >>> compile [] [] ("foo" =: int 5 :: Query Expr)
+  -- >>> compile [] [] ("foo" =: int 5)
   -- "q=foo:5"
   int :: Int64 -> expr 'TNum
 
@@ -43,7 +29,7 @@ class ExprSYM expr where
   --
   -- ==== __Examples__
   --
-  -- >>> compile [] [] ("foo" =: float 5 :: Query Expr)
+  -- >>> compile [] [] ("foo" =: float 5)
   -- "q=foo:5.0"
   float :: Double -> expr 'TNum
 
@@ -51,7 +37,7 @@ class ExprSYM expr where
   --
   -- ==== __Examples__
   --
-  -- >>> compile [] [] ("foo" =: true :: Query Expr)
+  -- >>> compile [] [] ("foo" =: true)
   -- "q=foo:true"
   true :: expr 'TBool
 
@@ -59,7 +45,7 @@ class ExprSYM expr where
   --
   -- ==== __Examples__
   --
-  -- >>> compile [] [] ("foo" =: false :: Query Expr)
+  -- >>> compile [] [] ("foo" =: false)
   -- "q=foo:false"
   false :: expr 'TBool
 
@@ -73,7 +59,7 @@ class ExprSYM expr where
   --
   -- ==== __Examples__
   --
-  -- >>> compile [] [] ("foo" =: word "bar" :: Query Expr)
+  -- >>> compile [] [] ("foo" =: word "bar")
   -- "q=foo:bar"
   word :: Text -> expr 'TWord
 
@@ -84,7 +70,7 @@ class ExprSYM expr where
   --
   -- ==== __Examples__
   --
-  -- >>> compile [] [] ("foo" =: wild "b?r" :: Query Expr)
+  -- >>> compile [] [] ("foo" =: wild "b?r")
   -- "q=foo:b?r"
   wild :: Text -> expr 'TWild
 
@@ -96,7 +82,7 @@ class ExprSYM expr where
   --
   -- ==== __Examples__
   --
-  -- >>> compile [] [] ("foo" =: regex "[mb]oat" :: Query Expr)
+  -- >>> compile [] [] ("foo" =: regex "[mb]oat")
   -- "q=foo:/[mb]oat/"
   regex :: Text -> expr 'TRegex
 
@@ -107,7 +93,7 @@ class ExprSYM expr where
   --
   -- ==== __Examples__
   --
-  -- >>> compile [] [] ("foo" =: phrase ["bar", "baz"] :: Query Expr)
+  -- >>> compile [] [] ("foo" =: phrase ["bar", "baz"])
   -- "q=foo:\"bar baz\""
   phrase :: [expr 'TWord] -> expr 'TPhrase
 
@@ -118,13 +104,13 @@ class ExprSYM expr where
   --
   -- >>> let date = fromGregorian 2016 1 1
   -- >>> let time = fromIntegral 0
-  -- >>> compile [] [] ("foo" =: datetime (UTCTime date time) :: Query Expr)
+  -- >>> compile [] [] ("foo" =: datetime (UTCTime date time))
   -- "q=foo:\"2016-01-01T00:00:00Z\""
   --
-  -- >>> compile [] [] ("foo" =: datetime (2015 :: Year) :: Query Expr)
+  -- >>> compile [] [] ("foo" =: datetime (2015 :: Year))
   -- "q=foo:\"2015\""
   --
-  -- >>> compile [] [] ("foo" =: datetime (2015, 1, 15, 11) :: Query Expr)
+  -- >>> compile [] [] ("foo" =: datetime (2015, 1, 15, 11))
   -- "q=foo:\"2015-01-15T11\""
   datetime :: IsDateTime a => a -> expr 'TDateTime
 
@@ -133,10 +119,10 @@ class ExprSYM expr where
   --
   -- ==== __Examples__
   --
-  -- >>> compile [] [] ("foo" =: word "bar" ~: 1 :: Query Expr)
+  -- >>> compile [] [] ("foo" =: word "bar" ~: 1)
   -- "q=foo:bar~1"
   --
-  -- >>> compile [] [] ("foo" =: phrase ["bar", "baz", "qux"] ~: 10 :: Query Expr)
+  -- >>> compile [] [] ("foo" =: phrase ["bar", "baz", "qux"] ~: 10)
   -- "q=foo:\"bar baz qux\"~10"
   (~:) :: Fuzzable a => expr a -> Int -> expr 'TFuzzy
   infix 6 ~:
@@ -145,13 +131,13 @@ class ExprSYM expr where
   --
   -- ==== __Examples__
   --
-  -- >>> compile [] [] ("foo" =: incl (int 5) `to` excl (int 10) :: Query Expr)
+  -- >>> compile [] [] ("foo" =: incl (int 5) `to` excl (int 10))
   -- "q=foo:[5 TO 10}"
   --
-  -- >>> compile [] [] ("foo" =: excl (word "bar") `to` star :: Query Expr)
+  -- >>> compile [] [] ("foo" =: excl (word "bar") `to` star)
   -- "q=foo:{bar TO *]"
   --
-  -- >>> compile [] [] ("foo" =: star `to` star :: Query Expr)
+  -- >>> compile [] [] ("foo" =: star `to` star)
   -- "q=foo:[* TO *]"
   to :: Rangeable a b => Boundary expr a -> Boundary expr b -> expr 'TRange
   infix 6 `to`
@@ -160,10 +146,10 @@ class ExprSYM expr where
   --
   -- ==== __Examples__
   --
-  -- >>> compile [] [] ("foo" =: word "bar" ^: 3.5 :: Query Expr)
+  -- >>> compile [] [] ("foo" =: word "bar" ^: 3.5)
   -- "q=foo:bar^3.5"
   --
-  -- >>> compile [] [] ("foo" =: phrase ["bar", "baz"] ^: 3.5 :: Query Expr)
+  -- >>> compile [] [] ("foo" =: phrase ["bar", "baz"] ^: 3.5)
   -- "q=foo:\"bar baz\"^3.5"
   (^:) :: Boostable a => expr a -> Float -> expr 'TBoosted
   infix 6 ^:
@@ -177,7 +163,7 @@ class ExprSYM expr where
 --
 -- ==== __Examples__
 --
--- >>> compile [] [] ("foo" =: fuzzy "bar" :: Query Expr)
+-- >>> compile [] [] ("foo" =: fuzzy "bar")
 -- "q=foo:bar~2"
 fuzzy :: ExprSYM expr => expr 'TWord -> expr 'TFuzzy
 fuzzy e = e ~: 2
@@ -190,7 +176,7 @@ fuzzy e = e ~: 2
 --
 -- ==== __Examples__
 --
--- >>> compile [] [] ("foo" =: gt (int 5) :: Query Expr)
+-- >>> compile [] [] ("foo" =: gt (int 5))
 -- "q=foo:{5 TO *]"
 gt :: (ExprSYM expr, Rangeable a 'TAny) => expr a -> expr 'TRange
 gt e = excl e `to` star
@@ -203,7 +189,7 @@ gt e = excl e `to` star
 --
 -- ==== __Examples__
 --
--- >>> compile [] [] ("foo" =: gte (int 5) :: Query Expr)
+-- >>> compile [] [] ("foo" =: gte (int 5))
 -- "q=foo:[5 TO *]"
 gte :: (ExprSYM expr, Rangeable a 'TAny) => expr a -> expr 'TRange
 gte e = incl e `to` star
@@ -216,7 +202,7 @@ gte e = incl e `to` star
 --
 -- ==== __Examples__
 --
--- >>> compile [] [] ("foo" =: lt (int 5) :: Query Expr)
+-- >>> compile [] [] ("foo" =: lt (int 5))
 -- "q=foo:[* TO 5}"
 lt :: (ExprSYM expr, Rangeable 'TAny a) => expr a -> expr 'TRange
 lt e = star `to` excl e
@@ -229,11 +215,10 @@ lt e = star `to` excl e
 --
 -- ==== __Examples__
 --
--- >>> compile [] [] ("foo" =: lte (int 5) :: Query Expr)
+-- >>> compile [] [] ("foo" =: lte (int 5))
 -- "q=foo:[* TO 5]"
 lte :: (ExprSYM expr, Rangeable 'TAny a) => expr a -> expr 'TRange
 lte e = star `to` incl e
-
 
 -- | An inclusive or exclusive expression for use in a range query, built with
 -- either 'incl', 'excl', or 'star'.
@@ -266,3 +251,106 @@ fuzz = (~:)
 -- | Named version of ('^:').
 boost :: (ExprSYM expr, Boostable a) => expr a -> Float -> expr 'TBoosted
 boost = (^:)
+
+
+-- | 'DateTime' literals. 'DateTime' expressions are constructed using the
+-- internal 'IsDateTime' typeclass, for which there exist the following
+-- instances:
+--
+-- @
+-- instance 'IsDateTime' 'UTCTime'
+-- instance 'IsDateTime' 'Year'
+-- instance 'IsDateTime' ('Year', 'Month')
+-- instance 'IsDateTime' ('Year', 'Month', 'Day')
+-- instance 'IsDateTime' ('Year', 'Month', 'Day', 'Hour')
+-- instance 'IsDateTime' ('Year', 'Month', 'Day', 'Hour', 'Minute')
+-- instance 'IsDateTime' ('Year', 'Month', 'Day', 'Hour', 'Minute', 'Second')
+-- instance 'IsDateTime' ('Year', 'Month', 'Day', 'Hour', 'Minute', 'Second', 'Millisecond')
+-- @
+data DateTime
+  = UTC UTCTime
+  | Truncated TruncatedDateTime
+
+type TruncatedDateTime
+  = (Year, Maybe (Month, Maybe (Day, Maybe (Hour, Maybe (Minute, Maybe (Second, Maybe Millisecond))))))
+
+type Leg a b = (a, Maybe b)
+
+type Y   = Leg Year   M
+type M   = Leg Month  D
+type D   = Leg Day    H
+type H   = Leg Hour   Min
+type Min = Leg Minute S
+type S   = Leg Second Millisecond
+
+-- | Year.
+type Year = Int
+
+-- | @1@-indexed month. Clamped to the range @1-12@.
+type Month = Int
+
+-- | @1@-indexed day. Clamped to the range @1-31@.
+type Day = Int
+
+-- | Hour. Clamped to the range @0-23@.
+type Hour = Int
+
+-- | Minute. Clamped to the range @0-59@.
+type Minute = Int
+
+-- | Second. Clamped to the range @0-60@.
+type Second = Int
+
+-- | Millisecond. Clamped to the range @0-99.999@.
+type Millisecond = Double
+
+class IsDateTime a where
+  toDateTime :: a -> DateTime
+
+instance IsDateTime UTCTime where
+  toDateTime = UTC
+
+instance IsDateTime Year where
+  toDateTime a = mkY a Nothing
+
+instance (a ~ Year, b ~ Month) => IsDateTime (a, b) where
+  toDateTime (a, b) = mkY a (mkM b Nothing)
+
+instance (a ~ Year, b ~ Month, c ~ Day) => IsDateTime (a, b, c) where
+  toDateTime (a, b, c) = mkY a (mkM b (mkD c Nothing))
+
+instance (a ~ Year, b ~ Month, c ~ Day, d ~ Hour) => IsDateTime (a, b, c, d) where
+  toDateTime (a, b, c, d) = mkY a (mkM b (mkD c (mkH d Nothing)))
+
+instance (a ~ Year, b ~ Month, c ~ Day, d ~ Hour, e ~ Minute) => IsDateTime (a, b, c, d, e) where
+  toDateTime (a, b, c, d, e) = mkY a (mkM b (mkD c (mkH d (mkMin e Nothing))))
+
+instance (a ~ Year, b ~ Month, c ~ Day, d ~ Hour, e ~ Minute, f ~ Second) => IsDateTime (a, b, c, d, e, f) where
+  toDateTime (a, b, c, d, e, f) = mkY a (mkM b (mkD c (mkH d (mkMin e (mkS f Nothing)))))
+
+instance (a ~ Year, b ~ Month, c ~ Day, d ~ Hour, e ~ Minute, f ~ Second, g ~ Millisecond) => IsDateTime (a, b, c, d, e, f, g) where
+  toDateTime (a, b, c, d, e, f, g) = mkY a (mkM b (mkD c (mkH d (mkMin e (mkS f (mkMilli g))))))
+
+mkY :: Year -> Maybe M -> DateTime
+mkY a b = Truncated (a, b)
+
+mkM :: Month -> Maybe D -> Maybe M
+mkM a b = Just (clamp 1 12 a, b)
+
+mkD :: Day -> Maybe H -> Maybe D
+mkD a b = Just (clamp 1 31 a, b)
+
+mkH :: Hour -> Maybe Min -> Maybe H
+mkH a b = Just (clamp 0 23 a, b)
+
+mkMin :: Minute -> Maybe S -> Maybe Min
+mkMin a b = Just (clamp 0 59 a, b)
+
+mkS :: Second -> Maybe Millisecond -> Maybe S
+mkS a b = Just (clamp 0 60 a, b)
+
+mkMilli :: Millisecond -> Maybe Millisecond
+mkMilli a = Just (clamp 0 99.999 a)
+
+clamp :: Ord a => a -> a -> a -> a
+clamp a z = min z . max a

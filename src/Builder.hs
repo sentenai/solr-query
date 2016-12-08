@@ -1,10 +1,8 @@
 module Builder
   ( Builder
-  , LText
   , char
   , bshow
   , intersperse
-  -- , spaces
   , parens
   , dquotes
   , freeze
@@ -13,26 +11,16 @@ module Builder
   , thawStr
   ) where
 
-import Data.Monoid (mempty)
-import Data.Semigroup (Semigroup(..))
-import Data.Text (Text)
+import Solr.Prelude
+
 import Data.Text.Lazy.Builder
   (Builder, fromLazyText, fromString, fromText, singleton, toLazyText)
-
-import qualified Data.Text.Lazy as LText
-
-type LText = LText.Text
 
 char :: Char -> Builder
 char = singleton
 
 bshow :: Show a => a -> Builder
 bshow = fromString . show
-
-spaces :: [Builder] -> Builder
-spaces [] = ""
-spaces [w] = w
-spaces (w:ws) = w <> singleton ' ' <> spaces ws
 
 intersperse :: Char -> [Builder] -> Builder
 intersperse c0 = go (singleton c0)

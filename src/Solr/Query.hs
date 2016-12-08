@@ -1,38 +1,68 @@
--- | This is the simplest interpretation of the Solr query language as a lazy
--- 'Text'.
---
--- Not all type-correct expressions using the Solr DSL result in well-formed
--- queries. For example,
---
--- >>> let query = (("foo" =: word "bar") ^=: 1.0) ^=: 2.0 :: QuerySYM expr query => query expr
--- >>> compile [] [] (query :: Query Expr)
--- "q=foo:bar^=1.0^=2.0"
---
--- For this reason, you may want to first interpret a query using
--- "Solr.Query.Initial", manually fix up the AST
--- (perhaps with 'Solr.Query.Initial.factor'), and then reinterpret it as the
--- lazy 'Text' version using 'Solr.Query.Initial.reinterpret':
---
--- >>> import Solr.Query.Initial (factor, reinterpret)
--- >>> compile [] [] (reinterpret (factor query) :: Query Expr)
--- "q=foo:bar^=2.0"
-
 module Solr.Query
-  ( -- * Query
-    Query
-  , FilterQuery
-  , compile
+  ( -- * Interpreting a query
+    compile
+    -- * Solr query language
+  , Query
+  , QuerySYM(..)
+  , neg
+    -- ** Named operators
+  , field
+  , qand
+  , qor
+  , qnot
+  , score
+    -- * Solr expression language
+  , ExprSYM(..)
+    -- ** Named operators
+  , fuzz
+  , boost
+    -- ** Derived operators
+  , fuzzy
+  , gt
+  , gte
+  , lt
+  , lte
+    -- ** Range expression
+  , Boundary(..)
+  , incl
+  , excl
+  , star
+    -- ** Datetime expression
+  , DateTime
+  , IsDateTime
+  , Year
+  , Month
+  , Day
+  , Hour
+  , Minute
+  , Second
+  , Millisecond
+    -- ** Solr expression types
+  , ExprTy(..)
+  , Fuzzable
+  , Boostable
+  , Rangeable
+    -- * Query parameters
+  , Param
+  , fl
+  , fq
+  , rows
+  , start
+    -- * Local query parameters
+  , LocalParam
+  , QueryLocalParams
+  , FilterQueryLocalParams
+  , cache
+  , cost
+  , df
+  , opAnd
+  , opOr
+  , HasLocalParamCache
+  , HasLocalParamCost
+  , HasLocalParamDf
+  , HasLocalParamOp
     -- * Re-exports
-  , module Solr.Expr
-  , module Solr.Expr.Class
-  , module Solr.LocalParam
-  , module Solr.Param
-  , module Solr.Query.Class
+  , UTCTime
   ) where
 
-import Solr.Expr
-import Solr.Expr.Class
-import Solr.LocalParam
-import Solr.Param
-import Solr.Query.Class
-import Solr.Query.Internal
+import Solr.Query.Initial

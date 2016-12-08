@@ -4,34 +4,32 @@
 module Orphans where
 
 import Solr.Query.Initial
-import Solr.Expr.Initial.Untyped
 
-import Control.Applicative       ((<$>), (<*>), pure)
-import Data.Coerce               (coerce)
+import Data.Coerce (coerce)
+import Prelude
 import Test.QuickCheck.Arbitrary
 import Test.QuickCheck.Gen
 import Test.QuickCheck.Instances ()
 
-
-instance Arbitrary (Expr a) where
+instance Arbitrary (UExpr a) where
   arbitrary = frequency
     [ (40, oneof
-        [ EInt <$> arbitrary
-        , EFloat <$> arbitrary
-        , pure ETrue
-        , pure EFalse
-        , EWord <$> arbitrary
-        , EWild <$> arbitrary
-        , ERegex <$> arbitrary
-        , EDateTime <$> arbitrary
+        [ UInt <$> arbitrary
+        , UFloat <$> arbitrary
+        , pure UTrue
+        , pure UFalse
+        , UWord <$> arbitrary
+        , UWild <$> arbitrary
+        , URegex <$> arbitrary
+        , UDateTime <$> arbitrary
         ])
     , (35, oneof
-        [ EFuzz <$> scaleSub1 arbitrary <*> arbitrary
-        , EBoost <$> scaleSub1 arbitrary <*> arbitrary
+        [ UFuzz <$> scaleSub1 arbitrary <*> arbitrary
+        , UBoost <$> scaleSub1 arbitrary <*> arbitrary
         ])
     , (25, oneof
-        [ EPhrase <$> listOf (scale (`div` 3) arbitrary)
-        , ETo
+        [ UPhrase <$> listOf (scale (`div` 3) arbitrary)
+        , UTo
             <$> scale (`div` 2) (oneof
                   [ Inclusive <$> arbitrary
                   , Exclusive <$> arbitrary
@@ -46,31 +44,31 @@ instance Arbitrary (Expr a) where
     ]
 
   shrink = \case
-    EInt n      -> [ EInt n' | n' <- shrink n ]
-    EFloat n    -> [ EFloat n' | n' <- shrink n ]
-    ETrue       -> []
-    EFalse      -> []
-    EWord s     -> [ EWord s' | s' <- shrink s ]
-    EWild s     -> [ EWild s' | s' <- shrink s ]
-    ERegex s    -> [ ERegex s' | s' <- shrink s ]
-    EUTCTime _  -> []
-    EDateTime _ -> []
-    EPhrase es  -> coerce es ++ [ EPhrase es' | es' <- shrink es ]
-    EFuzz e n   -> coerce e : [ EFuzz e' n' | (e', n') <- shrink (e, n) ]
-    ETo e1 e2   ->
+    UInt n      -> [ UInt n' | n' <- shrink n ]
+    UFloat n    -> [ UFloat n' | n' <- shrink n ]
+    UTrue       -> []
+    UFalse      -> []
+    UWord s     -> [ UWord s' | s' <- shrink s ]
+    UWild s     -> [ UWild s' | s' <- shrink s ]
+    URegex s    -> [ URegex s' | s' <- shrink s ]
+    UUTCTime _  -> []
+    UDateTime _ -> []
+    UPhrase es  -> coerce es ++ [ UPhrase es' | es' <- shrink es ]
+    UFuzz e n   -> coerce e : [ UFuzz e' n' | (e', n') <- shrink (e, n) ]
+    UTo e1 e2   ->
       case (e1, e2) of
-        (Inclusive e1', Inclusive e2') -> [ ETo (Inclusive e1'') (Inclusive e2'') | (e1'', e2'') <- shrink (e1', e2') ]
-        (Inclusive e1', Exclusive e2') -> [ ETo (Inclusive e1'') (Exclusive e2'') | (e1'', e2'') <- shrink (e1', e2') ]
-        (Inclusive e1', Star)          -> [ ETo (Inclusive e1'') Star             | e1''         <- shrink e1' ]
-        (Exclusive e1', Inclusive e2') -> [ ETo (Exclusive e1'') (Inclusive e2'') | (e1'', e2'') <- shrink (e1', e2') ]
-        (Exclusive e1', Exclusive e2') -> [ ETo (Exclusive e1'') (Exclusive e2'') | (e1'', e2'') <- shrink (e1', e2') ]
-        (Exclusive e1', Star)          -> [ ETo (Exclusive e1'') Star             | e1''         <- shrink e1' ]
-        (Star,          Inclusive e2') -> [ ETo Star             (Inclusive e2'') | e2''         <- shrink e2' ]
-        (Star,          Exclusive e2') -> [ ETo Star             (Exclusive e2'') | e2''         <- shrink e2' ]
+        (Inclusive e1', Inclusive e2') -> [ UTo (Inclusive e1'') (Inclusive e2'') | (e1'', e2'') <- shrink (e1', e2') ]
+        (Inclusive e1', Exclusive e2') -> [ UTo (Inclusive e1'') (Exclusive e2'') | (e1'', e2'') <- shrink (e1', e2') ]
+        (Inclusive e1', Star)          -> [ UTo (Inclusive e1'') Star             | e1''         <- shrink e1' ]
+        (Exclusive e1', Inclusive e2') -> [ UTo (Exclusive e1'') (Inclusive e2'') | (e1'', e2'') <- shrink (e1', e2') ]
+        (Exclusive e1', Exclusive e2') -> [ UTo (Exclusive e1'') (Exclusive e2'') | (e1'', e2'') <- shrink (e1', e2') ]
+        (Exclusive e1', Star)          -> [ UTo (Exclusive e1'') Star             | e1''         <- shrink e1' ]
+        (Star,          Inclusive e2') -> [ UTo Star             (Inclusive e2'') | e2''         <- shrink e2' ]
+        (Star,          Exclusive e2') -> [ UTo Star             (Exclusive e2'') | e2''         <- shrink e2' ]
         (Star,          Star)          -> []
-    EBoost e n  -> coerce e : [ EBoost e' n' | (e', n') <- shrink (e, n) ]
+    UBoost e n  -> coerce e : [ UBoost e' n' | (e', n') <- shrink (e, n) ]
 
-instance Arbitrary (Query Expr) where
+instance Arbitrary (Q UExpr) where
   arbitrary = frequency
     [ (40, oneof
         [ QDefaultField <$> arbitrary
@@ -94,7 +92,7 @@ instance Arbitrary (Query Expr) where
     QScore q n      -> q : [ QScore q' n' | (q', n') <- shrink (q, n) ]
     QAppend q1 q2   -> q1 : q2 : [ QAppend q1' q2' | (q1', q2') <- shrink (q1, q2) ]
 
-instance Arbitrary (LocalParam Query) where
+instance Arbitrary (LocalParam Q) where
   arbitrary = oneof
     [ df <$> arbitrary
     , pure opAnd

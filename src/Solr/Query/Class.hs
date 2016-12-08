@@ -1,40 +1,21 @@
--- | This module defines the finally tagless Solr DSL. This style admits
--- multiple interpreters, two of which (lazy 'Data.Text.Lazy.Text's and an
--- initial encoding) are provided by this library, in the "Solr.Query" and
--- "Solr.Query.Initial" modules, respectively.
---
--- Ordinary users should not normally have to import this module.
+module Solr.Query.Class where
 
-module Solr.Query.Class
-  ( -- * Solr query language
-    QuerySYM(..)
-  , neg
-    -- * Named operators
-  , field
-  , Solr.Query.Class.and
-  , Solr.Query.Class.or
-  , Solr.Query.Class.not
-  , score
-    -- * Re-exports
-  , module Solr.Expr.Class
-  ) where
-
+import Solr.Prelude
 import Solr.Expr.Class
-
-import Data.Text (Text)
-
 
 -- $setup
 -- >>> import Solr.Query
 
+-- | A 'Query' is built from the 'ExprSYM' and 'QuerySYM' languages.
+type Query = forall expr query. QuerySYM expr query => query expr
 
--- | Solr query language.
-class ExprSYM expr => QuerySYM expr query where
+-- | The Solr query language.
+class (ExprSYM expr, Semigroup (query expr)) => QuerySYM expr query where
   -- | A default field query.
   --
   -- ==== __Examples__
   --
-  -- >>> compile [] [] (defaultField (word "foo") :: Query Expr)
+  -- >>> compile [] [] (defaultField (word "foo"))
   -- "q=foo"
   defaultField :: expr a -> query expr
 
@@ -42,7 +23,7 @@ class ExprSYM expr => QuerySYM expr query where
   --
   -- ==== __Examples__
   --
-  -- >>> compile [] [] ("foo" =: word "bar" :: Query Expr)
+  -- >>> compile [] [] ("foo" =: word "bar")
   -- "q=foo:bar"
   (=:) :: Text -> expr a -> query expr
   infix 5 =:
@@ -51,7 +32,7 @@ class ExprSYM expr => QuerySYM expr query where
   --
   -- ==== __Examples__
   --
-  -- >>> compile [] [] ("foo" =: word "bar" &&: "baz" =: word "qux" :: Query Expr)
+  -- >>> compile [] [] ("foo" =: word "bar" &&: "baz" =: word "qux")
   -- "q=(foo:bar AND baz:qux)"
   (&&:) :: query expr -> query expr -> query expr
   infixr 3 &&:
@@ -60,7 +41,7 @@ class ExprSYM expr => QuerySYM expr query where
   --
   -- ==== __Examples__
   --
-  -- >>> compile [] [] ("foo" =: word "bar" ||: "baz" =: word "qux" :: Query Expr)
+  -- >>> compile [] [] ("foo" =: word "bar" ||: "baz" =: word "qux")
   -- "q=(foo:bar OR baz:qux)"
   (||:) :: query expr -> query expr -> query expr
   infixr 2 ||:
@@ -69,7 +50,7 @@ class ExprSYM expr => QuerySYM expr query where
   --
   -- ==== __Examples__
   --
-  -- >>> compile [] [] ("foo" =: word "bar" -: "baz" =: word "qux" :: Query Expr)
+  -- >>> compile [] [] ("foo" =: word "bar" -: "baz" =: word "qux")
   -- "q=(foo:bar NOT baz:qux)"
   (-:) :: query expr -> query expr -> query expr
   infixr 1 -:
@@ -80,7 +61,7 @@ class ExprSYM expr => QuerySYM expr query where
   --
   -- ==== __Examples__
   --
-  -- >>> compile [] [] ("foo" =: word "bar" ^=: 3.5 :: Query Expr)
+  -- >>> compile [] [] ("foo" =: word "bar" ^=: 3.5)
   -- "q=foo:bar^=3.5"
   (^=:) :: query expr -> Float -> query expr
   infixr 4 ^=:
@@ -89,7 +70,7 @@ class ExprSYM expr => QuerySYM expr query where
 --
 -- ==== __Examples__
 --
--- >>> compile [] [] (neg ("foo" =: word "bar") :: Query Expr)
+-- >>> compile [] [] (neg ("foo" =: word "bar"))
 -- "q=(*:[* TO *] NOT foo:bar)"
 neg :: QuerySYM expr query => query expr -> query expr
 neg = (-:) ("*" =: star `to` star)
@@ -99,19 +80,19 @@ field :: QuerySYM expr query => Text -> expr a -> query expr
 field = (=:)
 
 -- | Named version of ('&&:').
-and :: QuerySYM expr query => query expr -> query expr -> query expr
-and = (&&:)
-infixr 3 `and`
+qand :: QuerySYM expr query => query expr -> query expr -> query expr
+qand = (&&:)
+infixr 3 `qand`
 
 -- | Named version of ('||:').
-or :: QuerySYM expr query => query expr -> query expr -> query expr
-or = (||:)
-infixr 2 `or`
+qor :: QuerySYM expr query => query expr -> query expr -> query expr
+qor = (||:)
+infixr 2 `qor`
 
 -- | Named version of ('-:').
-not :: QuerySYM expr query => query expr -> query expr -> query expr
-not = (-:)
-infixr 1 `not`
+qnot :: QuerySYM expr query => query expr -> query expr -> query expr
+qnot = (-:)
+infixr 1 `qnot`
 
 -- | Named version of ('^=:').
 score :: QuerySYM expr query => query expr -> Float -> query expr
