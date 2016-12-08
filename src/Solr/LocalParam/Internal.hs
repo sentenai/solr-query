@@ -8,12 +8,12 @@ import Data.Text (Text)
 -- >>> import Data.Semigroup
 -- >>> import Solr.Query
 
-data LocalParam query where
-  LocalParamCache :: HasLocalParamCache query => Bool -> LocalParam query
-  LocalParamCost  :: HasLocalParamCost  query => Int  -> LocalParam query
-  LocalParamDf    :: HasLocalParamDf    query => Text -> LocalParam query
-  LocalParamOpAnd :: HasLocalParamOp    query =>         LocalParam query
-  LocalParamOpOr  :: HasLocalParamOp    query =>         LocalParam query
+data LocalParam (query :: (SolrType -> *) -> *)
+  = LocalParamCache Bool
+  | LocalParamCost  Int
+  | LocalParamDf    Text
+  | LocalParamOpAnd
+  | LocalParamOpOr
 
 deriving instance Show (LocalParam query)
 
