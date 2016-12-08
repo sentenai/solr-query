@@ -20,6 +20,7 @@
 module Solr.Query
   ( -- * Query
     Query
+  , FilterQuery
   , compile
     -- * Re-exports
   , module Solr.Expr
