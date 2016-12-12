@@ -10,7 +10,7 @@ import Solr.Query.LocalParam
 -- | A query parameter.
 data Param
   = ParamFl Text
-  | ParamFq FilterQueryLocalParams Query
+  | ParamFq [LocalParam 'FilterQueryLocalParam] Query
   | ParamRows Int
   | ParamStart Int
 
@@ -30,7 +30,7 @@ fl = ParamFl
 -- >>> let filterQuery = "baz" =: gte (int 10)
 -- >>> compile [fq [] filterQuery] [] ("foo" =: word "bar")
 -- "fq=baz:[10 TO *]&q=foo:bar"
-fq :: FilterQueryLocalParams -> Query -> Param
+fq :: [LocalParam 'FilterQueryLocalParam] -> Query -> Param
 fq = ParamFq
 
 -- | The @\'rows\'@ query parameter.

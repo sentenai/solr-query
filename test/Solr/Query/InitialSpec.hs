@@ -3,7 +3,7 @@ module Solr.Query.InitialSpec where
 import Orphans ()
 import Solr.Query.Initial
 
-import Prelude
+import Prelude.Compat
 import Test.Hspec
 
 spec :: Spec

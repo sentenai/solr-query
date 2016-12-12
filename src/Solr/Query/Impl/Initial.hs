@@ -1,5 +1,4 @@
-{-# language CPP                  #-}
-{-# language UndecidableInstances #-}
+{-# language CPP #-}
 
 #if MIN_VERSION_base(4,9,0)
 {-# options_ghc -fno-warn-redundant-constraints #-}
@@ -12,16 +11,11 @@ import Solr.Expr.Impl.Initial.Typed
 import Solr.Expr.Impl.Initial.Untyped
 import Solr.Expr.Type
 import Solr.Query.Class
-import Solr.Query.LocalParam
 import Solr.Prelude
 
 import Data.Generics.Uniplate.Direct
   (Uniplate(..), (|-), (|*), plate, transform)
 import Data.Generics.Str (Str)
-
-#if MIN_VERSION_base(4,9,0)
-import GHC.TypeLits (TypeError, ErrorMessage(..))
-#endif
 
 #if WITH_CONSTRAINTS
 import Data.Constraint ((:-), (\\))
@@ -92,13 +86,6 @@ instance ExprSYM expr => QuerySYM expr Q where
   (||:)        = QOr
   (-:)         = QNot
   (^=:)        = QScore
-
-instance HasLocalParamDf Q
-instance HasLocalParamOp Q
-#if MIN_VERSION_base(4,9,0)
-instance TypeError ('Text "Query cannot have a 'cache' local parameter") => HasLocalParamCache Q
-instance TypeError ('Text "Query cannot have a 'cost' local parameter")  => HasLocalParamCost  Q
-#endif
 
 #if MIN_VERSION_base(4,8,0)
 pattern QNeg :: Q Expr -> Q Expr

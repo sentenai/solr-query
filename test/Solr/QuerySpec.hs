@@ -4,7 +4,7 @@ import Solr.Query
 
 import Data.Text.Lazy (Text)
 import Data.Time
-import Prelude
+import Prelude.Compat
 import Test.Hspec
 
 spec :: Spec
@@ -119,5 +119,5 @@ spec =
   t1 = UTCTime (fromGregorian 2015 1 1) 0
   t2 = UTCTime (fromGregorian 2016 1 1) 0
 
-test :: QueryLocalParams  -> Query -> Text -> Expectation
+test :: [LocalParam 'QueryLocalParam] -> Query -> Text -> Expectation
 test locals query result = compile [] locals query `shouldBe` result

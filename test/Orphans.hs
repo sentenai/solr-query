@@ -6,7 +6,7 @@ module Orphans where
 import Solr.Query.Initial
 
 import Data.Coerce (coerce)
-import Prelude
+import Prelude.Compat
 import Test.QuickCheck.Arbitrary
 import Test.QuickCheck.Gen
 import Test.QuickCheck.Instances ()
@@ -92,7 +92,7 @@ instance Arbitrary (Q UExpr) where
     QScore q n      -> q : [ QScore q' n' | (q', n') <- shrink (q, n) ]
     QAppend q1 q2   -> q1 : q2 : [ QAppend q1' q2' | (q1', q2') <- shrink (q1, q2) ]
 
-instance Arbitrary (LocalParam Q) where
+instance Arbitrary (LocalParam 'QueryLocalParam) where
   arbitrary = oneof
     [ df <$> arbitrary
     , pure opAnd

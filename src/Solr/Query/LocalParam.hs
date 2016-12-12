@@ -6,34 +6,24 @@
 
 module Solr.Query.LocalParam where
 
-import Solr.Expr.Type
 import Solr.Prelude
 
 -- $setup
 -- >>> import Solr.Query
 
+data LocalParamTy
+  = QueryLocalParam
+  | FilterQueryLocalParam
+
 -- | Local query parameters.
-data LocalParam (query :: (ExprTy -> *) -> *)
-  = LocalParamCache Bool
-  | LocalParamCost  Int
-  | LocalParamDf    Text
-  | LocalParamOpAnd
-  | LocalParamOpOr
+data LocalParam :: LocalParamTy -> * where
+  LocalParamCache :: Bool -> LocalParam 'FilterQueryLocalParam
+  LocalParamCost  :: Int  -> LocalParam 'FilterQueryLocalParam
+  LocalParamDf    :: Text -> LocalParam ty
+  LocalParamOpAnd ::         LocalParam ty
+  LocalParamOpOr  ::         LocalParam ty
 
-deriving instance Show (LocalParam query)
-
--- | A convenient type alias for a list of 'LocalParam' that all work on
--- top-level queries.
-type QueryLocalParams
-  = forall query.
-    (HasLocalParamDf query, HasLocalParamOp query) => [LocalParam query]
-
--- | A convenient type alias for a list of 'LocalParam' that all work on
--- filter queries.
-type FilterQueryLocalParams
-  = forall query.
-    (HasLocalParamCache query, HasLocalParamCost query, HasLocalParamDf query,
-      HasLocalParamOp query) => [LocalParam query]
+deriving instance Show (LocalParam ty)
 
 -- | The @\'cache\'@ local parameter.
 --
@@ -42,7 +32,7 @@ type FilterQueryLocalParams
 -- >>> let filterQuery = "baz" =: gte (int 10)
 -- >>> compile [fq [cache False] filterQuery] [] ("foo" =: word "bar")
 -- "fq={!cache=false}baz:[10 TO *]&q=foo:bar"
-cache :: HasLocalParamCache query => Bool -> LocalParam query
+cache :: Bool -> LocalParam 'FilterQueryLocalParam
 cache = LocalParamCache
 
 -- | The @\'cost\'@ local parameter.
@@ -52,7 +42,7 @@ cache = LocalParamCache
 -- >>> let filterQuery = "baz" =: gte (int 10)
 -- >>> compile [fq [cost 5] filterQuery] [] ("foo" =: word "bar")
 -- "fq={!cost=5}baz:[10 TO *]&q=foo:bar"
-cost :: HasLocalParamCost query => Int -> LocalParam query
+cost :: Int -> LocalParam 'FilterQueryLocalParam
 cost = LocalParamCost
 
 -- | The @\'df\'@ local parameter.
@@ -61,7 +51,7 @@ cost = LocalParamCost
 --
 -- >>> compile [] [df "foo"] (defaultField (word "bar"))
 -- "q={!df=foo}bar"
-df :: HasLocalParamDf query => Text -> LocalParam query
+df :: Text -> LocalParam ty
 df = LocalParamDf
 
 -- | The @\'op=AND\'@ local parameter.
@@ -70,7 +60,7 @@ df = LocalParamDf
 --
 -- >>> compile [] [opAnd] (defaultField (word "foo") <> defaultField (word "bar"))
 -- "q={!q.op=AND}foo bar"
-opAnd :: HasLocalParamOp query => LocalParam query
+opAnd :: LocalParam ty
 opAnd = LocalParamOpAnd
 
 -- | The @\'op=OR\'@ local parameter.
@@ -79,10 +69,5 @@ opAnd = LocalParamOpAnd
 --
 -- >>> compile [] [opOr] (defaultField (word "foo") <> defaultField (word "bar"))
 -- "q={!q.op=OR}foo bar"
-opOr :: HasLocalParamOp query => LocalParam query
+opOr :: LocalParam ty
 opOr = LocalParamOpOr
-
-class HasLocalParamCache (query :: (ExprTy -> *) -> *)
-class HasLocalParamCost  (query :: (ExprTy -> *) -> *)
-class HasLocalParamDf    (query :: (ExprTy -> *) -> *)
-class HasLocalParamOp    (query :: (ExprTy -> *) -> *)

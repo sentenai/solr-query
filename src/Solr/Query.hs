@@ -50,19 +50,21 @@ module Solr.Query
   , start
     -- * Local query parameters
   , LocalParam
-  , QueryLocalParams
-  , FilterQueryLocalParams
+  , LocalParamTy(..)
   , cache
   , cost
   , df
   , opAnd
   , opOr
-  , HasLocalParamCache
-  , HasLocalParamCost
-  , HasLocalParamDf
-  , HasLocalParamOp
     -- * Re-exports
   , UTCTime
   ) where
 
-import Solr.Query.Initial
+import Solr.Expr.Class
+import Solr.Expr.Type
+import Solr.Query.Class
+import Solr.Query.Impl.Final (compile)
+import Solr.Query.LocalParam
+import Solr.Query.Param
+
+import Data.Time (UTCTime)

@@ -1,77 +1,21 @@
 module Solr.Query.Initial
-  ( -- * Interpreting a query
-    compile
-  , typeCheck
+  ( -- * Manipulating a query
+    typeCheck
   , factor
   , reinterpret
-    -- * Solr query language
-  , Query
-  , QuerySYM(..)
-  , neg
-    -- ** Named operators
-  , field
-  , qand
-  , qor
-  , qnot
-  , score
-    -- * Solr expression language
-  , ExprSYM(..)
-    -- ** Named operators
-  , fuzz
-  , boost
-    -- ** Derived operators
-  , fuzzy
-  , gt
-  , gte
-  , lt
-  , lte
-    -- ** Range expression
-  , Boundary(..)
-  , incl
-  , excl
-  , star
-    -- ** Datetime expression
-  , DateTime(..)
-  , IsDateTime
-  , Year
-  , Month
-  , Day
-  , Hour
-  , Minute
-  , Second
-  , Millisecond
-    -- ** Solr expression types
-  , ExprTy(..)
-  , Fuzzable
-  , Boostable
-  , Rangeable
-    -- * Query parameters
-  , Param(..)
-  , fl
-  , fq
-  , rows
-  , start
-    -- * Local query parameters
-  , LocalParam(..)
-  , QueryLocalParams
-  , FilterQueryLocalParams
-  , cache
-  , cost
-  , df
-  , opAnd
-  , opOr
-  , HasLocalParamCache
-  , HasLocalParamCost
-  , HasLocalParamDf
-  , HasLocalParamOp
     -- * Initially-encoded query
   , Q(..)
     -- ** Untyped expression
   , UExpr(..)
     -- ** Typed expression
   , Expr(..)
+    -- * Misc. internals
+  , Boundary(..)
+  , DateTime(..)
+  , Param(..)
+  , LocalParam(..)
     -- * Re-exports
-  , UTCTime
+  , module Solr.Query
   ) where
 
 import Solr.Expr.Class
@@ -83,5 +27,6 @@ import Solr.Query.Impl.Final (compile)
 import Solr.Query.Impl.Initial (Q(..), factor, reinterpret, typeCheck)
 import Solr.Query.LocalParam
 import Solr.Query.Param
+import Solr.Query
 
 import Data.Time (UTCTime)
