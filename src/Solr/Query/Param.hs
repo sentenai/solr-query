@@ -12,6 +12,8 @@ data Param
   = ParamFl Text
   | ParamFq [LocalParam 'FilterQueryLocalParam] Query
   | ParamRows Int
+  | ParamSortAsc Text
+  | ParamSortDesc Text
   | ParamStart Int
 
 -- | The @\'fl\'@ query parameter.
@@ -41,6 +43,24 @@ fq = ParamFq
 -- "rows=5&q=foo:bar"
 rows :: Int -> Param
 rows = ParamRows
+
+-- | The @\'sort\'@ query parameter (ascending).
+--
+-- ==== __Examples__
+--
+-- >>> compile [sortAsc "foo"] [] ("foo" =: gt (int 5))
+-- "sort=foo asc&q=foo:{5 TO *]"
+sortAsc :: Text -> Param
+sortAsc = ParamSortAsc
+
+-- | The @\'sort\'@ query parameter (descending).
+--
+-- ==== __Examples__
+--
+-- >>> compile [sortDesc "foo"] [] ("foo" =: gt (int 5))
+-- "sort=foo desc&q=foo:{5 TO *]"
+sortDesc :: Text -> Param
+sortDesc = ParamSortDesc
 
 -- | The @\'start\'@ query parameter.
 --

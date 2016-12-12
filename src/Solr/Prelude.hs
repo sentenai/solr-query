@@ -15,7 +15,7 @@ module Solr.Prelude
   , module Prelude.Compat
   ) where
 
-import Control.Monad
+import Control.Monad (forM)
 import Data.Coerce
 import Data.Int
 import Data.Function

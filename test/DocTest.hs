@@ -1,4 +1,4 @@
-import Prelude
+import Prelude.Compat
 import Test.DocTest
 
 main :: IO ()
@@ -15,6 +15,7 @@ main = doctest
   , "-XLambdaCase"
   , "-XKindSignatures"
   , "-XMultiParamTypeClasses"
+  , "-XNoImplicitPrelude"
   , "-XOverloadedStrings"
   , "-XPatternSynonyms"
   , "-XRankNTypes"

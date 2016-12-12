@@ -1,5 +1,9 @@
 {-# language CPP #-}
 
+#if WITH_CONSTRAINTS
+{-# language UndecidableInstances #-}
+#endif
+
 #if MIN_VERSION_base(4,9,0)
 {-# options_ghc -fno-warn-redundant-constraints #-}
 #endif

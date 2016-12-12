@@ -62,10 +62,12 @@ compileParams :: [Param] -> Builder
 compileParams = foldr (\p b -> go p <> char '&' <> b) mempty
  where
   go = \case
-    ParamFl s -> "fl=" <> thaw' s
-    ParamFq locals (FQ query) -> "fq=" <> compileQuery locals query
-    ParamRows n  -> "rows=" <> bshow n
-    ParamStart n -> "start=" <> bshow n
+    ParamFl s                 -> "fl="    <> thaw' s
+    ParamFq locals (FQ query) -> "fq="    <> compileQuery locals query
+    ParamRows n               -> "rows="  <> bshow n
+    ParamSortAsc s            -> "sort="  <> thaw' s <> " asc"
+    ParamSortDesc s           -> "sort="  <> thaw' s <> " desc"
+    ParamStart n              -> "start=" <> bshow n
 
 compileLocalParams :: [LocalParam ty] -> Builder
 compileLocalParams [] = mempty

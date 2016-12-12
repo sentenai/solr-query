@@ -47,6 +47,8 @@ module Solr.Query
   , fl
   , fq
   , rows
+  , sortAsc
+  , sortDesc
   , start
     -- * Local query parameters
   , LocalParam
