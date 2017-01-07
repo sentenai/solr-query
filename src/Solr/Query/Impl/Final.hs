@@ -43,7 +43,8 @@ instance QuerySYM E Q where
 newtype FilterQuery expr = FQ (Q expr)
   deriving (Semigroup, QuerySYM E)
 
--- | Compile a 'Query' to a lazy 'Data.Text.Lazy.Text'.
+-- | Compile a 'Query' with 'Param's and 'LocalParam's to a lazy
+-- 'Data.Text.Lazy.Text'.
 --
 -- ==== __Examples__
 --
@@ -52,30 +53,52 @@ newtype FilterQuery expr = FQ (Q expr)
 -- "q={!df=body}(foo:\"bar baz\"~5 AND /wh?t/)"
 compile :: [Param] -> [LocalParam 'QueryLocalParam] -> Query -> Data.Text.Lazy.Text
 compile params locals query =
-  freeze (compileParams params <> "q=" <> compileQuery locals query)
-
-compileQuery
-  :: [LocalParam ty] -> Q E -> Builder
-compileQuery locals (Q query) = compileLocalParams locals <> query
+  freeze (compileParams params <> "q=" <> compileLocalParams locals <>
+           compileQuery query)
 
 compileParams :: [Param] -> Builder
-compileParams = foldr (\p b -> go p <> char '&' <> b) mempty
- where
-  go = \case
-    ParamFl s                 -> "fl="    <> thaw' s
-    ParamFq locals (FQ query) -> "fq="    <> compileQuery locals query
-    ParamRows n               -> "rows="  <> bshow n
-    ParamSortAsc s            -> "sort="  <> thaw' s <> " asc"
-    ParamSortDesc s           -> "sort="  <> thaw' s <> " desc"
-    ParamStart n              -> "start=" <> bshow n
+compileParams = foldr (\p b -> compileParam p <> char '&' <> b) mempty
+
+-- | Compile a 'Param' to a 'Builder'. Usually 'compile' is more convenient.
+--
+-- ==== __Examples__
+--
+-- >>> compileParam (rows 5)
+-- "rows=5"
+compileParam :: Param -> Builder
+compileParam = \case
+  ParamFl s -> "fl=" <> thaw' s
+  ParamFq locals (FQ (Q query :: Q E)) ->
+    "fq=" <> compileLocalParams locals <> query
+  ParamRows n -> "rows=" <> bshow n
+  ParamSortAsc s -> "sort=" <> thaw' s <> " asc"
+  ParamSortDesc s -> "sort=" <> thaw' s <> " desc"
+  ParamStart n -> "start=" <> bshow n
 
 compileLocalParams :: [LocalParam ty] -> Builder
 compileLocalParams [] = mempty
-compileLocalParams ps = "{!" <> intersperse ' ' (map go ps) <> "}"
- where
-  go = \case
-    LocalParamCache b -> "cache=" <> if b then "true" else "false"
-    LocalParamCost n  -> "cost=" <> bshow n
-    LocalParamDf v    -> "df=" <> thaw' v
-    LocalParamOpAnd   -> "q.op=AND"
-    LocalParamOpOr    -> "q.op=OR"
+compileLocalParams ps = "{!" <> intersperse ' ' (map compileLocalParam ps) <> "}"
+
+-- | Compile a 'LocalParam' to a 'Builder'. Usually 'compile' is more
+-- convenient.
+--
+-- ==== __Examples__
+--
+-- >>> compileLocalParam (cache True)
+-- "cache=true"
+compileLocalParam :: LocalParam ty -> Builder
+compileLocalParam = \case
+  LocalParamCache b -> "cache=" <> if b then "true" else "false"
+  LocalParamCost n  -> "cost=" <> bshow n
+  LocalParamDf v    -> "df=" <> thaw' v
+  LocalParamOpAnd   -> "q.op=AND"
+  LocalParamOpOr    -> "q.op=OR"
+
+-- | Compile a 'Query' to a 'Builder'. Usually 'compile' is more convenient.
+--
+-- ==== __Examples__
+--
+-- >>> compileQuery ("foo" =: word "bar")
+-- "foo:bar"
+compileQuery :: Query -> Builder
+compileQuery (Q query :: Q E) = query

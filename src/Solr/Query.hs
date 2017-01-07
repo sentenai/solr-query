@@ -1,6 +1,9 @@
 module Solr.Query
   ( -- * Interpreting a query
     compile
+  , compileParam
+  , compileLocalParam
+  , compileQuery
     -- * Solr query language
   , Query
   , QuerySYM(..)
@@ -65,7 +68,8 @@ module Solr.Query
 import Solr.Expr.Class
 import Solr.Expr.Type
 import Solr.Query.Class
-import Solr.Query.Impl.Final (compile)
+import Solr.Query.Impl.Final
+  (compile, compileLocalParam, compileParam, compileQuery)
 import Solr.Query.LocalParam
 import Solr.Query.Param
 
