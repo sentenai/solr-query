@@ -71,9 +71,9 @@ class (ExprSYM expr, Semigroup (query expr)) => QuerySYM expr query where
 -- ==== __Examples__
 --
 -- >>> compile [] [] (neg ("foo" =: word "bar"))
--- "q=(*:[* TO *] NOT foo:bar)"
+-- "q=(*:* NOT foo:bar)"
 neg :: QuerySYM expr query => query expr -> query expr
-neg = (-:) ("*" =: star `to` star)
+neg = (-:) ("*" =: word "*")
 
 -- | Named version of ('=:').
 field :: QuerySYM expr query => Text -> expr a -> query expr

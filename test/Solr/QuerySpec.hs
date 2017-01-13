@@ -110,7 +110,7 @@ spec =
       it "word"   (test []  ("foo" =: word "bar" ^=: 3.5)            "q=foo:bar^=3.5")
       it "phrase" (test []  ("foo" =: phrase ["bar", "baz"] ^=: 3.5) "q=foo:\"bar baz\"^=3.5")
 
-    it "neg" (test [] (neg ("foo" =: word "bar")) "q=(*:[* TO *] NOT foo:bar)")
+    it "neg" (test [] (neg ("foo" =: word "bar")) "q=(*:* NOT foo:bar)")
 
     describe "params" $ do
       it "one" (test [df "foo"] (defaultField (word "bar")) "q={!df=foo}bar")
