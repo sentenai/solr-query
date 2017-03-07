@@ -16,4 +16,4 @@ spec = do
         (reinterpret (factor
           (QNot (QField "*" (ETo Star Star))
             (QNot (QField "*" (ETo Star Star)) q))))
-        `shouldBe` "q={!type=lucene}foo:true"
+        `shouldBe` "q={!lucene}foo:true"

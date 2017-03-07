@@ -29,7 +29,7 @@ data Param a where
 -- ==== __Examples__
 --
 -- >>> compile [fl "baz", fl "qux"] [] ("foo" =: word "bar")
--- "fl=baz&fl=qux&q={!type=lucene}foo:bar"
+-- "fl=baz&fl=qux&q={!lucene}foo:bar"
 fl :: Text -> Param a
 fl = ParamFl
 
@@ -40,7 +40,7 @@ fl = ParamFl
 -- >>> let filterQuery = "baz" =: gte (int 10)
 -- >>> let params = [] :: [LuceneQueryParam]
 -- >>> compile [fq DontCache Nothing params filterQuery] [] ("foo" =: word "bar")
--- "fq={!type=lucene cache=false}baz:[10 TO *]&q={!type=lucene}foo:bar"
+-- "fq={!lucene cache=false}baz:[10 TO *]&q={!lucene}foo:bar"
 fq :: InterpretQuery sym a
    => Cache -> Maybe Cost -> [LocalParam sym] -> Query sym -> Param a
 fq = ParamFq
@@ -50,7 +50,7 @@ fq = ParamFq
 -- ==== __Examples__
 --
 -- >>> compile [rows 5] [] ("foo" =: word "bar")
--- "rows=5&q={!type=lucene}foo:bar"
+-- "rows=5&q={!lucene}foo:bar"
 rows :: Int -> Param a
 rows = ParamRows
 
@@ -59,7 +59,7 @@ rows = ParamRows
 -- ==== __Examples__
 --
 -- >>> compile [sortAsc "foo"] [] ("foo" =: gt (int 5))
--- "sort=foo asc&q={!type=lucene}foo:{5 TO *]"
+-- "sort=foo asc&q={!lucene}foo:{5 TO *]"
 sortAsc :: Text -> Param a
 sortAsc = ParamSortAsc
 
@@ -68,7 +68,7 @@ sortAsc = ParamSortAsc
 -- ==== __Examples__
 --
 -- >>> compile [sortDesc "foo"] [] ("foo" =: gt (int 5))
--- "sort=foo desc&q={!type=lucene}foo:{5 TO *]"
+-- "sort=foo desc&q={!lucene}foo:{5 TO *]"
 sortDesc :: Text -> Param a
 sortDesc = ParamSortDesc
 
@@ -77,6 +77,6 @@ sortDesc = ParamSortDesc
 -- ==== __Examples__
 --
 -- >>> compile [start 10] [] ("foo" =: word "bar")
--- "start=10&q={!type=lucene}foo:bar"
+-- "start=10&q={!lucene}foo:bar"
 start :: Int -> Param a
 start = ParamStart

@@ -44,9 +44,9 @@ instance LuceneQuerySYM E Q where
 
 instance InterpretQuery LuceneQuerySYM Builder where
   interpretParams :: [LuceneQueryParam] -> Builder
-  interpretParams [] = "type=lucene"
+  interpretParams [] = "lucene"
   interpretParams ps =
-    "type=lucene " <> intersperse ' ' (map compileLocalParam ps)
+    "lucene " <> intersperse ' ' (map compileLocalParam ps)
 
   interpretQuery :: Proxy LuceneQuerySYM -> LuceneQuery -> Builder
   interpretQuery _ = compileQuery
@@ -58,7 +58,7 @@ instance InterpretQuery LuceneQuerySYM Builder where
 --
 -- >>> let query = "foo" =: phrase ["bar", "baz"] ~: 5 &&: defaultField (regex "wh?t")
 -- >>> compile [] [df "body"] query
--- "q={!type=lucene df=body}(foo:\"bar baz\"~5 AND /wh?t/)"
+-- "q={!lucene df=body}(foo:\"bar baz\"~5 AND /wh?t/)"
 compile
   :: [Param Builder] -> [LuceneQueryParam] -> LuceneQuery
   -> Data.Text.Lazy.Text

@@ -26,7 +26,7 @@ class (ExprSYM expr, Semigroup (query expr)) => LuceneQuerySYM expr query where
   -- ==== __Examples__
   --
   -- >>> compile [] [] (defaultField (word "foo"))
-  -- "q={!type=lucene}foo"
+  -- "q={!lucene}foo"
   defaultField :: expr a -> query expr
 
   -- | A field query.
@@ -34,7 +34,7 @@ class (ExprSYM expr, Semigroup (query expr)) => LuceneQuerySYM expr query where
   -- ==== __Examples__
   --
   -- >>> compile [] [] ("foo" =: word "bar")
-  -- "q={!type=lucene}foo:bar"
+  -- "q={!lucene}foo:bar"
   (=:) :: Text -> expr a -> query expr
   infix 5 =:
 
@@ -43,7 +43,7 @@ class (ExprSYM expr, Semigroup (query expr)) => LuceneQuerySYM expr query where
   -- ==== __Examples__
   --
   -- >>> compile [] [] ("foo" =: word "bar" &&: "baz" =: word "qux")
-  -- "q={!type=lucene}(foo:bar AND baz:qux)"
+  -- "q={!lucene}(foo:bar AND baz:qux)"
   (&&:) :: query expr -> query expr -> query expr
   infixr 3 &&:
 
@@ -52,7 +52,7 @@ class (ExprSYM expr, Semigroup (query expr)) => LuceneQuerySYM expr query where
   -- ==== __Examples__
   --
   -- >>> compile [] [] ("foo" =: word "bar" ||: "baz" =: word "qux")
-  -- "q={!type=lucene}(foo:bar OR baz:qux)"
+  -- "q={!lucene}(foo:bar OR baz:qux)"
   (||:) :: query expr -> query expr -> query expr
   infixr 2 ||:
 
@@ -61,7 +61,7 @@ class (ExprSYM expr, Semigroup (query expr)) => LuceneQuerySYM expr query where
   -- ==== __Examples__
   --
   -- >>> compile [] [] ("foo" =: word "bar" -: "baz" =: word "qux")
-  -- "q={!type=lucene}(foo:bar NOT baz:qux)"
+  -- "q={!lucene}(foo:bar NOT baz:qux)"
   (-:) :: query expr -> query expr -> query expr
   infixr 1 -:
 
@@ -72,7 +72,7 @@ class (ExprSYM expr, Semigroup (query expr)) => LuceneQuerySYM expr query where
   -- ==== __Examples__
   --
   -- >>> compile [] [] ("foo" =: word "bar" ^=: 3.5)
-  -- "q={!type=lucene}foo:bar^=3.5"
+  -- "q={!lucene}foo:bar^=3.5"
   (^=:) :: query expr -> Float -> query expr
   infixr 4 ^=:
 
@@ -81,7 +81,7 @@ class (ExprSYM expr, Semigroup (query expr)) => LuceneQuerySYM expr query where
 -- ==== __Examples__
 --
 -- >>> compile [] [] (neg ("foo" =: word "bar"))
--- "q={!type=lucene}(*:* NOT foo:bar)"
+-- "q={!lucene}(*:* NOT foo:bar)"
 neg :: LuceneQuerySYM expr query => query expr -> query expr
 neg = (-:) ("*" =: word "*")
 
@@ -114,7 +114,7 @@ infixr 4 `score`
 -- ==== __Examples__
 --
 -- >>> compile [] [df "foo"] (defaultField (word "bar"))
--- "q={!type=lucene df=foo}bar"
+-- "q={!lucene df=foo}bar"
 df :: Text -> LuceneQueryParam
 df = Df
 
@@ -123,7 +123,7 @@ df = Df
 -- ==== __Examples__
 --
 -- >>> compile [] [opAnd] (defaultField (word "foo") <> defaultField (word "bar"))
--- "q={!type=lucene q.op=AND}foo bar"
+-- "q={!lucene q.op=AND}foo bar"
 opAnd :: LuceneQueryParam
 opAnd = OpAnd
 
@@ -132,6 +132,6 @@ opAnd = OpAnd
 -- ==== __Examples__
 --
 -- >>> compile [] [opOr] (defaultField (word "foo") <> defaultField (word "bar"))
--- "q={!type=lucene q.op=OR}foo bar"
+-- "q={!lucene q.op=OR}foo bar"
 opOr :: LuceneQueryParam
 opOr = OpOr
