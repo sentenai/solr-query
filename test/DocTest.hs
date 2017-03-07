@@ -21,6 +21,7 @@ main = doctest
   , "-XRankNTypes"
   , "-XScopedTypeVariables"
   , "-XStandaloneDeriving"
+  , "-XTypeFamilies"
   , "-XTypeOperators"
   , "src"
   ]

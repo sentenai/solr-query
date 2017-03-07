@@ -8,14 +8,14 @@
 {-# options_ghc -fno-warn-redundant-constraints #-}
 #endif
 
-module Solr.Query.Impl.Initial where
+module Solr.Query.Lucene.Impl.Initial where
 
 import Solr.Expr.Class
 import Solr.Expr.Impl.Initial.Typed
 import Solr.Expr.Impl.Initial.Untyped
 import Solr.Expr.Type
-import Solr.Query.Class
 import Solr.Prelude
+import Solr.Query.Lucene.Class
 
 import Data.Generics.Uniplate.Direct
   (Uniplate(..), (|-), (|*), plate, transform)
@@ -83,7 +83,7 @@ instance Uniplate (Q expr) where
     QScore q n      -> plate QScore |* q |- n
     QAppend q1 q2   -> plate QAppend |* q1 |* q2
 
-instance ExprSYM expr => QuerySYM expr Q where
+instance ExprSYM expr => LuceneQuerySYM expr Q where
   defaultField = QDefaultField
   (=:)         = QField
   (&&:)        = QAnd
@@ -163,7 +163,7 @@ factor =
 -- This may be useful for reinterpreting a 'Query' as a lazy
 -- 'Data.Text.Lazy.Text' after it's been type checked and factored with the
 -- machinery in this module.
-reinterpret :: Q Expr -> Query
+reinterpret :: Q Expr -> LuceneQuery
 reinterpret = fix $ \r -> \case
   QDefaultField e -> defaultField (reinterpretE e)
   QField s e      -> field s (reinterpretE e)

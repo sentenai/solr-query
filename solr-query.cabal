@@ -1,4 +1,4 @@
--- This file has been generated from package.yaml by hpack version 0.14.1.
+-- This file has been generated from package.yaml by hpack version 0.15.0.
 --
 -- see: https://github.com/sol/hpack
 
@@ -45,7 +45,8 @@ library
         constraints >= 0.6 && < 0.9
   exposed-modules:
       Solr.Query
-      Solr.Query.Initial
+      Solr.Query.Lucene
+      Solr.Query.Lucene.Initial
   other-modules:
       Builder
       Solr.Expr.Class
@@ -54,11 +55,11 @@ library
       Solr.Expr.Impl.Initial.Untyped
       Solr.Expr.Type
       Solr.Prelude
-      Solr.Query.Class
-      Solr.Query.Impl.Final
-      Solr.Query.Impl.Initial
-      Solr.Query.LocalParam
+      Solr.Query.Lucene.Class
+      Solr.Query.Lucene.Impl.Final
+      Solr.Query.Lucene.Impl.Initial
       Solr.Query.Param
+      Solr.Query.Param.Local
   default-language: Haskell2010
 
 test-suite doctest
@@ -100,6 +101,6 @@ test-suite spec
   other-modules:
       DocTest
       Orphans
-      Solr.Query.InitialSpec
-      Solr.QuerySpec
+      Solr.Query.Lucene.InitialSpec
+      Solr.Query.LuceneSpec
   default-language: Haskell2010

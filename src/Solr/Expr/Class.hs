@@ -13,7 +13,7 @@ import Data.String (IsString)
 
 -- $setup
 -- >>> import Data.Time (UTCTime(..), fromGregorian)
--- >>> import Solr.Query
+-- >>> import Solr.Query.Lucene
 
 -- | The Solr expression language.
 class IsString (expr 'TWord) => ExprSYM expr where
@@ -22,7 +22,7 @@ class IsString (expr 'TWord) => ExprSYM expr where
   -- ==== __Examples__
   --
   -- >>> compile [] [] ("foo" =: int 5)
-  -- "q=foo:5"
+  -- "q={!type=lucene}foo:5"
   int :: Int64 -> expr 'TNum
 
   -- | A @float@ expression.
@@ -30,7 +30,7 @@ class IsString (expr 'TWord) => ExprSYM expr where
   -- ==== __Examples__
   --
   -- >>> compile [] [] ("foo" =: float 5)
-  -- "q=foo:5.0"
+  -- "q={!type=lucene}foo:5.0"
   float :: Double -> expr 'TNum
 
   -- | A @true@ expression.
@@ -38,7 +38,7 @@ class IsString (expr 'TWord) => ExprSYM expr where
   -- ==== __Examples__
   --
   -- >>> compile [] [] ("foo" =: true)
-  -- "q=foo:true"
+  -- "q={!type=lucene}foo:true"
   true :: expr 'TBool
 
   -- | A @false@ expression.
@@ -46,7 +46,7 @@ class IsString (expr 'TWord) => ExprSYM expr where
   -- ==== __Examples__
   --
   -- >>> compile [] [] ("foo" =: false)
-  -- "q=foo:false"
+  -- "q={!type=lucene}foo:false"
   false :: expr 'TBool
 
   -- | A single word. Must /not/ contain any spaces, wildcard characters
@@ -60,7 +60,7 @@ class IsString (expr 'TWord) => ExprSYM expr where
   -- ==== __Examples__
   --
   -- >>> compile [] [] ("foo" =: word "bar")
-  -- "q=foo:bar"
+  -- "q={!type=lucene}foo:bar"
   word :: Text -> expr 'TWord
 
   -- | A single word that may contain wildcard characters (@\'?\'@ and @\'*\'@),
@@ -71,7 +71,7 @@ class IsString (expr 'TWord) => ExprSYM expr where
   -- ==== __Examples__
   --
   -- >>> compile [] [] ("foo" =: wild "b?r")
-  -- "q=foo:b?r"
+  -- "q={!type=lucene}foo:b?r"
   wild :: Text -> expr 'TWild
 
   -- | A regular expression, whose syntax is described by
@@ -83,7 +83,7 @@ class IsString (expr 'TWord) => ExprSYM expr where
   -- ==== __Examples__
   --
   -- >>> compile [] [] ("foo" =: regex "[mb]oat")
-  -- "q=foo:/[mb]oat/"
+  -- "q={!type=lucene}foo:/[mb]oat/"
   regex :: Text -> expr 'TRegex
 
   -- | A phrase, composed of multiple (non-fuzzy) words, none of which may
@@ -94,7 +94,7 @@ class IsString (expr 'TWord) => ExprSYM expr where
   -- ==== __Examples__
   --
   -- >>> compile [] [] ("foo" =: phrase ["bar", "baz"])
-  -- "q=foo:\"bar baz\""
+  -- "q={!type=lucene}foo:\"bar baz\""
   phrase :: [expr 'TWord] -> expr 'TPhrase
 
   -- | A 'DateTime' expression. This may either be a timestamp ('UTCTime'), or a
@@ -105,13 +105,13 @@ class IsString (expr 'TWord) => ExprSYM expr where
   -- >>> let date = fromGregorian 2016 1 1
   -- >>> let time = fromIntegral 0
   -- >>> compile [] [] ("foo" =: datetime (UTCTime date time))
-  -- "q=foo:\"2016-01-01T00:00:00Z\""
+  -- "q={!type=lucene}foo:\"2016-01-01T00:00:00Z\""
   --
   -- >>> compile [] [] ("foo" =: datetime (2015 :: Year))
-  -- "q=foo:\"2015\""
+  -- "q={!type=lucene}foo:\"2015\""
   --
   -- >>> compile [] [] ("foo" =: datetime (2015, 1, 15, 11))
-  -- "q=foo:\"2015-01-15T11\""
+  -- "q={!type=lucene}foo:\"2015-01-15T11\""
   datetime :: IsDateTime a => a -> expr 'TDateTime
 
   -- | The @\'~\'@ operator, which fuzzes its argument (either a word or phrase)
@@ -120,10 +120,10 @@ class IsString (expr 'TWord) => ExprSYM expr where
   -- ==== __Examples__
   --
   -- >>> compile [] [] ("foo" =: word "bar" ~: 1)
-  -- "q=foo:bar~1"
+  -- "q={!type=lucene}foo:bar~1"
   --
   -- >>> compile [] [] ("foo" =: phrase ["bar", "baz", "qux"] ~: 10)
-  -- "q=foo:\"bar baz qux\"~10"
+  -- "q={!type=lucene}foo:\"bar baz qux\"~10"
   (~:) :: Fuzzable a => expr a -> Int -> expr 'TFuzzy
   infix 6 ~:
 
@@ -132,13 +132,13 @@ class IsString (expr 'TWord) => ExprSYM expr where
   -- ==== __Examples__
   --
   -- >>> compile [] [] ("foo" =: incl (int 5) `to` excl (int 10))
-  -- "q=foo:[5 TO 10}"
+  -- "q={!type=lucene}foo:[5 TO 10}"
   --
   -- >>> compile [] [] ("foo" =: excl (word "bar") `to` star)
-  -- "q=foo:{bar TO *]"
+  -- "q={!type=lucene}foo:{bar TO *]"
   --
   -- >>> compile [] [] ("foo" =: star `to` star)
-  -- "q=foo:[* TO *]"
+  -- "q={!type=lucene}foo:[* TO *]"
   to :: Rangeable a b => Boundary expr a -> Boundary expr b -> expr 'TRange
   infix 6 `to`
 
@@ -147,10 +147,10 @@ class IsString (expr 'TWord) => ExprSYM expr where
   -- ==== __Examples__
   --
   -- >>> compile [] [] ("foo" =: word "bar" ^: 3.5)
-  -- "q=foo:bar^3.5"
+  -- "q={!type=lucene}foo:bar^3.5"
   --
   -- >>> compile [] [] ("foo" =: phrase ["bar", "baz"] ^: 3.5)
-  -- "q=foo:\"bar baz\"^3.5"
+  -- "q={!type=lucene}foo:\"bar baz\"^3.5"
   (^:) :: Boostable a => expr a -> Float -> expr 'TBoosted
   infix 6 ^:
 
@@ -164,7 +164,7 @@ class IsString (expr 'TWord) => ExprSYM expr where
 -- ==== __Examples__
 --
 -- >>> compile [] [] ("foo" =: fuzzy "bar")
--- "q=foo:bar~2"
+-- "q={!type=lucene}foo:bar~2"
 fuzzy :: ExprSYM expr => expr 'TWord -> expr 'TFuzzy
 fuzzy e = e ~: 2
 
@@ -177,7 +177,7 @@ fuzzy e = e ~: 2
 -- ==== __Examples__
 --
 -- >>> compile [] [] ("foo" =: gt (int 5))
--- "q=foo:{5 TO *]"
+-- "q={!type=lucene}foo:{5 TO *]"
 gt :: (ExprSYM expr, Rangeable a 'TAny) => expr a -> expr 'TRange
 gt e = excl e `to` star
 
@@ -190,7 +190,7 @@ gt e = excl e `to` star
 -- ==== __Examples__
 --
 -- >>> compile [] [] ("foo" =: gte (int 5))
--- "q=foo:[5 TO *]"
+-- "q={!type=lucene}foo:[5 TO *]"
 gte :: (ExprSYM expr, Rangeable a 'TAny) => expr a -> expr 'TRange
 gte e = incl e `to` star
 
@@ -203,7 +203,7 @@ gte e = incl e `to` star
 -- ==== __Examples__
 --
 -- >>> compile [] [] ("foo" =: lt (int 5))
--- "q=foo:[* TO 5}"
+-- "q={!type=lucene}foo:[* TO 5}"
 lt :: (ExprSYM expr, Rangeable 'TAny a) => expr a -> expr 'TRange
 lt e = star `to` excl e
 
@@ -216,7 +216,7 @@ lt e = star `to` excl e
 -- ==== __Examples__
 --
 -- >>> compile [] [] ("foo" =: lte (int 5))
--- "q=foo:[* TO 5]"
+-- "q={!type=lucene}foo:[* TO 5]"
 lte :: (ExprSYM expr, Rangeable 'TAny a) => expr a -> expr 'TRange
 lte e = star `to` incl e
 

@@ -1,7 +1,7 @@
-module Solr.Query.InitialSpec where
+module Solr.Query.Lucene.InitialSpec where
 
 import Orphans ()
-import Solr.Query.Initial
+import Solr.Query.Lucene.Initial
 
 import Prelude.Compat
 import Test.Hspec
@@ -16,4 +16,4 @@ spec = do
         (reinterpret (factor
           (QNot (QField "*" (ETo Star Star))
             (QNot (QField "*" (ETo Star Star)) q))))
-        `shouldBe` "q=foo:true"
+        `shouldBe` "q={!type=lucene}foo:true"

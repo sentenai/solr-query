@@ -1,4 +1,4 @@
-module Solr.Query.Initial
+module Solr.Query.Lucene.Initial
   ( -- * Manipulating a query
     typeCheck
   , factor
@@ -15,18 +15,17 @@ module Solr.Query.Initial
   , Param(..)
   , LocalParam(..)
     -- * Re-exports
-  , module Solr.Query
+  , module Solr.Query.Lucene
   ) where
 
 import Solr.Expr.Class
 import Solr.Expr.Impl.Initial.Untyped (UExpr(..))
 import Solr.Expr.Impl.Initial.Typed (Expr(..))
 import Solr.Expr.Type
-import Solr.Query.Class
-import Solr.Query.Impl.Final (compile)
-import Solr.Query.Impl.Initial (Q(..), factor, reinterpret, typeCheck)
-import Solr.Query.LocalParam
+import Solr.Query.Lucene
+import Solr.Query.Lucene.Class
+import Solr.Query.Lucene.Impl.Final (compile)
+import Solr.Query.Lucene.Impl.Initial (Q(..), factor, reinterpret, typeCheck)
 import Solr.Query.Param
-import Solr.Query
 
 import Data.Time (UTCTime)

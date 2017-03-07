@@ -1,28 +1,36 @@
 module Solr.Query.Param where
 
 import Solr.Prelude
-import Solr.Query.Class
-import Solr.Query.LocalParam
+import Solr.Query (InterpretQuery, Query)
+import Solr.Query.Param.Local (LocalParam)
 
 -- $setup
--- >>> import Solr.Query
+-- >>> import Solr.Query.Lucene
 
--- | A query parameter.
-data Param
-  = ParamFl Text
-  | ParamFq [LocalParam 'FilterQueryLocalParam] Query
-  | ParamRows Int
-  | ParamSortAsc Text
-  | ParamSortDesc Text
-  | ParamStart Int
+data Cache
+  = Cache
+  | DontCache
+  deriving (Eq, Show)
+
+type Cost = Int
+
+-- | A common query parameter.
+data Param a where
+  ParamFl :: Text -> Param a
+  ParamFq :: InterpretQuery sym a
+          => Cache -> Maybe Cost -> [LocalParam sym] -> Query sym -> Param a
+  ParamRows :: Int -> Param a
+  ParamSortAsc :: Text -> Param a
+  ParamSortDesc :: Text -> Param a
+  ParamStart :: Int -> Param a
 
 -- | The @\'fl\'@ query parameter.
 --
 -- ==== __Examples__
 --
 -- >>> compile [fl "baz", fl "qux"] [] ("foo" =: word "bar")
--- "fl=baz&fl=qux&q=foo:bar"
-fl :: Text -> Param
+-- "fl=baz&fl=qux&q={!type=lucene}foo:bar"
+fl :: Text -> Param a
 fl = ParamFl
 
 -- | The @\'fq\'@ query parameter.
@@ -30,9 +38,11 @@ fl = ParamFl
 -- ==== __Examples__
 --
 -- >>> let filterQuery = "baz" =: gte (int 10)
--- >>> compile [fq [] filterQuery] [] ("foo" =: word "bar")
--- "fq=baz:[10 TO *]&q=foo:bar"
-fq :: [LocalParam 'FilterQueryLocalParam] -> Query -> Param
+-- >>> let params = [] :: [LuceneQueryParam]
+-- >>> compile [fq DontCache Nothing params filterQuery] [] ("foo" =: word "bar")
+-- "fq={!type=lucene cache=false}baz:[10 TO *]&q={!type=lucene}foo:bar"
+fq :: InterpretQuery sym a
+   => Cache -> Maybe Cost -> [LocalParam sym] -> Query sym -> Param a
 fq = ParamFq
 
 -- | The @\'rows\'@ query parameter.
@@ -40,8 +50,8 @@ fq = ParamFq
 -- ==== __Examples__
 --
 -- >>> compile [rows 5] [] ("foo" =: word "bar")
--- "rows=5&q=foo:bar"
-rows :: Int -> Param
+-- "rows=5&q={!type=lucene}foo:bar"
+rows :: Int -> Param a
 rows = ParamRows
 
 -- | The @\'sort\'@ query parameter (ascending).
@@ -49,8 +59,8 @@ rows = ParamRows
 -- ==== __Examples__
 --
 -- >>> compile [sortAsc "foo"] [] ("foo" =: gt (int 5))
--- "sort=foo asc&q=foo:{5 TO *]"
-sortAsc :: Text -> Param
+-- "sort=foo asc&q={!type=lucene}foo:{5 TO *]"
+sortAsc :: Text -> Param a
 sortAsc = ParamSortAsc
 
 -- | The @\'sort\'@ query parameter (descending).
@@ -58,8 +68,8 @@ sortAsc = ParamSortAsc
 -- ==== __Examples__
 --
 -- >>> compile [sortDesc "foo"] [] ("foo" =: gt (int 5))
--- "sort=foo desc&q=foo:{5 TO *]"
-sortDesc :: Text -> Param
+-- "sort=foo desc&q={!type=lucene}foo:{5 TO *]"
+sortDesc :: Text -> Param a
 sortDesc = ParamSortDesc
 
 -- | The @\'start\'@ query parameter.
@@ -67,6 +77,6 @@ sortDesc = ParamSortDesc
 -- ==== __Examples__
 --
 -- >>> compile [start 10] [] ("foo" =: word "bar")
--- "start=10&q=foo:bar"
-start :: Int -> Param
+-- "start=10&q={!type=lucene}foo:bar"
+start :: Int -> Param a
 start = ParamStart

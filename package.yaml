@@ -57,11 +57,11 @@ library:
     - Solr.Expr.Impl.Initial.Untyped
     - Solr.Expr.Type
     - Solr.Prelude
-    - Solr.Query.Class
-    - Solr.Query.Impl.Final
-    - Solr.Query.Impl.Initial
-    - Solr.Query.LocalParam
+    - Solr.Query.Lucene.Class
+    - Solr.Query.Lucene.Impl.Final
+    - Solr.Query.Lucene.Impl.Initial
     - Solr.Query.Param
+    - Solr.Query.Param.Local
   dependencies:
     - uniplate >= 1.3 && < 1.7
   when:

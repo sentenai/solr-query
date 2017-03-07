@@ -43,7 +43,7 @@ instance ExprSYM E where
             (go 'T' fmt
               (go ':' fmt
                 (go ':' fmt formatMilli)))))
-      where
+     where
       go :: Char -> (a -> String) -> (b -> Builder) -> (a, Maybe b) -> Builder
       go c f g (a, b) = char c <> thawStr (f a) <> maybe (char '"') g b
 
@@ -69,5 +69,3 @@ instance ExprSYM E where
     rhs Star          = "*]"
 
   E e ^: n = E (e <> char '^' <> bshow n)
-
-

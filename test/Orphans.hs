@@ -3,7 +3,7 @@
 
 module Orphans where
 
-import Solr.Query.Initial
+import Solr.Query.Lucene.Initial
 
 import Data.Coerce (coerce)
 import Prelude.Compat
@@ -92,7 +92,7 @@ instance Arbitrary (Q UExpr) where
     QScore q n      -> q : [ QScore q' n' | (q', n') <- shrink (q, n) ]
     QAppend q1 q2   -> q1 : q2 : [ QAppend q1' q2' | (q1', q2') <- shrink (q1, q2) ]
 
-instance Arbitrary (LocalParam 'QueryLocalParam) where
+instance Arbitrary (LocalParam LuceneQuerySYM) where
   arbitrary = oneof
     [ df <$> arbitrary
     , pure opAnd
