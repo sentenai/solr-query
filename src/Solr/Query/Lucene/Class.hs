@@ -1,8 +1,8 @@
 module Solr.Query.Lucene.Class where
 
 import Solr.Prelude
-import Solr.Expr.Class
 import Solr.Query (Query)
+import Solr.Query.Lucene.Expr.Class
 import Solr.Query.Param.Local (LocalParam)
 
 -- $setup
@@ -20,14 +20,14 @@ data instance LocalParam LuceneQuerySYM
 type LuceneQueryParam = LocalParam LuceneQuerySYM
 
 -- | The @lucene@ query language.
-class (ExprSYM expr, Semigroup (query expr)) => LuceneQuerySYM expr query where
+class Semigroup query => LuceneQuerySYM query where
   -- | A default field query.
   --
   -- ==== __Examples__
   --
   -- >>> compile [] [] (defaultField (word "foo"))
   -- "q={!lucene}foo"
-  defaultField :: expr a -> query expr
+  defaultField :: LuceneExpr ty -> query
 
   -- | A field query.
   --
@@ -35,7 +35,7 @@ class (ExprSYM expr, Semigroup (query expr)) => LuceneQuerySYM expr query where
   --
   -- >>> compile [] [] ("foo" =: word "bar")
   -- "q={!lucene}foo:bar"
-  (=:) :: Text -> expr a -> query expr
+  (=:) :: Text -> LuceneExpr ty -> query
   infix 5 =:
 
   -- | An @AND@ query.
@@ -44,7 +44,7 @@ class (ExprSYM expr, Semigroup (query expr)) => LuceneQuerySYM expr query where
   --
   -- >>> compile [] [] ("foo" =: word "bar" &&: "baz" =: word "qux")
   -- "q={!lucene}(foo:bar AND baz:qux)"
-  (&&:) :: query expr -> query expr -> query expr
+  (&&:) :: query -> query -> query
   infixr 3 &&:
 
   -- | An @OR@ query.
@@ -53,7 +53,7 @@ class (ExprSYM expr, Semigroup (query expr)) => LuceneQuerySYM expr query where
   --
   -- >>> compile [] [] ("foo" =: word "bar" ||: "baz" =: word "qux")
   -- "q={!lucene}(foo:bar OR baz:qux)"
-  (||:) :: query expr -> query expr -> query expr
+  (||:) :: query -> query -> query
   infixr 2 ||:
 
   -- | A @NOT@, @\'!\'@, or @\'-\'@ query.
@@ -62,7 +62,7 @@ class (ExprSYM expr, Semigroup (query expr)) => LuceneQuerySYM expr query where
   --
   -- >>> compile [] [] ("foo" =: word "bar" -: "baz" =: word "qux")
   -- "q={!lucene}(foo:bar NOT baz:qux)"
-  (-:) :: query expr -> query expr -> query expr
+  (-:) :: query -> query -> query
   infixr 1 -:
 
   -- | The @\'^=\'@ constant score operator.
@@ -73,7 +73,7 @@ class (ExprSYM expr, Semigroup (query expr)) => LuceneQuerySYM expr query where
   --
   -- >>> compile [] [] ("foo" =: word "bar" ^=: 3.5)
   -- "q={!lucene}foo:bar^=3.5"
-  (^=:) :: query expr -> Float -> query expr
+  (^=:) :: query -> Float -> query
   infixr 4 ^=:
 
 -- | Negate a query.
@@ -82,30 +82,30 @@ class (ExprSYM expr, Semigroup (query expr)) => LuceneQuerySYM expr query where
 --
 -- >>> compile [] [] (neg ("foo" =: word "bar"))
 -- "q={!lucene}(*:* NOT foo:bar)"
-neg :: LuceneQuerySYM expr query => query expr -> query expr
+neg :: LuceneQuerySYM query => query -> query
 neg = (-:) ("*" =: word "*")
 
 -- | Named version of ('=:').
-field :: LuceneQuerySYM expr query => Text -> expr a -> query expr
+field :: LuceneQuerySYM query => Text -> LuceneExpr ty -> query
 field = (=:)
 
 -- | Named version of ('&&:').
-qand :: LuceneQuerySYM expr query => query expr -> query expr -> query expr
+qand :: LuceneQuerySYM query => query -> query -> query
 qand = (&&:)
 infixr 3 `qand`
 
 -- | Named version of ('||:').
-qor :: LuceneQuerySYM expr query => query expr -> query expr -> query expr
+qor :: LuceneQuerySYM query => query -> query -> query
 qor = (||:)
 infixr 2 `qor`
 
 -- | Named version of ('-:').
-qnot :: LuceneQuerySYM expr query => query expr -> query expr -> query expr
+qnot :: LuceneQuerySYM query => query -> query -> query
 qnot = (-:)
 infixr 1 `qnot`
 
 -- | Named version of ('^=:').
-score :: LuceneQuerySYM expr query => query expr -> Float -> query expr
+score :: LuceneQuerySYM query => query -> Float -> query
 score = (^=:)
 infixr 4 `score`
 

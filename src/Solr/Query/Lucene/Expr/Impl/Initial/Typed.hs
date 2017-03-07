@@ -1,14 +1,14 @@
-module Solr.Expr.Impl.Initial.Typed where
+module Solr.Query.Lucene.Expr.Impl.Initial.Typed where
 
-import Solr.Expr.Class
-import Solr.Expr.Impl.Initial.Untyped
-import Solr.Expr.Type
 import Solr.Prelude
+import Solr.Query.Lucene.Expr.Class
+import Solr.Query.Lucene.Expr.Impl.Initial.Untyped
+import Solr.Query.Lucene.Expr.Type
 
 import Data.String (IsString(..))
 
--- | A typed, initially-encoded Solr expression.
-data Expr :: ExprTy -> * where
+-- | A typed, initially-encoded @lucene@ expression.
+data Expr :: LuceneExprTy -> * where
   EInt      :: Int64  -> Expr 'TNum
   EFloat    :: Double -> Expr 'TNum
   ETrue     :: Expr 'TBool
@@ -26,18 +26,18 @@ data Expr :: ExprTy -> * where
 instance IsString (Expr 'TWord) where
   fromString s = word (pack s)
 
-instance ExprSYM Expr where
-  int     = EInt
-  float   = EFloat
-  true    = ETrue
-  false   = EFalse
-  word    = EWord
-  wild    = EWild
-  regex   = ERegex
-  phrase  = EPhrase
-  (~:)    = EFuzz
-  to      = ETo
-  (^:)    = EBoost
+instance LuceneExprSYM Expr where
+  int    = EInt
+  float  = EFloat
+  true   = ETrue
+  false  = EFalse
+  word   = EWord
+  wild   = EWild
+  regex  = ERegex
+  phrase = EPhrase
+  (~:)   = EFuzz
+  to     = ETo
+  (^:)   = EBoost
 
   datetime t =
     case toDateTime t of
@@ -143,7 +143,7 @@ typeCheckE' u0 =
       _                    -> Nothing
 
 -- Reinterpret a Solr expression.
-reinterpretE :: ExprSYM expr => Expr ty -> expr ty
+reinterpretE :: LuceneExprSYM expr => Expr ty -> expr ty
 reinterpretE = \case
   EInt n      -> int n
   EFloat n    -> float n

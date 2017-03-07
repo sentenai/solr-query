@@ -5,13 +5,13 @@
 {-# options_ghc -fno-warn-redundant-constraints #-}
 #endif
 
-module Solr.Expr.Type where
+module Solr.Query.Lucene.Expr.Type where
 
 #if MIN_VERSION_base(4,9,0)
 import GHC.TypeLits (TypeError, ErrorMessage(..))
 #endif
 
-data ExprTy
+data LuceneExprTy
   = TAny
   | TNum
   | TBool
@@ -25,17 +25,17 @@ data ExprTy
   | TRange
 
 -- | 'word's and 'phrase's can fuzzed by the '~:' operator.
-class Fuzzable (ty :: ExprTy)
+class Fuzzable (ty :: LuceneExprTy)
 instance Fuzzable 'TWord
 instance Fuzzable 'TPhrase
 
 -- | 'word's and 'phrase's can be boosted by the '^:' operator.
-class Boostable (ty :: ExprTy)
+class Boostable (ty :: LuceneExprTy)
 instance Boostable 'TWord
 instance Boostable 'TPhrase
 
 -- | 'int's, 'float's, 'word's, and 'datetime's can 'to' range expression.
-class Rangeable (a :: ExprTy) (b :: ExprTy)
+class Rangeable (a :: LuceneExprTy) (b :: LuceneExprTy)
 instance Rangeable 'TNum      'TNum
 instance Rangeable 'TNum      'TAny
 instance Rangeable 'TWord     'TWord

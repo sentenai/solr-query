@@ -1,19 +1,19 @@
-module Solr.Expr.Impl.Final where
+module Solr.Query.Lucene.Expr.Impl.Final where
 
 import Builder
-import Solr.Expr.Class
-import Solr.Expr.Type
+import Solr.Query.Lucene.Expr.Class
+import Solr.Query.Lucene.Expr.Type
 import Solr.Prelude
 
 import Data.String (IsString(..))
 
--- 'Builder' interpretation of a 'ExprSYM'.
-newtype E (t :: ExprTy) = E { unE :: Builder }
+-- 'Builder' interpretation of a 'LuceneExprSYM'.
+newtype E (t :: LuceneExprTy) = E { unE :: Builder }
 
 instance IsString (E 'TWord) where
   fromString s = word (pack s)
 
-instance ExprSYM E where
+instance LuceneExprSYM E where
   int n = E (bshow n)
 
   float n = E (bshow n)

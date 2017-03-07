@@ -29,7 +29,7 @@ flag with-constraints
 library
   hs-source-dirs:
       src
-  default-extensions: ConstraintKinds DataKinds DeriveFunctor ExistentialQuantification FlexibleContexts FlexibleInstances GADTs GeneralizedNewtypeDeriving InstanceSigs KindSignatures LambdaCase MultiParamTypeClasses NoImplicitPrelude OverloadedStrings PatternSynonyms RankNTypes ScopedTypeVariables StandaloneDeriving TypeFamilies TypeOperators
+  default-extensions: ConstraintKinds DataKinds DeriveFunctor ExistentialQuantification FlexibleContexts FlexibleInstances GADTs GeneralizedNewtypeDeriving InstanceSigs KindSignatures LambdaCase MultiParamTypeClasses NoImplicitPrelude OverloadedStrings PatternSynonyms PolyKinds RankNTypes ScopedTypeVariables StandaloneDeriving TypeFamilies TypeOperators
   ghc-options: -Wall
   build-depends:
       base        >= 4.7     && < 5
@@ -49,13 +49,13 @@ library
       Solr.Query.Lucene.Initial
   other-modules:
       Builder
-      Solr.Expr.Class
-      Solr.Expr.Impl.Final
-      Solr.Expr.Impl.Initial.Typed
-      Solr.Expr.Impl.Initial.Untyped
-      Solr.Expr.Type
       Solr.Prelude
       Solr.Query.Lucene.Class
+      Solr.Query.Lucene.Expr.Class
+      Solr.Query.Lucene.Expr.Impl.Final
+      Solr.Query.Lucene.Expr.Impl.Initial.Typed
+      Solr.Query.Lucene.Expr.Impl.Initial.Untyped
+      Solr.Query.Lucene.Expr.Type
       Solr.Query.Lucene.Impl.Final
       Solr.Query.Lucene.Impl.Initial
       Solr.Query.Param
@@ -65,7 +65,7 @@ library
 test-suite doctest
   type: exitcode-stdio-1.0
   main-is: test/DocTest.hs
-  default-extensions: ConstraintKinds DataKinds DeriveFunctor ExistentialQuantification FlexibleContexts FlexibleInstances GADTs GeneralizedNewtypeDeriving InstanceSigs KindSignatures LambdaCase MultiParamTypeClasses NoImplicitPrelude OverloadedStrings PatternSynonyms RankNTypes ScopedTypeVariables StandaloneDeriving TypeFamilies TypeOperators
+  default-extensions: ConstraintKinds DataKinds DeriveFunctor ExistentialQuantification FlexibleContexts FlexibleInstances GADTs GeneralizedNewtypeDeriving InstanceSigs KindSignatures LambdaCase MultiParamTypeClasses NoImplicitPrelude OverloadedStrings PatternSynonyms PolyKinds RankNTypes ScopedTypeVariables StandaloneDeriving TypeFamilies TypeOperators
   ghc-options: -Wall
   build-depends:
       base        >= 4.7     && < 5
@@ -83,7 +83,7 @@ test-suite spec
   main-is: Spec.hs
   hs-source-dirs:
       test
-  default-extensions: ConstraintKinds DataKinds DeriveFunctor ExistentialQuantification FlexibleContexts FlexibleInstances GADTs GeneralizedNewtypeDeriving InstanceSigs KindSignatures LambdaCase MultiParamTypeClasses NoImplicitPrelude OverloadedStrings PatternSynonyms RankNTypes ScopedTypeVariables StandaloneDeriving TypeFamilies TypeOperators
+  default-extensions: ConstraintKinds DataKinds DeriveFunctor ExistentialQuantification FlexibleContexts FlexibleInstances GADTs GeneralizedNewtypeDeriving InstanceSigs KindSignatures LambdaCase MultiParamTypeClasses NoImplicitPrelude OverloadedStrings PatternSynonyms PolyKinds RankNTypes ScopedTypeVariables StandaloneDeriving TypeFamilies TypeOperators
   ghc-options: -Wall
   build-depends:
       base        >= 4.7     && < 5

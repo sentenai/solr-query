@@ -14,8 +14,8 @@ module Solr.Query.Lucene
   , qor
   , qnot
   , score
-    -- * Solr expression language
-  , ExprSYM(..)
+    -- * Lucene expression language
+  , LuceneExprSYM(..)
     -- ** Named operators
   , fuzz
   , boost
@@ -40,8 +40,8 @@ module Solr.Query.Lucene
   , Minute
   , Second
   , Millisecond
-    -- ** Solr expression types
-  , ExprTy(..)
+    -- ** Lucene expression types
+  , LuceneExprTy(..)
   , Fuzzable
   , Boostable
   , Rangeable
@@ -64,9 +64,9 @@ module Solr.Query.Lucene
   , UTCTime
   ) where
 
-import Solr.Expr.Class
-import Solr.Expr.Type
 import Solr.Query.Lucene.Class
+import Solr.Query.Lucene.Expr.Class
+import Solr.Query.Lucene.Expr.Type
 import Solr.Query.Lucene.Impl.Final
   (compile, compileLocalParam, compileParam, compileQuery)
 import Solr.Query.Param

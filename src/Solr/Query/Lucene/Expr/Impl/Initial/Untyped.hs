@@ -1,13 +1,13 @@
-module Solr.Expr.Impl.Initial.Untyped where
+module Solr.Query.Lucene.Expr.Impl.Initial.Untyped where
 
-import Solr.Expr.Class
-import Solr.Expr.Type
 import Solr.Prelude
+import Solr.Query.Lucene.Expr.Class
+import Solr.Query.Lucene.Expr.Type
 
 import Data.String (IsString(..))
 
--- | An untyped, initially-encoded Solr expression.
-data UExpr (ty :: ExprTy)
+-- | An untyped, initially-encoded @lucene@ expression.
+data UExpr (ty :: LuceneExprTy)
   = UInt Int64
   | UFloat Double
   | UTrue
@@ -49,7 +49,7 @@ instance Eq (UExpr ty) where
 instance IsString (UExpr 'TWord) where
   fromString s = word (pack s)
 
-instance ExprSYM UExpr where
+instance LuceneExprSYM UExpr where
   int    = UInt
   float  = UFloat
   true   = UTrue

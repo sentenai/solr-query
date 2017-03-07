@@ -9,6 +9,7 @@ module Solr.Query.Lucene.Initial
   , UExpr(..)
     -- ** Typed expression
   , Expr(..)
+  , LuceneExprTy(..)
     -- * Misc. internals
   , Boundary(..)
   , DateTime(..)
@@ -18,12 +19,11 @@ module Solr.Query.Lucene.Initial
   , module Solr.Query.Lucene
   ) where
 
-import Solr.Expr.Class
-import Solr.Expr.Impl.Initial.Untyped (UExpr(..))
-import Solr.Expr.Impl.Initial.Typed (Expr(..))
-import Solr.Expr.Type
 import Solr.Query.Lucene
 import Solr.Query.Lucene.Class
+import Solr.Query.Lucene.Expr.Class
+import Solr.Query.Lucene.Expr.Impl.Initial.Untyped (UExpr(..))
+import Solr.Query.Lucene.Expr.Impl.Initial.Typed (Expr(..))
 import Solr.Query.Lucene.Impl.Final (compile)
 import Solr.Query.Lucene.Impl.Initial (Q(..), factor, reinterpret, typeCheck)
 import Solr.Query.Param

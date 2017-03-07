@@ -18,6 +18,7 @@ main = doctest
   , "-XNoImplicitPrelude"
   , "-XOverloadedStrings"
   , "-XPatternSynonyms"
+  , "-XPolyKinds"
   , "-XRankNTypes"
   , "-XScopedTypeVariables"
   , "-XStandaloneDeriving"

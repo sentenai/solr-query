@@ -33,6 +33,7 @@ default-extensions:
   - NoImplicitPrelude
   - OverloadedStrings
   - PatternSynonyms
+  - PolyKinds
   - RankNTypes
   - ScopedTypeVariables
   - StandaloneDeriving
@@ -51,13 +52,13 @@ library:
   source-dirs: src
   other-modules:
     - Builder
-    - Solr.Expr.Class
-    - Solr.Expr.Impl.Final
-    - Solr.Expr.Impl.Initial.Typed
-    - Solr.Expr.Impl.Initial.Untyped
-    - Solr.Expr.Type
     - Solr.Prelude
     - Solr.Query.Lucene.Class
+    - Solr.Query.Lucene.Expr.Class
+    - Solr.Query.Lucene.Expr.Impl.Final
+    - Solr.Query.Lucene.Expr.Impl.Initial.Typed
+    - Solr.Query.Lucene.Expr.Impl.Initial.Untyped
+    - Solr.Query.Lucene.Expr.Type
     - Solr.Query.Lucene.Impl.Final
     - Solr.Query.Lucene.Impl.Initial
     - Solr.Query.Param

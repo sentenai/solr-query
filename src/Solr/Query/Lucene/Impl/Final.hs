@@ -10,10 +10,9 @@ module Solr.Query.Lucene.Impl.Final where
 
 import Builder
 import Solr.Prelude
-import Solr.Expr.Impl.Final
-import Solr.Expr.Type
 import Solr.Query (InterpretQuery(interpretParams, interpretQuery), Query)
 import Solr.Query.Lucene.Class
+import Solr.Query.Lucene.Expr.Impl.Final
 import Solr.Query.Param
 
 import Data.Proxy (Proxy(Proxy))
@@ -21,15 +20,15 @@ import Data.Proxy (Proxy(Proxy))
 import qualified Data.Text.Lazy
 
 -- $setup
--- >>> import Solr.Expr.Class
+-- >>> import Solr.Query.Lucene.Expr.Class
 
 -- 'Builder' interpretation of 'LuceneQuerySYM'.
-newtype Q (expr :: ExprTy -> *) = Q { unQ :: Builder }
+newtype Q = Q { unQ :: Builder }
 
-instance Semigroup (Q expr) where
+instance Semigroup Q where
   q1 <> q2 = Q (unQ q1 <> char ' ' <> unQ q2)
 
-instance LuceneQuerySYM E Q where
+instance LuceneQuerySYM Q where
   defaultField e = Q (unE e)
 
   f =: e = Q (thaw' f <> char ':' <> unE e)
@@ -115,4 +114,4 @@ compileLocalParam = \case
 -- >>> compileQuery ("foo" =: word "bar")
 -- "foo:bar"
 compileQuery :: LuceneQuery -> Builder
-compileQuery (Q query :: Q E) = query
+compileQuery (Q query) = query

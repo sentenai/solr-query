@@ -10,12 +10,12 @@
 
 module Solr.Query.Lucene.Impl.Initial where
 
-import Solr.Expr.Class
-import Solr.Expr.Impl.Initial.Typed
-import Solr.Expr.Impl.Initial.Untyped
-import Solr.Expr.Type
 import Solr.Prelude
 import Solr.Query.Lucene.Class
+import Solr.Query.Lucene.Expr.Class
+import Solr.Query.Lucene.Expr.Impl.Initial.Typed
+import Solr.Query.Lucene.Expr.Impl.Initial.Untyped
+import Solr.Query.Lucene.Expr.Type
 
 import Data.Generics.Uniplate.Direct
   (Uniplate(..), (|-), (|*), plate, transform)
@@ -29,7 +29,7 @@ import GHC.Show (showSpace)
 
 -- | An initial encoding of a Solr query. To get a 'Show' instance, compile with
 -- @-fwith-constraints@.
-data Q (expr :: ExprTy -> *)
+data Q (expr :: LuceneExprTy -> *)
   = forall a. QDefaultField (expr a)
   | forall a. QField Text (expr a)
   | QAnd (Q expr) (Q expr)
@@ -83,7 +83,7 @@ instance Uniplate (Q expr) where
     QScore q n      -> plate QScore |* q |- n
     QAppend q1 q2   -> plate QAppend |* q1 |* q2
 
-instance ExprSYM expr => LuceneQuerySYM expr Q where
+instance LuceneExprSYM expr => LuceneQuerySYM (Q expr) where
   defaultField = QDefaultField
   (=:)         = QField
   (&&:)        = QAnd

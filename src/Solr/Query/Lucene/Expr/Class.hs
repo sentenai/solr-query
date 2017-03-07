@@ -4,9 +4,9 @@
 {-# options_ghc -fno-warn-redundant-constraints #-}
 #endif
 
-module Solr.Expr.Class where
+module Solr.Query.Lucene.Expr.Class where
 
-import Solr.Expr.Type
+import Solr.Query.Lucene.Expr.Type
 import Solr.Prelude
 
 import Data.String (IsString)
@@ -15,8 +15,10 @@ import Data.String (IsString)
 -- >>> import Data.Time (UTCTime(..), fromGregorian)
 -- >>> import Solr.Query.Lucene
 
--- | The Solr expression language.
-class IsString (expr 'TWord) => ExprSYM expr where
+type LuceneExpr ty = forall expr. LuceneExprSYM expr => expr ty
+
+-- | The @lucene@ expression language.
+class IsString (expr 'TWord) => LuceneExprSYM expr where
   -- | An @int@ expression.
   --
   -- ==== __Examples__
@@ -165,7 +167,7 @@ class IsString (expr 'TWord) => ExprSYM expr where
 --
 -- >>> compile [] [] ("foo" =: fuzzy "bar")
 -- "q={!lucene}foo:bar~2"
-fuzzy :: ExprSYM expr => expr 'TWord -> expr 'TFuzzy
+fuzzy :: LuceneExprSYM expr => expr 'TWord -> expr 'TFuzzy
 fuzzy e = e ~: 2
 
 -- | Short-hand for a greater-than range query.
@@ -178,7 +180,7 @@ fuzzy e = e ~: 2
 --
 -- >>> compile [] [] ("foo" =: gt (int 5))
 -- "q={!lucene}foo:{5 TO *]"
-gt :: (ExprSYM expr, Rangeable a 'TAny) => expr a -> expr 'TRange
+gt :: (LuceneExprSYM expr, Rangeable a 'TAny) => expr a -> expr 'TRange
 gt e = excl e `to` star
 
 -- | Short-hand for a greater-than-or-equal-to range query.
@@ -191,7 +193,7 @@ gt e = excl e `to` star
 --
 -- >>> compile [] [] ("foo" =: gte (int 5))
 -- "q={!lucene}foo:[5 TO *]"
-gte :: (ExprSYM expr, Rangeable a 'TAny) => expr a -> expr 'TRange
+gte :: (LuceneExprSYM expr, Rangeable a 'TAny) => expr a -> expr 'TRange
 gte e = incl e `to` star
 
 -- | Short-hand for a less-than range query.
@@ -204,7 +206,7 @@ gte e = incl e `to` star
 --
 -- >>> compile [] [] ("foo" =: lt (int 5))
 -- "q={!lucene}foo:[* TO 5}"
-lt :: (ExprSYM expr, Rangeable 'TAny a) => expr a -> expr 'TRange
+lt :: (LuceneExprSYM expr, Rangeable 'TAny a) => expr a -> expr 'TRange
 lt e = star `to` excl e
 
 -- | Short-hand for a less-than-or-equal-to range query.
@@ -217,7 +219,7 @@ lt e = star `to` excl e
 --
 -- >>> compile [] [] ("foo" =: lte (int 5))
 -- "q={!lucene}foo:[* TO 5]"
-lte :: (ExprSYM expr, Rangeable 'TAny a) => expr a -> expr 'TRange
+lte :: (LuceneExprSYM expr, Rangeable 'TAny a) => expr a -> expr 'TRange
 lte e = star `to` incl e
 
 -- | An inclusive or exclusive expression for use in a range query, built with
@@ -233,23 +235,23 @@ deriving instance Eq   (expr ty) => Eq   (Boundary expr ty)
 deriving instance Show (expr ty) => Show (Boundary expr ty)
 
 -- | Mark an expression as inclusive, for use in a range query.
-incl :: ExprSYM expr => expr a -> Boundary expr a
+incl :: LuceneExprSYM expr => expr a -> Boundary expr a
 incl = Inclusive
 
 -- | Mark an expression as exclusive, for use in a range query.
-excl :: ExprSYM expr => expr a -> Boundary expr a
+excl :: LuceneExprSYM expr => expr a -> Boundary expr a
 excl = Exclusive
 
 -- | @\'*\'@ operator, signifying the minimum or maximun bound of a range.
-star :: ExprSYM expr => Boundary expr 'TAny
+star :: LuceneExprSYM expr => Boundary expr 'TAny
 star = Star
 
 -- | Named version of ('~:').
-fuzz :: (ExprSYM expr, Fuzzable a) => expr a -> Int -> expr 'TFuzzy
+fuzz :: (LuceneExprSYM expr, Fuzzable a) => expr a -> Int -> expr 'TFuzzy
 fuzz = (~:)
 
 -- | Named version of ('^:').
-boost :: (ExprSYM expr, Boostable a) => expr a -> Float -> expr 'TBoosted
+boost :: (LuceneExprSYM expr, Boostable a) => expr a -> Float -> expr 'TBoosted
 boost = (^:)
 
 
