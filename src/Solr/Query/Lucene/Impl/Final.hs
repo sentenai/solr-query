@@ -10,12 +10,11 @@ module Solr.Query.Lucene.Impl.Final where
 
 import Builder
 import Solr.Prelude
-import Solr.Query (InterpretQuery(interpretParams, interpretQuery), Query)
+import Solr.Query (InterpretQuery(interpretParams, interpretQuery))
 import Solr.Query.Lucene.Class
 import Solr.Query.Lucene.Expr.Impl.Final
 import Solr.Query.Param
-
-import Data.Proxy (Proxy(Proxy))
+import Solr.Query.Utils (compileParams)
 
 import qualified Data.Text.Lazy
 
@@ -65,33 +64,6 @@ compile params locals query =
   freeze
     (compileParams params <> "q={!" <> interpretParams locals
       <> char '}' <> interpretQuery (Proxy :: Proxy LuceneQuerySYM) query)
-
-compileParams :: [Param Builder] -> Builder
-compileParams = foldr (\p b -> compileParam p <> char '&' <> b) mempty
-
--- | Compile a 'Param' to a 'Builder'. Usually 'compile' is more convenient.
---
--- ==== __Examples__
---
--- >>> compileParam (rows 5)
--- "rows=5"
-compileParam :: Param Builder -> Builder
-compileParam = \case
-  ParamFl s -> "fl=" <> thaw' s
-  ParamFq cache cost (locals :: [LocalParam sym]) (query :: Query sym) ->
-    "fq={!" <> interpretParams locals <> " cache=" <> compileCache cache <>
-      compileCost cost <> char '}' <> interpretQuery (Proxy :: Proxy sym) query
-  ParamRows n -> "rows=" <> bshow n
-  ParamSortAsc s -> "sort=" <> thaw' s <> " asc"
-  ParamSortDesc s -> "sort=" <> thaw' s <> " desc"
-  ParamStart n -> "start=" <> bshow n
- where
-  compileCache :: Cache -> Builder
-  compileCache Cache = "true"
-  compileCache DontCache = "false"
-
-  compileCost :: Maybe Cost -> Builder
-  compileCost = maybe mempty (\cost -> " cost=" <> bshow cost)
 
 -- | Compile a 'LuceneQueryParam' to a 'Builder'. Usually 'compile' is more
 -- convenient.

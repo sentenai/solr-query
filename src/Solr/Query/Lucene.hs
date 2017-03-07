@@ -45,16 +45,6 @@ module Solr.Query.Lucene
   , Fuzzable
   , Boostable
   , Rangeable
-    -- * Query parameters
-  , Param
-  , Cache
-  , Cost
-  , fl
-  , fq
-  , rows
-  , sortAsc
-  , sortDesc
-  , start
     -- * Local query parameters
   , LuceneQueryParam
   , df
@@ -67,8 +57,7 @@ module Solr.Query.Lucene
 import Solr.Query.Lucene.Class
 import Solr.Query.Lucene.Expr.Class
 import Solr.Query.Lucene.Expr.Type
-import Solr.Query.Lucene.Impl.Final
-  (compile, compileLocalParam, compileParam, compileQuery)
-import Solr.Query.Param
+import Solr.Query.Lucene.Impl.Final (compile, compileLocalParam, compileQuery)
+import Solr.Query.Utils (compileParam)
 
 import Data.Time (UTCTime)

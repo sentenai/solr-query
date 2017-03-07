@@ -45,11 +45,15 @@ library
         constraints >= 0.6 && < 0.9
   exposed-modules:
       Solr.Query
+      Solr.Query.Geofilt
       Solr.Query.Lucene
       Solr.Query.Lucene.Initial
   other-modules:
       Builder
       Solr.Prelude
+      Solr.Query.Geofilt.Class
+      Solr.Query.Geofilt.Impl.Final
+      Solr.Query.Internal
       Solr.Query.Lucene.Class
       Solr.Query.Lucene.Expr.Class
       Solr.Query.Lucene.Expr.Impl.Final
@@ -60,6 +64,7 @@ library
       Solr.Query.Lucene.Impl.Initial
       Solr.Query.Param
       Solr.Query.Param.Local
+      Solr.Query.Utils
   default-language: Haskell2010
 
 test-suite doctest
@@ -101,6 +106,7 @@ test-suite spec
   other-modules:
       DocTest
       Orphans
+      Solr.Query.GeofiltSpec
       Solr.Query.Lucene.InitialSpec
       Solr.Query.LuceneSpec
   default-language: Haskell2010

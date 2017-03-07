@@ -1,7 +1,7 @@
 module Solr.Query.Param where
 
 import Solr.Prelude
-import Solr.Query (InterpretQuery, Query)
+import Solr.Query.Internal (InterpretQuery, Query)
 import Solr.Query.Param.Local (LocalParam)
 
 -- $setup

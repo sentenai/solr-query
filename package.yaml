@@ -53,6 +53,9 @@ library:
   other-modules:
     - Builder
     - Solr.Prelude
+    - Solr.Query.Geofilt.Class
+    - Solr.Query.Geofilt.Impl.Final
+    - Solr.Query.Internal
     - Solr.Query.Lucene.Class
     - Solr.Query.Lucene.Expr.Class
     - Solr.Query.Lucene.Expr.Impl.Final
@@ -63,6 +66,7 @@ library:
     - Solr.Query.Lucene.Impl.Initial
     - Solr.Query.Param
     - Solr.Query.Param.Local
+    - Solr.Query.Utils
   dependencies:
     - uniplate >= 1.3 && < 1.7
   when:

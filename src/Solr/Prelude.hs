@@ -8,6 +8,7 @@ module Solr.Prelude
   , module Data.Int
   , module Data.Function
   , module Data.Monoid
+  , module Data.Proxy
   , module Data.Semigroup
   , module Data.Text
   , module Data.Time
@@ -20,6 +21,7 @@ import Data.Coerce
 import Data.Int
 import Data.Function
 import Data.Monoid (mempty)
+import Data.Proxy
 import Data.Text (Text, pack)
 import Data.Time (UTCTime, formatTime)
 import Data.Semigroup (Semigroup(..))
