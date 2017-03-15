@@ -9,12 +9,6 @@ github: Sentenai/solr-query
 license: BSD3
 copyright: 2016 Sentenai, Inc.
 
-flags:
-  with-constraints:
-    description: Depend on constraints
-    default: False
-    manual: False
-
 ghc-options: -Wall
 
 default-extensions:
@@ -30,6 +24,7 @@ default-extensions:
   - KindSignatures
   - LambdaCase
   - MultiParamTypeClasses
+  - NamedFieldPuns
   - NoImplicitPrelude
   - OverloadedStrings
   - PatternSynonyms
@@ -43,6 +38,7 @@ default-extensions:
 dependencies:
   - base        >= 4.7     && < 5
   - base-compat >= 0.9.1
+  - data-default-class
   - old-locale                < 1.1
   - semigroups  >= 0.3     && < 0.19
   - text        >= 1.0     && < 1.3
@@ -53,27 +49,11 @@ library:
   other-modules:
     - Builder
     - Solr.Prelude
-    - Solr.Query.Geofilt.Class
-    - Solr.Query.Geofilt.Impl.Final
+    - Solr.Query.Filter.Internal
     - Solr.Query.Internal
-    - Solr.Query.Lucene.Class
-    - Solr.Query.Lucene.Expr.Class
-    - Solr.Query.Lucene.Expr.Impl.Final
-    - Solr.Query.Lucene.Expr.Impl.Initial.Typed
-    - Solr.Query.Lucene.Expr.Impl.Initial.Untyped
+    - Solr.Query.Lucene.Expr
     - Solr.Query.Lucene.Expr.Type
-    - Solr.Query.Lucene.Impl.Final
-    - Solr.Query.Lucene.Impl.Initial
     - Solr.Query.Param
-    - Solr.Query.Param.Local
-    - Solr.Query.Utils
-  dependencies:
-    - uniplate >= 1.3 && < 1.7
-  when:
-    condition: flag(with-constraints)
-    cpp-options: -DWITH_CONSTRAINTS
-    dependencies:
-      - constraints >= 0.6 && < 0.9
 
 tests:
   spec:
@@ -86,9 +66,3 @@ tests:
       - quickcheck-instances
       - solr-query
       - uniplate
-
-  doctest:
-    main: test/DocTest.hs
-    dependencies:
-      - doctest >= 0.11
-      - solr-query

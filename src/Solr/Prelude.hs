@@ -5,8 +5,10 @@ module Solr.Prelude
   , defaultTimeLocale
   , module Control.Monad
   , module Data.Coerce
+  , module Data.Default.Class
   , module Data.Int
   , module Data.Function
+  , module Data.Maybe
   , module Data.Monoid
   , module Data.Proxy
   , module Data.Semigroup
@@ -18,8 +20,10 @@ module Solr.Prelude
 
 import Control.Monad (forM)
 import Data.Coerce
+import Data.Default.Class
 import Data.Int
 import Data.Function
+import Data.Maybe
 import Data.Monoid (mempty)
 import Data.Proxy
 import Data.Text (Text, pack)
@@ -29,11 +33,10 @@ import Prelude.Compat
 import Text.Printf (printf)
 
 #if MIN_VERSION_time(1,5,0)
-import Data.Time      (defaultTimeLocale)
+import Data.Time (defaultTimeLocale)
 #else
-import System.Locale  (defaultTimeLocale)
+import System.Locale (defaultTimeLocale)
 #endif
-
 
 import qualified Data.Text.Lazy as LText
 

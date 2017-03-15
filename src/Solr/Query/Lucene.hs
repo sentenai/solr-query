@@ -1,38 +1,37 @@
 module Solr.Query.Lucene
-  ( -- * Interpreting a query
-    compile
-  , compileParam
-  , compileLocalParam
-  , compileQuery
-    -- * Lucene query language
-  , LuceneQuery
-  , LuceneQuerySYM(..)
-  , neg
-    -- ** Named operators
+  ( -- * Lucene query
+    LuceneQuery
+  , defaultField
+  , (=:)
   , field
-  , qand
-  , qor
-  , qnot
+  , (^=:)
   , score
-    -- * Lucene expression language
-  , LuceneExprSYM(..)
-    -- ** Named operators
+    -- ** Lucene expression
+  , LuceneExpr
+  , int
+  , float
+  , true
+  , false
+  , word
+  , wild
+  , regex
+  , phrase
+  , datetime
+  , (~:)
   , fuzz
-  , boost
-    -- ** Derived operators
   , fuzzy
+  , (^:)
+  , boost
+  , to
   , gt
   , gte
   , lt
   , lte
-    -- ** Range expression
-  , Boundary(..)
+  , Boundary
   , incl
   , excl
   , star
-    -- ** Datetime expression
   , DateTime
-  , IsDateTime
   , Year
   , Month
   , Day
@@ -40,13 +39,12 @@ module Solr.Query.Lucene
   , Minute
   , Second
   , Millisecond
-    -- ** Lucene expression types
+    -- *** Lucene expression types
   , LuceneExprTy(..)
   , Fuzzable
   , Boostable
   , Rangeable
-    -- * Local query parameters
-  , LuceneQueryParam
+    -- ** Local parameters
   , df
   , opAnd
   , opOr
@@ -54,10 +52,82 @@ module Solr.Query.Lucene
   , UTCTime
   ) where
 
-import Solr.Query.Lucene.Class
-import Solr.Query.Lucene.Expr.Class
-import Solr.Query.Lucene.Expr.Type
-import Solr.Query.Lucene.Impl.Final (compile, compileLocalParam, compileQuery)
-import Solr.Query.Utils (compileParam)
+import Solr.Prelude
 
-import Data.Time (UTCTime)
+import Builder
+import Solr.Query.Internal
+import Solr.Query.Lucene.Expr
+import Solr.Query.Lucene.Expr.Type
+
+newtype LuceneQuery
+  = Q { unQ :: Builder }
+
+instance Monoid LuceneQuery where
+  mempty :: LuceneQuery
+  mempty = defaultMempty
+
+  mappend :: LuceneQuery -> LuceneQuery -> LuceneQuery
+  mappend = defaultMappend
+
+instance Query LuceneQuery where
+  data LocalParams LuceneQuery = LuceneParams
+    { _df :: Maybe Text
+    , _qop :: Maybe QOp
+    }
+
+  compileLocalParams :: LocalParams LuceneQuery -> [Builder]
+  compileLocalParams (LuceneParams{_df, _qop}) = catMaybes
+    [ compileDf <$> _df
+    , compileQOp <$> _qop
+    ]
+   where
+    compileDf :: Text -> Builder
+    compileDf v = "df=" <> thaw' v
+
+    compileQOp :: QOp -> Builder
+    compileQOp QOpAnd = "q.op=AND"
+    compileQOp QOpOr  = "q.op=OR"
+
+data QOp
+  = QOpAnd
+  | QOpOr
+
+instance Default (LocalParams LuceneQuery) where
+  def = LuceneParams Nothing Nothing
+
+-- | The @\'df\'@ local parameter.
+df :: Text -> LocalParams LuceneQuery -> LocalParams LuceneQuery
+df x s = s { _df = Just x }
+
+-- | The @\'op=AND\'@ local parameter.
+opAnd :: LocalParams LuceneQuery -> LocalParams LuceneQuery
+opAnd s = s { _qop = Just QOpAnd }
+
+-- | The @\'op=OR\'@ local parameter.
+opOr :: LocalParams LuceneQuery -> LocalParams LuceneQuery
+opOr s = s { _qop = Just QOpOr }
+
+-- | A default field query.
+defaultField :: LuceneExpr ty -> LuceneQuery
+defaultField (E q) = Q q
+
+-- | A field query.
+(=:) :: Text -> LuceneExpr ty -> LuceneQuery
+f =: E e = Q (thaw' f <> char ':' <> e)
+infix 7 =:
+
+-- | Named version of ('=:').
+field :: Text -> LuceneExpr ty -> LuceneQuery
+field = (=:)
+
+-- | The @\'^=\'@ constant score operator.
+--
+-- This is given right-fixity to reject queries like @q ^= 1 ^= 2@.
+(^=:) :: LuceneQuery -> Float -> LuceneQuery
+Q q ^=: n = Q (q <> "^=" <> bshow n)
+infixr 6 ^=:
+
+-- | Named version of ('^=:').
+score :: LuceneQuery -> Float -> LuceneQuery
+score = (^=:)
+infixr 6 `score`

@@ -1,4 +1,4 @@
--- This file has been generated from package.yaml by hpack version 0.15.0.
+-- This file has been generated from package.yaml by hpack version 0.17.0.
 --
 -- see: https://github.com/sol/hpack
 
@@ -21,66 +21,32 @@ source-repository head
   type: git
   location: https://github.com/Sentenai/solr-query
 
-flag with-constraints
-  description: Depend on constraints
-  manual: False
-  default: False
-
 library
   hs-source-dirs:
       src
-  default-extensions: ConstraintKinds DataKinds DeriveFunctor ExistentialQuantification FlexibleContexts FlexibleInstances GADTs GeneralizedNewtypeDeriving InstanceSigs KindSignatures LambdaCase MultiParamTypeClasses NoImplicitPrelude OverloadedStrings PatternSynonyms PolyKinds RankNTypes ScopedTypeVariables StandaloneDeriving TypeFamilies TypeOperators
+  default-extensions: ConstraintKinds DataKinds DeriveFunctor ExistentialQuantification FlexibleContexts FlexibleInstances GADTs GeneralizedNewtypeDeriving InstanceSigs KindSignatures LambdaCase MultiParamTypeClasses NamedFieldPuns NoImplicitPrelude OverloadedStrings PatternSynonyms PolyKinds RankNTypes ScopedTypeVariables StandaloneDeriving TypeFamilies TypeOperators
   ghc-options: -Wall
   build-depends:
       base        >= 4.7     && < 5
     , base-compat >= 0.9.1
+    , data-default-class
     , old-locale                < 1.1
     , semigroups  >= 0.3     && < 0.19
     , text        >= 1.0     && < 1.3
     , time        >= 1.1.2.0 && < 1.7
-    , uniplate >= 1.3 && < 1.7
-  if flag(with-constraints)
-    cpp-options: -DWITH_CONSTRAINTS
-    build-depends:
-        constraints >= 0.6 && < 0.9
   exposed-modules:
       Solr.Query
+      Solr.Query.Filter
       Solr.Query.Geofilt
       Solr.Query.Lucene
-      Solr.Query.Lucene.Initial
   other-modules:
       Builder
       Solr.Prelude
-      Solr.Query.Geofilt.Class
-      Solr.Query.Geofilt.Impl.Final
+      Solr.Query.Filter.Internal
       Solr.Query.Internal
-      Solr.Query.Lucene.Class
-      Solr.Query.Lucene.Expr.Class
-      Solr.Query.Lucene.Expr.Impl.Final
-      Solr.Query.Lucene.Expr.Impl.Initial.Typed
-      Solr.Query.Lucene.Expr.Impl.Initial.Untyped
+      Solr.Query.Lucene.Expr
       Solr.Query.Lucene.Expr.Type
-      Solr.Query.Lucene.Impl.Final
-      Solr.Query.Lucene.Impl.Initial
       Solr.Query.Param
-      Solr.Query.Param.Local
-      Solr.Query.Utils
-  default-language: Haskell2010
-
-test-suite doctest
-  type: exitcode-stdio-1.0
-  main-is: test/DocTest.hs
-  default-extensions: ConstraintKinds DataKinds DeriveFunctor ExistentialQuantification FlexibleContexts FlexibleInstances GADTs GeneralizedNewtypeDeriving InstanceSigs KindSignatures LambdaCase MultiParamTypeClasses NoImplicitPrelude OverloadedStrings PatternSynonyms PolyKinds RankNTypes ScopedTypeVariables StandaloneDeriving TypeFamilies TypeOperators
-  ghc-options: -Wall
-  build-depends:
-      base        >= 4.7     && < 5
-    , base-compat >= 0.9.1
-    , old-locale                < 1.1
-    , semigroups  >= 0.3     && < 0.19
-    , text        >= 1.0     && < 1.3
-    , time        >= 1.1.2.0 && < 1.7
-    , doctest >= 0.11
-    , solr-query
   default-language: Haskell2010
 
 test-suite spec
@@ -88,11 +54,12 @@ test-suite spec
   main-is: Spec.hs
   hs-source-dirs:
       test
-  default-extensions: ConstraintKinds DataKinds DeriveFunctor ExistentialQuantification FlexibleContexts FlexibleInstances GADTs GeneralizedNewtypeDeriving InstanceSigs KindSignatures LambdaCase MultiParamTypeClasses NoImplicitPrelude OverloadedStrings PatternSynonyms PolyKinds RankNTypes ScopedTypeVariables StandaloneDeriving TypeFamilies TypeOperators
+  default-extensions: ConstraintKinds DataKinds DeriveFunctor ExistentialQuantification FlexibleContexts FlexibleInstances GADTs GeneralizedNewtypeDeriving InstanceSigs KindSignatures LambdaCase MultiParamTypeClasses NamedFieldPuns NoImplicitPrelude OverloadedStrings PatternSynonyms PolyKinds RankNTypes ScopedTypeVariables StandaloneDeriving TypeFamilies TypeOperators
   ghc-options: -Wall
   build-depends:
       base        >= 4.7     && < 5
     , base-compat >= 0.9.1
+    , data-default-class
     , old-locale                < 1.1
     , semigroups  >= 0.3     && < 0.19
     , text        >= 1.0     && < 1.3
@@ -104,9 +71,8 @@ test-suite spec
     , solr-query
     , uniplate
   other-modules:
-      DocTest
       Orphans
+      Solr.Query.FilterSpec
       Solr.Query.GeofiltSpec
-      Solr.Query.Lucene.InitialSpec
       Solr.Query.LuceneSpec
   default-language: Haskell2010
