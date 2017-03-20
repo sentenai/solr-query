@@ -1,0 +1,56 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-pragma">{-# language CPP                  #-}</span><span>
+</span><a name="line-2"></a><span class="hs-pragma">{-# language UndecidableInstances #-}</span><span>
+</span><a name="line-3"></a><span>
+</span><a name="line-4"></a><span class="hs-cpp">#if MIN_VERSION_base(4,9,0)</span><span>
+</span><a name="line-5"></a><span class="hs-pragma">{-# options_ghc -fno-warn-redundant-constraints #-}</span><span>
+</span><a name="line-6"></a><span class="hs-cpp">#endif</span><span>
+</span><a name="line-7"></a><span>
+</span><a name="line-8"></a><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Solr</span><span class="hs-operator">.</span><span class="hs-identifier">Query</span><span class="hs-operator">.</span><span class="hs-identifier">Lucene</span><span class="hs-operator">.</span><span class="hs-identifier">Expr</span><span class="hs-operator">.</span><span class="hs-identifier">Type</span><span> </span><span class="hs-keyword">where</span><span>
+</span><a name="line-9"></a><span>
+</span><a name="line-10"></a><span class="hs-cpp">#if MIN_VERSION_base(4,9,0)</span><span>
+</span><a name="line-11"></a><span class="hs-keyword">import</span><span> </span><span class="hs-identifier">GHC</span><span class="hs-operator">.</span><span class="hs-identifier">TypeLits</span><span> </span><span class="hs-special">(</span><span class="hs-identifier hs-type">TypeError</span><span class="hs-special">,</span><span> </span><span class="hs-identifier hs-type">ErrorMessage</span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><a name="line-12"></a><span class="hs-cpp">#endif</span><span>
+</span><a name="line-13"></a><span>
+</span><a name="line-14"></a><span class="hs-keyword">data</span><span> </span><a name="LuceneExprTy"><a href="Solr.Query.Lucene.Expr.Type.html#LuceneExprTy"><span class="hs-identifier">LuceneExprTy</span></a></a><span>
+</span><a name="line-15"></a><span>  </span><span class="hs-glyph">=</span><span> </span><a name="TAny"><a href="Solr.Query.Lucene.Expr.Type.html#TAny"><span class="hs-identifier">TAny</span></a></a><span>
+</span><a name="line-16"></a><span>  </span><span class="hs-glyph">|</span><span> </span><a name="TNum"><a href="Solr.Query.Lucene.Expr.Type.html#TNum"><span class="hs-identifier">TNum</span></a></a><span>
+</span><a name="line-17"></a><span>  </span><span class="hs-glyph">|</span><span> </span><a name="TBool"><a href="Solr.Query.Lucene.Expr.Type.html#TBool"><span class="hs-identifier">TBool</span></a></a><span>
+</span><a name="line-18"></a><span>  </span><span class="hs-glyph">|</span><span> </span><a name="TWord"><a href="Solr.Query.Lucene.Expr.Type.html#TWord"><span class="hs-identifier">TWord</span></a></a><span>
+</span><a name="line-19"></a><span>  </span><span class="hs-glyph">|</span><span> </span><a name="TWild"><a href="Solr.Query.Lucene.Expr.Type.html#TWild"><span class="hs-identifier">TWild</span></a></a><span>
+</span><a name="line-20"></a><span>  </span><span class="hs-glyph">|</span><span> </span><a name="TRegex"><a href="Solr.Query.Lucene.Expr.Type.html#TRegex"><span class="hs-identifier">TRegex</span></a></a><span>
+</span><a name="line-21"></a><span>  </span><span class="hs-glyph">|</span><span> </span><a name="TPhrase"><a href="Solr.Query.Lucene.Expr.Type.html#TPhrase"><span class="hs-identifier">TPhrase</span></a></a><span>
+</span><a name="line-22"></a><span>  </span><span class="hs-glyph">|</span><span> </span><a name="TDateTime"><a href="Solr.Query.Lucene.Expr.Type.html#TDateTime"><span class="hs-identifier">TDateTime</span></a></a><span>
+</span><a name="line-23"></a><span>  </span><span class="hs-glyph">|</span><span> </span><a name="TFuzzy"><a href="Solr.Query.Lucene.Expr.Type.html#TFuzzy"><span class="hs-identifier">TFuzzy</span></a></a><span>
+</span><a name="line-24"></a><span>  </span><span class="hs-glyph">|</span><span> </span><a name="TBoosted"><a href="Solr.Query.Lucene.Expr.Type.html#TBoosted"><span class="hs-identifier">TBoosted</span></a></a><span>
+</span><a name="line-25"></a><span>  </span><span class="hs-glyph">|</span><span> </span><a name="TRange"><a href="Solr.Query.Lucene.Expr.Type.html#TRange"><span class="hs-identifier">TRange</span></a></a><span>
+</span><a name="line-26"></a><span>  </span><span class="hs-glyph">|</span><span> </span><a name="TSpatialPredicate"><a href="Solr.Query.Lucene.Expr.Type.html#TSpatialPredicate"><span class="hs-identifier">TSpatialPredicate</span></a></a><span>
+</span><a name="line-27"></a><span>
+</span><a name="line-28"></a><span class="hs-comment">-- | 'word's and 'phrase's can fuzzed by the '~:' operator.</span><span>
+</span><a name="line-29"></a><span class="hs-keyword">class</span><span> </span><a name="Fuzzable"><a href="Solr.Query.Lucene.Expr.Type.html#Fuzzable"><span class="hs-identifier">Fuzzable</span></a></a><span> </span><span class="hs-special">(</span><a name="local-1627403098"><a href="#local-1627403098"><span class="hs-identifier">ty</span></a></a><span> </span><span class="hs-glyph">::</span><span> </span><a href="Solr.Query.Lucene.Expr.Type.html#LuceneExprTy"><span class="hs-identifier hs-type">LuceneExprTy</span></a><span class="hs-special">)</span><span>
+</span><a name="line-30"></a><span class="hs-keyword">instance</span><span> </span><a href="Solr.Query.Lucene.Expr.Type.html#Fuzzable"><span class="hs-identifier hs-type">Fuzzable</span></a><span> </span><span class="hs-char">'TWord
+instance Fuzzable 'TPhrase
+
+-- | 'word's and 'phrase's can be boosted by the '^:' operator.
+class Boostable (ty :: LuceneExprTy)
+instance Boostable 'TWord
+instance Boostable 'TPhrase
+
+-- | 'int's, 'float's, 'word's, and 'datetime's can 'to' range expression.
+class Rangeable (a :: LuceneExprTy) (b :: LuceneExprTy)
+instance Rangeable 'TNum      'TNum
+instance Rangeable 'TNum      'TAny
+instance Rangeable 'TWord     'TWord
+instance Rangeable 'TWord     'TAny
+instance Rangeable 'TDateTime 'TDateTime
+instance Rangeable 'TDateTime 'TAny
+instance Rangeable 'TAny      'TNum
+instance Rangeable 'TAny      'TWord
+instance Rangeable 'TAny      'TDateTime
+instance Rangeable 'TAny      'TAny
+
+#if MIN_VERSION_base(4,9,0)
+instance {-# OVERLAPPABLE #-} TypeError ('Text &quot;You can only fuzz words and phrases&quot;) =&gt; Fuzzable a
+instance {-# OVERLAPPABLE #-} TypeError ('Text &quot;You can only boost words and phrases&quot;) =&gt; Boostable a
+instance {-# OVERLAPPABLE #-} TypeError ('Text &quot;You can only use numbers, words, and dates in a range expression&quot;) =&gt; Rangeable a b
+#endif
+</span></pre></body></html>

@@ -1,0 +1,316 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-pragma">{-# language CPP #-}</span><span>
+</span><a name="line-2"></a><span>
+</span><a name="line-3"></a><span class="hs-cpp">#if MIN_VERSION_base(4,9,0)</span><span>
+</span><a name="line-4"></a><span class="hs-pragma">{-# options_ghc -fno-warn-redundant-constraints #-}</span><span>
+</span><a name="line-5"></a><span class="hs-cpp">#endif</span><span>
+</span><a name="line-6"></a><span>
+</span><a name="line-7"></a><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Solr</span><span class="hs-operator">.</span><span class="hs-identifier">Query</span><span class="hs-operator">.</span><span class="hs-identifier">Lucene</span><span class="hs-operator">.</span><span class="hs-identifier">Expr</span><span> </span><span class="hs-keyword">where</span><span>
+</span><a name="line-8"></a><span>
+</span><a name="line-9"></a><span class="hs-keyword">import</span><span> </span><a href="Builder.html"><span class="hs-identifier">Builder</span></a><span>
+</span><a name="line-10"></a><span class="hs-keyword">import</span><span> </span><a href="Solr.Prelude.html"><span class="hs-identifier">Solr</span><span class="hs-operator">.</span><span class="hs-identifier">Prelude</span></a><span>
+</span><a name="line-11"></a><span class="hs-keyword">import</span><span> </span><a href="Solr.Query.Lucene.Expr.Type.html"><span class="hs-identifier">Solr</span><span class="hs-operator">.</span><span class="hs-identifier">Query</span><span class="hs-operator">.</span><span class="hs-identifier">Lucene</span><span class="hs-operator">.</span><span class="hs-identifier">Expr</span><span class="hs-operator">.</span><span class="hs-identifier">Type</span></a><span>
+</span><a name="line-12"></a><span>
+</span><a name="line-13"></a><span class="hs-keyword">import</span><span> </span><span class="hs-identifier">Data</span><span class="hs-operator">.</span><span class="hs-identifier">String</span><span> </span><span class="hs-special">(</span><span class="hs-identifier hs-type">IsString</span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><a name="line-14"></a><span>
+</span><a name="line-15"></a><span class="hs-comment">-- | A @lucene@ expression.</span><span>
+</span><a name="line-16"></a><span class="hs-keyword">newtype</span><span> </span><a name="LuceneExpr"><a href="Solr.Query.Lucene.Expr.html#LuceneExpr"><span class="hs-identifier">LuceneExpr</span></a></a><span> </span><span class="hs-special">(</span><a name="local-1627436773"><a href="#local-1627436773"><span class="hs-identifier">t</span></a></a><span> </span><span class="hs-glyph">::</span><span> </span><a href="Solr.Query.Lucene.Expr.Type.html#LuceneExprTy"><span class="hs-identifier hs-type">LuceneExprTy</span></a><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><a name="E"><a href="Solr.Query.Lucene.Expr.html#E"><span class="hs-identifier">E</span></a></a><span> </span><span class="hs-special">{</span><span> </span><a name="unE"><a href="Solr.Query.Lucene.Expr.html#unE"><span class="hs-identifier">unE</span></a></a><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-identifier hs-type">Builder</span><span> </span><span class="hs-special">}</span><span>
+</span><a name="line-17"></a><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span class="hs-identifier hs-type">Eq</span><span class="hs-special">,</span><span> </span><span class="hs-identifier hs-type">Show</span><span class="hs-special">)</span><span>
+</span><a name="line-18"></a><span>
+</span><a name="line-19"></a><span class="hs-keyword">instance</span><span> </span><span class="hs-identifier hs-type">IsString</span><span> </span><span class="hs-special">(</span><a href="Solr.Query.Lucene.Expr.html#LuceneExpr"><span class="hs-identifier hs-type">LuceneExpr</span></a><span> </span><span class="hs-char">'TWord) where
+  fromString s = word (pack s)
+
+-- | An @int@ expression.
+int :: Int64 -&gt; LuceneExpr 'TNum
+int n = E (bshow n)
+
+-- | A @float@ expression.
+float :: Double -&gt; LuceneExpr 'TNum
+float n = E (bshow n)
+
+-- | A @true@ expression.
+true :: LuceneExpr 'TBool
+true = E &quot;true&quot;
+
+-- | A @false@ expression.
+false :: LuceneExpr 'TBool
+false = E &quot;false&quot;
+
+-- | A single word. Must /not/ contain any spaces, wildcard characters
+-- (@\'?\'@ and @\'*\'@), or tildes (@\'~\'@), though this is not enforced by
+-- the type system.
+--
+-- Note that sometimes you may use the 'Data.String.IsString' instance for
+-- 'LuceneExpr' 'TWord', but usually an explicit type signature
+-- will be required (at the interpretation site or earlier).
+word :: Text -&gt; LuceneExpr 'TWord
+word s = E (thaw' s)
+
+-- | A single word that may contain wildcard characters (@\'?\'@ and @\'*\'@),
+-- although the meaning of consecutive @\'*\'@s is probably ill-defined. Must
+-- also /not/ contain any spaces or tildes (@\'~\'@), though this is not
+-- enforced by the type system.
+wild :: Text -&gt; LuceneExpr 'TWild
+wild s = E (thaw' s)
+
+-- | A &lt;https://lucene.apache.org/core/6_4_2/core/org/apache/lucene/util/automaton/RegExp.html regular expression&gt;.
+--
+-- Note that the leading and trailing @\'/\'@ must be omitted. The regex
+-- innards are not type checked in any way.
+regex :: Text -&gt; LuceneExpr 'TRegex
+regex s = E (char '/' &lt;&gt; thaw' s &lt;&gt; char '/')
+
+-- | A phrase, composed of multiple (non-fuzzy) words, none of which may
+-- contain wildcard characters. Both of these properties are enforced by the
+-- type system, as long as the words themselves adhere to the 'word' contract.
+-- The list should not be empty.
+phrase :: [LuceneExpr 'TWord] -&gt; LuceneExpr 'TPhrase
+phrase ss = E (dquotes (intersperse ' ' (map unE ss)))
+
+-- | A 'DateTime' expression. This may either be a timestamp ('UTCTime'), or a
+-- &quot;truncated&quot; 'DateTime' such as @(2015, 5, 12)@.
+datetime :: IsDateTime a =&gt; a -&gt; LuceneExpr 'TDateTime
+datetime t =
+  case toDateTime t of
+    UTC t' -&gt;
+      E (thawStr (formatTime defaultTimeLocale &quot;\&quot;%Y-%m-%dT%H:%M:%S%QZ\&quot;&quot; t'))
+    Truncated t' -&gt; E (formatTruncated t')
+ where
+  formatTruncated :: TruncatedDateTime -&gt; Builder
+  formatTruncated =
+    go '&quot;' show
+      (go '-' fmt
+        (go '-' fmt
+          (go 'T' fmt
+            (go ':' fmt
+              (go ':' fmt formatMilli)))))
+   where
+    go :: Char -&gt; (a -&gt; String) -&gt; (b -&gt; Builder) -&gt; (a, Maybe b) -&gt; Builder
+    go c f g (a, b) = char c &lt;&gt; thawStr (f a) &lt;&gt; maybe (char '&quot;') g b
+
+    fmt :: Int -&gt; String
+    fmt = printf &quot;%02d&quot;
+
+  -- Format to 5 decimal places
+  formatMilli :: Millisecond -&gt; Builder
+  formatMilli ml = thawStr (tail (printf &quot;%.5f&quot; (ml / 100))) &lt;&gt; &quot;Z\&quot;&quot;
+
+
+-- | The @\'~\'@ operator, which fuzzes its argument (either a word or phrase)
+-- by a numeric amount.
+(~:) :: Fuzzable a =&gt; LuceneExpr a -&gt; Int -&gt; LuceneExpr 'TFuzzy
+E e ~: n = E (e &lt;&gt; char '~' &lt;&gt; bshow n)
+infix 9 ~:
+
+-- | Named version of ('~:').
+fuzz :: Fuzzable a =&gt; LuceneExpr a -&gt; Int -&gt; LuceneExpr 'TFuzzy
+fuzz = (~:)
+
+-- | Short-hand for fuzzing a word by 2. This is the default behavior of a
+-- Solr @\'~\'@ operator without an integer added.
+--
+-- @
+-- 'fuzzy' e = e '~:' 2
+-- @
+fuzzy :: LuceneExpr 'TWord -&gt; LuceneExpr 'TFuzzy
+fuzzy e = e ~: 2
+
+-- | The @\'^\'@ operator, which boosts its argument.
+(^:) :: Boostable a =&gt; LuceneExpr a -&gt; Float -&gt; LuceneExpr 'TBoosted
+E e ^: n = E (e &lt;&gt; char '^' &lt;&gt; bshow n)
+infix 9 ^:
+
+-- | Named version of ('^:').
+boost :: Boostable a =&gt; LuceneExpr a -&gt; Float -&gt; LuceneExpr 'TBoosted
+boost = (^:)
+
+-- | A range expression.
+to :: Rangeable a b =&gt; Boundary a -&gt; Boundary b -&gt; LuceneExpr 'TRange
+to b1 b2 = E (lhs b1 &lt;&gt; &quot; TO &quot; &lt;&gt; rhs b2)
+ where
+  lhs :: Boundary a -&gt; Builder
+  lhs (Inclusive e) = char '[' &lt;&gt; unE e
+  lhs (Exclusive e) = char '{' &lt;&gt; unE e
+  lhs Star          = &quot;[*&quot;
+
+  rhs :: Boundary a -&gt; Builder
+  rhs (Inclusive e) = unE e &lt;&gt; char ']'
+  rhs (Exclusive e) = unE e &lt;&gt; char '}'
+  rhs Star          = &quot;*]&quot;
+infix 9 `to`
+
+-- | Short-hand for a greater-than range query.
+--
+-- @
+-- 'gt' e = 'excl' e \`to\` 'star'
+-- @
+gt :: Rangeable a 'TAny =&gt; LuceneExpr a -&gt; LuceneExpr 'TRange
+gt e = excl e `to` star
+
+-- | Short-hand for a greater-than-or-equal-to range query.
+--
+-- @
+-- 'gte' e = 'incl' e \`to\` 'star'
+-- @
+gte :: Rangeable a 'TAny =&gt; LuceneExpr a -&gt; LuceneExpr 'TRange
+gte e = incl e `to` star
+
+-- | Short-hand for a less-than range query.
+--
+-- @
+--  'lt' e = 'star' \`to\` 'excl' e
+-- @
+lt :: Rangeable 'TAny a =&gt; LuceneExpr a -&gt; LuceneExpr 'TRange
+lt e = star `to` excl e
+
+-- | Short-hand for a less-than-or-equal-to range query.
+--
+-- @
+-- 'lte' e = 'star' \`to\` 'incl' e
+-- @
+lte :: Rangeable 'TAny a =&gt; LuceneExpr a -&gt; LuceneExpr 'TRange
+lte e = star `to` incl e
+
+-- | An inclusive or exclusive expression for use in a range query, built with
+-- either 'incl', 'excl', or 'star'.
+--
+-- The constructors are exported for use in interpreters.
+data Boundary ty where
+  Inclusive :: LuceneExpr ty -&gt; Boundary ty
+  Exclusive :: LuceneExpr ty -&gt; Boundary ty
+  Star :: Boundary 'TAny
+
+deriving instance Eq (Boundary ty)
+deriving instance Show (Boundary ty)
+
+-- | Mark an expression as inclusive, for use in a range query.
+incl :: LuceneExpr a -&gt; Boundary a
+incl = Inclusive
+
+-- | Mark an expression as exclusive, for use in a range query.
+excl :: LuceneExpr a -&gt; Boundary a
+excl = Exclusive
+
+-- | @\'*\'@ operator, signifying the minimum or maximun bound of a range.
+star :: Boundary 'TAny
+star = Star
+
+-- | @\'Intersects\'@ spatial predicate.
+intersects :: Shape -&gt; LuceneExpr 'TSpatialPredicate
+intersects (S s) = E (dquotes (&quot;Intersects&quot; &lt;&gt; parens s))
+
+-- | @\'IsWithin\'@ spatial predicate.
+isWithin :: Shape -&gt; LuceneExpr 'TSpatialPredicate
+isWithin (S s) = E (&quot;IsWithin(&quot; &lt;&gt; s &lt;&gt; char ')')
+
+-- | A shape.
+newtype Shape
+  = S Builder
+
+-- | A @POLYGON@ shape.
+polygon :: [(Double, Double)] -&gt; Shape
+polygon =
+  S . (&quot;POLYGON&quot; &lt;&gt;) . parens . intersperse ',' .
+    map (\(x, y) -&gt; bshow x &lt;&gt; char ' ' &lt;&gt; bshow y)
+
+-- | 'DateTime' literals. 'DateTime' expressions are constructed using the
+-- internal 'IsDateTime' typeclass, for which there exist the following
+-- instances:
+--
+-- @
+-- instance 'IsDateTime' 'UTCTime'
+-- instance 'IsDateTime' 'Year'
+-- instance 'IsDateTime' ('Year', 'Month')
+-- instance 'IsDateTime' ('Year', 'Month', 'Day')
+-- instance 'IsDateTime' ('Year', 'Month', 'Day', 'Hour')
+-- instance 'IsDateTime' ('Year', 'Month', 'Day', 'Hour', 'Minute')
+-- instance 'IsDateTime' ('Year', 'Month', 'Day', 'Hour', 'Minute', 'Second')
+-- instance 'IsDateTime' ('Year', 'Month', 'Day', 'Hour', 'Minute', 'Second', 'Millisecond')
+-- @
+data DateTime
+  = UTC UTCTime
+  | Truncated TruncatedDateTime
+
+type TruncatedDateTime
+  = (Year, Maybe (Month, Maybe (Day, Maybe (Hour, Maybe (Minute, Maybe (Second, Maybe Millisecond))))))
+
+type Leg a b = (a, Maybe b)
+
+type Y   = Leg Year   M
+type M   = Leg Month  D
+type D   = Leg Day    H
+type H   = Leg Hour   Min
+type Min = Leg Minute S
+type S   = Leg Second Millisecond
+
+-- | Year.
+type Year = Int
+
+-- | @1@-indexed month. Clamped to the range @1-12@.
+type Month = Int
+
+-- | @1@-indexed day. Clamped to the range @1-31@.
+type Day = Int
+
+-- | Hour. Clamped to the range @0-23@.
+type Hour = Int
+
+-- | Minute. Clamped to the range @0-59@.
+type Minute = Int
+
+-- | Second. Clamped to the range @0-60@.
+type Second = Int
+
+-- | Millisecond. Clamped to the range @0-99.999@.
+type Millisecond = Double
+
+class IsDateTime a where
+  toDateTime :: a -&gt; DateTime
+
+instance IsDateTime UTCTime where
+  toDateTime = UTC
+
+instance IsDateTime Year where
+  toDateTime a = mkY a Nothing
+
+instance (a ~ Year, b ~ Month) =&gt; IsDateTime (a, b) where
+  toDateTime (a, b) = mkY a (mkM b Nothing)
+
+instance (a ~ Year, b ~ Month, c ~ Day) =&gt; IsDateTime (a, b, c) where
+  toDateTime (a, b, c) = mkY a (mkM b (mkD c Nothing))
+
+instance (a ~ Year, b ~ Month, c ~ Day, d ~ Hour) =&gt; IsDateTime (a, b, c, d) where
+  toDateTime (a, b, c, d) = mkY a (mkM b (mkD c (mkH d Nothing)))
+
+instance (a ~ Year, b ~ Month, c ~ Day, d ~ Hour, e ~ Minute) =&gt; IsDateTime (a, b, c, d, e) where
+  toDateTime (a, b, c, d, e) = mkY a (mkM b (mkD c (mkH d (mkMin e Nothing))))
+
+instance (a ~ Year, b ~ Month, c ~ Day, d ~ Hour, e ~ Minute, f ~ Second) =&gt; IsDateTime (a, b, c, d, e, f) where
+  toDateTime (a, b, c, d, e, f) = mkY a (mkM b (mkD c (mkH d (mkMin e (mkS f Nothing)))))
+
+instance (a ~ Year, b ~ Month, c ~ Day, d ~ Hour, e ~ Minute, f ~ Second, g ~ Millisecond) =&gt; IsDateTime (a, b, c, d, e, f, g) where
+  toDateTime (a, b, c, d, e, f, g) = mkY a (mkM b (mkD c (mkH d (mkMin e (mkS f (mkMilli g))))))
+
+mkY :: Year -&gt; Maybe M -&gt; DateTime
+mkY a b = Truncated (a, b)
+
+mkM :: Month -&gt; Maybe D -&gt; Maybe M
+mkM a b = Just (clamp 1 12 a, b)
+
+mkD :: Day -&gt; Maybe H -&gt; Maybe D
+mkD a b = Just (clamp 1 31 a, b)
+
+mkH :: Hour -&gt; Maybe Min -&gt; Maybe H
+mkH a b = Just (clamp 0 23 a, b)
+
+mkMin :: Minute -&gt; Maybe S -&gt; Maybe Min
+mkMin a b = Just (clamp 0 59 a, b)
+
+mkS :: Second -&gt; Maybe Millisecond -&gt; Maybe S
+mkS a b = Just (clamp 0 60 a, b)
+
+mkMilli :: Millisecond -&gt; Maybe Millisecond
+mkMilli a = Just (clamp 0 99.999 a)
+
+clamp :: Ord a =&gt; a -&gt; a -&gt; a -&gt; a
+clamp a z = min z . max a
+</span></pre></body></html>
