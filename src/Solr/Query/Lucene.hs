@@ -8,20 +8,39 @@ module Solr.Query.Lucene
   , score
     -- ** Lucene expression
   , LuceneExpr
+    -- *** @int@ expression
   , int
+    -- *** @float@ expression
   , float
+    -- *** @bool@ expressions
   , true
   , false
+    -- *** @word@ expression
   , word
+    -- *** @wild@ expression
   , wild
+    -- *** @regex@ expression
   , regex
+    -- *** @phrase@ expression
   , phrase
+    -- *** @datetime@ expression
   , datetime
+  , DateTime
+  , Year
+  , Month
+  , Day
+  , Hour
+  , Minute
+  , Second
+  , Millisecond
+    -- *** @fuzz@ expression
   , (~:)
   , fuzz
   , fuzzy
+    -- *** @boost@ expression
   , (^:)
   , boost
+    -- *** @range@ expressions
   , to
   , gt
   , gte
@@ -31,14 +50,11 @@ module Solr.Query.Lucene
   , incl
   , excl
   , star
-  , DateTime
-  , Year
-  , Month
-  , Day
-  , Hour
-  , Minute
-  , Second
-  , Millisecond
+    -- *** @spatial predicate@ expressions
+  , intersects
+  , isWithin
+  , Shape
+  , polygon
     -- *** Lucene expression types
   , LuceneExprTy(..)
   , Fuzzable

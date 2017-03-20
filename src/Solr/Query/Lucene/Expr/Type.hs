@@ -23,6 +23,7 @@ data LuceneExprTy
   | TFuzzy
   | TBoosted
   | TRange
+  | TSpatialPredicate
 
 -- | 'word's and 'phrase's can fuzzed by the '~:' operator.
 class Fuzzable (ty :: LuceneExprTy)

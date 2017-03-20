@@ -194,6 +194,24 @@ excl = Exclusive
 star :: Boundary 'TAny
 star = Star
 
+-- | @\'Intersects\'@ spatial predicate.
+intersects :: Shape -> LuceneExpr 'TSpatialPredicate
+intersects (S s) = E (dquotes ("Intersects" <> parens s))
+
+-- | @\'IsWithin\'@ spatial predicate.
+isWithin :: Shape -> LuceneExpr 'TSpatialPredicate
+isWithin (S s) = E ("IsWithin(" <> s <> char ')')
+
+-- | A shape.
+newtype Shape
+  = S Builder
+
+-- | A @POLYGON@ shape.
+polygon :: [(Double, Double)] -> Shape
+polygon =
+  S . ("POLYGON" <>) . parens . intersperse ',' .
+    map (\(x, y) -> bshow x <> char ' ' <> bshow y)
+
 -- | 'DateTime' literals. 'DateTime' expressions are constructed using the
 -- internal 'IsDateTime' typeclass, for which there exist the following
 -- instances:

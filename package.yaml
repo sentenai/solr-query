@@ -1,7 +1,7 @@
 name: solr-query
-version: 0.3.6.0
+version: 0.4.0
 synopsis: Solr query EDSL
-description: A typed, finally tagless Solr query EDSL.
+description: A typed Solr query EDSL.
 category: DSLs
 author: Mitchell Rosen
 maintainer: mitchellwrosen@gmail.com
@@ -12,14 +12,10 @@ copyright: 2016 Sentenai, Inc.
 ghc-options: -Wall
 
 default-extensions:
-  - ConstraintKinds
   - DataKinds
-  - DeriveFunctor
-  - ExistentialQuantification
   - FlexibleContexts
   - FlexibleInstances
   - GADTs
-  - GeneralizedNewtypeDeriving
   - InstanceSigs
   - KindSignatures
   - LambdaCase
@@ -27,13 +23,8 @@ default-extensions:
   - NamedFieldPuns
   - NoImplicitPrelude
   - OverloadedStrings
-  - PatternSynonyms
-  - PolyKinds
-  - RankNTypes
-  - ScopedTypeVariables
   - StandaloneDeriving
   - TypeFamilies
-  - TypeOperators
 
 dependencies:
   - base        >= 4.7     && < 5
@@ -61,8 +52,4 @@ tests:
     main: Spec.hs
     dependencies:
       - hspec
-      - mtl
-      - QuickCheck
-      - quickcheck-instances
       - solr-query
-      - uniplate
