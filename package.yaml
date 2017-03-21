@@ -41,9 +41,10 @@ library:
     - Builder
     - Solr.Prelude
     - Solr.Query.Filter.Internal
-    - Solr.Query.Internal
+    - Solr.Query.Internal.Internal
     - Solr.Query.Lucene.Expr
     - Solr.Query.Lucene.Expr.Type
+    - Solr.Query.Lucene.Internal.Internal
     - Solr.Query.Param
 
 tests:

@@ -123,4 +123,4 @@ spec =
   t2 = UTCTime (fromGregorian 2016 1 1) 0
 
 test :: LocalParams LuceneQuery -> LuceneQuery -> Text -> Expectation
-test locals query result = compile [q locals query] `shouldBe` result
+test locals query result = compile [] locals query `shouldBe` result

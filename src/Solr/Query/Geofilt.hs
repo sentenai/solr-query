@@ -12,11 +12,13 @@ module Solr.Query.Geofilt
 import Solr.Prelude
 
 import Builder
-import Solr.Query.Internal
+import Solr.Query.Internal.Internal
 
 type Latitude = Double
 type Longitude = Double
 
+-- | A 'GeofiltQuery' exists only through its 'LocalParams'. Use 'def' to
+-- construct a 'GeofiltQuery' to 'Solr.Query.compile'.
 newtype GeofiltQuery
   = Q { unQ :: Builder }
 
@@ -31,22 +33,22 @@ instance Query GeofiltQuery where
     , _sfield :: Maybe Text
     }
 
-  compileLocalParams :: LocalParams GeofiltQuery -> [Builder]
+  compileLocalParams :: LocalParams GeofiltQuery -> [(Builder, Builder)]
   compileLocalParams GeofiltParams{_d, _pt, _sfield} =
-    "geofilt" : catMaybes
+    ("type", "geofilt") : catMaybes
       [ compileD <$> _d
       , compilePt <$> _pt
       , compileSfield <$> _sfield
       ]
    where
-    compileD :: Double -> Builder
-    compileD n = "d=" <> bshow n
+    compileD :: Double -> (Builder, Builder)
+    compileD n = ("d", bshow n)
 
-    compilePt :: (Latitude, Longitude) -> Builder
-    compilePt (n, m) = "pt=" <> bshow n <> char ',' <> bshow m
+    compilePt :: (Latitude, Longitude) -> (Builder, Builder)
+    compilePt (n, m) = ("pt", bshow n <> char ',' <> bshow m)
 
-    compileSfield :: Text -> Builder
-    compileSfield s = "sfield=" <> thaw' s
+    compileSfield :: Text -> (Builder, Builder)
+    compileSfield s = ("sfield", thaw' s)
 
 instance Default (LocalParams GeofiltQuery) where
   def :: LocalParams GeofiltQuery

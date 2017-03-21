@@ -14,7 +14,6 @@ module Solr.Query
   , Param
   , fl
   , fq
-  , q
   , rows
   , sortAsc
   , sortDesc
@@ -27,11 +26,17 @@ module Solr.Query
 import Solr.Prelude
 
 import Builder
-import Solr.Query.Internal
+import Solr.Query.Internal.Internal
 import Solr.Query.Param
 
 import qualified Data.Text.Lazy
 
--- | Compile a list of 'Param' to a lazy 'Data.Text.Lazy.Text'.
-compile :: [Param] -> Data.Text.Lazy.Text
-compile = freeze . intersperse '&' . map compileParam
+-- | Compile a 'Query' a lazy 'Data.Text.Lazy.Text'.
+compile
+  :: Query query => [Param] -> LocalParams query -> query -> Data.Text.Lazy.Text
+compile params locals query =
+  freeze (intersperse '&'
+    ("q=" <> compileQuery locals query : map f params))
+ where
+  f :: Param -> Builder
+  f = (\(x, y) -> x <> char '=' <> y) . compileParam

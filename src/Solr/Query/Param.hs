@@ -4,13 +4,12 @@ import Solr.Prelude
 
 import Builder
 import Solr.Query.Filter.Internal
-import Solr.Query.Internal
+import Solr.Query.Internal.Internal
 
 -- | A query parameter.
 data Param where
   ParamFl :: Text -> Param
   ParamFq :: Query query => FilterParams query -> query -> Param
-  ParamQ :: Query query => LocalParams query -> query -> Param
   ParamRows :: Int -> Param
   ParamSortAsc :: Text -> Param
   ParamSortDesc :: Text -> Param
@@ -23,10 +22,6 @@ fl = ParamFl
 -- | The @\'fq\'@ query parameter.
 fq :: Query query => FilterParams query -> query -> Param
 fq = ParamFq
-
--- | The @\'q\'@ query parameter.
-q :: Query query => LocalParams query -> query -> Param
-q = ParamQ
 
 -- | The @\'rows\'@ query parameter.
 rows :: Int -> Param
@@ -44,12 +39,12 @@ sortDesc = ParamSortDesc
 start :: Int -> Param
 start = ParamStart
 
-compileParam :: Param -> Builder
+-- | Compile a 'Param' to a its ('Builder', 'Builder') equivalent.
+compileParam :: Param -> (Builder, Builder)
 compileParam = \case
-  ParamFl s -> "fl=" <> thaw' s
-  ParamFq locals query -> "fq=" <> compileFilterQuery locals query
-  ParamQ locals query -> "q=" <> compileQuery locals query
-  ParamRows n -> "rows=" <> bshow n
-  ParamSortAsc s -> "sort=" <> thaw' s <> " asc"
-  ParamSortDesc s -> "sort=" <> thaw' s <> " desc"
-  ParamStart n -> "start=" <> bshow n
+  ParamFl s            -> ("fl",    thaw' s)
+  ParamFq locals query -> ("fq",    compileFilterQuery locals query)
+  ParamRows n          -> ("rows",  bshow n)
+  ParamSortAsc s       -> ("sort",  thaw' s <> " asc")
+  ParamSortDesc s      -> ("sort",  thaw' s <> " desc")
+  ParamStart n         -> ("start", bshow n)
