@@ -3,6 +3,7 @@
 module Solr.Query.Internal
   ( Query(..)
   , Param(..)
+  , coerceQuery
   , compileQuery
   , compileParam
   ) where

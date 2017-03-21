@@ -10,6 +10,9 @@ class (Coercible query Builder, Default (LocalParams query))
 
   compileLocalParams :: LocalParams query -> [(Builder, Builder)]
 
+coerceQuery :: Query query => query -> Builder
+coerceQuery = coerce
+
 defaultMempty :: Coercible query Builder => query
 defaultMempty = coerce (mempty :: Builder)
 

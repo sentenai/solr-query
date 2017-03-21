@@ -20,13 +20,13 @@ instance Monoid LuceneQuery where
 instance Query LuceneQuery where
   data LocalParams LuceneQuery = LuceneParams
     { paramDf :: Maybe Text
-    , paramQop :: Maybe QOp
+    , paramQOp :: Maybe QOp
     }
 
   compileLocalParams :: LocalParams LuceneQuery -> [(Builder, Builder)]
-  compileLocalParams (LuceneParams{paramDf, paramQop}) = catMaybes
+  compileLocalParams (LuceneParams{paramDf, paramQOp}) = catMaybes
     [ compileDf <$> paramDf
-    , compileQOp <$> paramQop
+    , compileQOp <$> paramQOp
     ]
    where
     compileDf :: Text -> (Builder, Builder)
@@ -49,11 +49,11 @@ df x s = s { paramDf = Just x }
 
 -- | The @\'op=AND\'@ local parameter.
 opAnd :: LocalParams LuceneQuery -> LocalParams LuceneQuery
-opAnd s = s { paramQop = Just QOpAnd }
+opAnd s = s { paramQOp = Just QOpAnd }
 
 -- | The @\'op=OR\'@ local parameter.
 opOr :: LocalParams LuceneQuery -> LocalParams LuceneQuery
-opOr s = s { paramQop = Just QOpOr }
+opOr s = s { paramQOp = Just QOpOr }
 
 -- | A default field query.
 defaultField :: LuceneExpr ty -> LuceneQuery
