@@ -10,13 +10,6 @@ import Solr.Query.Lucene.Expr.Type
 newtype LuceneQuery
   = Q { unQ :: Builder }
 
-instance Monoid LuceneQuery where
-  mempty :: LuceneQuery
-  mempty = defaultMempty
-
-  mappend :: LuceneQuery -> LuceneQuery -> LuceneQuery
-  mappend = defaultMappend
-
 instance Query LuceneQuery where
   data LocalParams LuceneQuery = LuceneParams
     { paramDf :: Maybe Text
@@ -54,6 +47,10 @@ opAnd s = s { paramQOp = Just QOpAnd }
 -- | The @\'op=OR\'@ local parameter.
 opOr :: LocalParams LuceneQuery -> LocalParams LuceneQuery
 opOr s = s { paramQOp = Just QOpOr }
+
+-- | Negate a 'LuceneQuery'.
+neg :: LuceneQuery -> LuceneQuery
+neg (Q q) = coerce (parens ("*:* NOT " <> q))
 
 -- | A default field query.
 defaultField :: LuceneExpr ty -> LuceneQuery

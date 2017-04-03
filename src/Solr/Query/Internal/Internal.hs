@@ -13,31 +13,17 @@ class (Coercible query Builder, Default (LocalParams query))
 coerceQuery :: Query query => query -> Builder
 coerceQuery = coerce
 
-defaultMempty :: Coercible query Builder => query
-defaultMempty = coerce (mempty :: Builder)
+(&&:) :: Query query => query -> query -> query
+(&&:) q1 q2 = coerce (parens (coerce q1 <> " AND " <> coerce q2))
+infixr 3 &&:
 
-defaultMappend :: Coercible query Builder => query -> query -> query
-defaultMappend q1 q2 = coerce (coerce q1 `mappend` char ' ' `mappend` coerce q2)
+(||:) :: Query query => query -> query -> query
+(||:) q1 q2 = coerce (parens (coerce q1 <> " OR " <> coerce q2))
+infixr 2 ||:
 
--- | This clause <https://lucene.apache.org/core/6_4_2/core/org/apache/lucene/search/BooleanClause.Occur.html#SHOULD should>
--- occur.
-should :: Query query => query -> query
-should = id
-
--- | This clause <https://lucene.apache.org/core/6_4_2/core/org/apache/lucene/search/BooleanClause.Occur.html#MUST must>
--- occur.
-must :: Query query => query -> query
-must = coerce . (char '+' <>) . parens . coerce
-
--- | This clause <https://lucene.apache.org/core/6_4_2/core/org/apache/lucene/search/BooleanClause.Occur.html#MUST_NOT must not>
--- occur.
-mustNot :: Query query => query -> query
-mustNot = coerce . (char '-' <>) . parens . coerce
-
--- | This clause <https://lucene.apache.org/core/6_4_2/core/org/apache/lucene/search/BooleanClause.Occur.html#FILTER must>
--- occur, but it does not participate in scoring.
-filt :: Query query => query -> query
-filt = coerce . (char '#' <>) . parens . coerce
+(-:) :: Query query => query -> query -> query
+(-:) q1 q2 = coerce (parens (coerce q1 <> " NOT " <> coerce q2))
+infixl 6 -:
 
 -- | 'SomeQuery' is a simple wrapper around a 'Query' that enables composition
 -- through its 'Monoid' instance.
@@ -45,13 +31,6 @@ filt = coerce . (char '#' <>) . parens . coerce
 -- It has no 'LocalParams' of its own - you can only create them with 'def'.
 newtype SomeQuery
   = SomeQ Builder
-
-instance Monoid SomeQuery where
-  mempty :: SomeQuery
-  mempty = defaultMempty
-
-  mappend :: SomeQuery -> SomeQuery -> SomeQuery
-  mappend = defaultMappend
 
 instance Query SomeQuery where
   data LocalParams SomeQuery

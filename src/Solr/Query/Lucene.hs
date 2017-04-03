@@ -1,6 +1,7 @@
 module Solr.Query.Lucene
   ( -- * Lucene query
     LuceneQuery
+  , neg
   , defaultField
   , (=:)
   , field

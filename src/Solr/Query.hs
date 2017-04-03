@@ -2,10 +2,9 @@ module Solr.Query
   ( -- * Query class
     Query
   , LocalParams
-  , should
-  , must
-  , mustNot
-  , filt
+  , (&&:)
+  , (||:)
+  , (-:)
   , SomeQuery
   , someQuery
     -- * Compiling a 'Query'
