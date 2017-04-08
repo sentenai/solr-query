@@ -25,6 +25,14 @@ infixr 2 ||:
 (-:) q1 q2 = coerce (parens (coerce q1 <> " NOT " <> coerce q2))
 infixl 6 -:
 
+-- | The @\'^\'@ operator, which boosts a 'Query'.
+boost :: Query query => Float -> query -> query
+boost n q = coerce (parens (coerce q <> char '^' <> bshow n))
+
+-- | The @\'^=\'@ operator, which assigns a constant score to a 'Query'.
+score :: Query query => Float -> query -> query
+score n q = coerce (parens (coerce q <> "^=" <> bshow n))
+
 -- | 'SomeQuery' is a simple wrapper around a 'Query' that enables composition
 -- through its 'Monoid' instance.
 --

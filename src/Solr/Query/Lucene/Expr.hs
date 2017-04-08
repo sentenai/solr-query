@@ -45,6 +45,10 @@ false = E "false"
 word :: Text -> LuceneExpr 'TWord
 word s = E (thaw' s)
 
+-- | A fuzzy word.
+fuzzy :: Text -> Int -> LuceneExpr 'TWord
+fuzzy s n = E (thaw' s <> char '~' <> bshow (max 0 (min 2 n)))
+
 -- | A single word that may contain wildcard characters (@\'?\'@ and @\'*\'@),
 -- although the meaning of consecutive @\'*\'@s is probably ill-defined. Must
 -- also /not/ contain any spaces or tildes (@\'~\'@), though this is not
@@ -65,6 +69,11 @@ regex s = E (char '/' <> thaw' s <> char '/')
 -- The list should not be empty.
 phrase :: [LuceneExpr 'TWord] -> LuceneExpr 'TPhrase
 phrase ss = E (dquotes (intersperse ' ' (map unE ss)))
+
+-- | A proximity phrase.
+proximity :: Int -> [LuceneExpr 'TWord] -> LuceneExpr 'TPhrase
+proximity n ss =
+  E (dquotes (intersperse ' ' (map unE ss)) <> char '~' <> bshow (max 0 n))
 
 -- | A 'DateTime' expression. This may either be a timestamp ('UTCTime'), or a
 -- "truncated" 'DateTime' such as @(2015, 5, 12)@.
@@ -93,35 +102,6 @@ datetime t =
   -- Format to 5 decimal places
   formatMilli :: Millisecond -> Builder
   formatMilli ml = thawStr (tail (printf "%.5f" (ml / 100))) <> "Z\""
-
-
--- | The @\'~\'@ operator, which fuzzes its argument (either a word or phrase)
--- by a numeric amount.
-(~:) :: Fuzzable a => LuceneExpr a -> Int -> LuceneExpr 'TFuzzy
-E e ~: n = E (e <> char '~' <> bshow n)
-infix 9 ~:
-
--- | Named version of ('~:').
-fuzz :: Fuzzable a => LuceneExpr a -> Int -> LuceneExpr 'TFuzzy
-fuzz = (~:)
-
--- | Short-hand for fuzzing a word by 2. This is the default behavior of a
--- Solr @\'~\'@ operator without an integer added.
---
--- @
--- 'fuzzy' e = e '~:' 2
--- @
-fuzzy :: LuceneExpr 'TWord -> LuceneExpr 'TFuzzy
-fuzzy e = e ~: 2
-
--- | The @\'^\'@ operator, which boosts its argument.
-(^:) :: Boostable a => LuceneExpr a -> Float -> LuceneExpr 'TBoosted
-E e ^: n = E (e <> char '^' <> bshow n)
-infix 9 ^:
-
--- | Named version of ('^:').
-boost :: Boostable a => LuceneExpr a -> Float -> LuceneExpr 'TBoosted
-boost = (^:)
 
 -- | A range expression.
 to :: Rangeable a b => Boundary a -> Boundary b -> LuceneExpr 'TRange

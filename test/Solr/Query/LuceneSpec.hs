@@ -20,6 +20,13 @@ spec =
     it "wild" (test def ("foo" =: wild "b?r") "q=foo:b?r")
     it "regex" (test def ("foo" =: regex "[mb]oat") "q=foo:/[mb]oat/")
     it "phrase" (test def ("foo" =: phrase ["bar", "baz"]) "q=foo:\"bar baz\"")
+    it "proximity" (test def ("foo" =: proximity 5 ["bar", "baz"]) "q=foo:\"bar baz\"~5")
+
+    describe "fuzzy" $ do
+      it "fuzzes with ~" (test def ("foo" =: fuzzy "bar" 1) "q=foo:bar~1")
+      it "clamps up to 0-2" $ do
+        test def ("foo" =: fuzzy "bar" (-1)) "q=foo:bar~0"
+        test def ("foo" =: fuzzy "bar" 3) "q=foo:bar~2"
 
     describe "datetime" $ do
       it "utc" (test def ("foo" =: datetime t1) "q=foo:\"2015-01-01T00:00:00Z\"")
@@ -42,10 +49,6 @@ spec =
       it "clamps second 60 <-" (test def ("foo" =: datetime (2015, 1, 1, 1, 1, 61)) "q=foo:\"2015-01-01T01:01:60\"")
       it "clamps millisecond -> 0" (test def ("foo" =: datetime (2015, 1, 1, 1, 1, 1, -1)) "q=foo:\"2015-01-01T01:01:01.00000Z\"")
       it "clamps millisecond 99.999 <-" (test def ("foo" =: datetime (2015, 1, 1, 1, 1, 1, 100)) "q=foo:\"2015-01-01T01:01:01.99999Z\"")
-
-    describe "fuzzy" $ do
-      it "word" (test def ("foo" =: word "bar" ~: 1) "q=foo:bar~1")
-      it "phrase" (test def ("foo" =: phrase ["bar", "baz"] ~: 1) "q=foo:\"bar baz\"~1")
 
     describe "range" $ do
       it "[* TO *]" (test def ("foo" =: star `to` star) "q=foo:[* TO *]")
@@ -99,17 +102,12 @@ spec =
         it "lt" (test def ("foo" =: lt (datetime t1)) "q=foo:[* TO \"2015-01-01T00:00:00Z\"}")
         it "lte" (test def ("foo" =: lte (datetime t1)) "q=foo:[* TO \"2015-01-01T00:00:00Z\"]")
 
-    describe "boost" $ do
-      it "word" (test def ("foo" =: word "bar" ^: 3) "q=foo:bar^3.0")
-      it "phrase" (test def ("foo" =: phrase ["bar", "baz"] ^: 3) "q=foo:\"bar baz\"^3.0")
-
     it "&&:" (test def ("foo" =: word "bar" &&: "baz" =: word "qux") "q=(foo:bar AND baz:qux)")
     it "||:" (test def ("foo" =: word "bar" ||: "baz" =: word "qux") "q=(foo:bar OR baz:qux)")
     it "-:" (test def ("foo" =: word "bar" -: "baz" =: word "qux") "q=(foo:bar NOT baz:qux)")
 
-    describe "constant score" $ do
-      it "word" (test def ("foo" =: word "bar" ^=: 3.5) "q=foo:bar^=3.5")
-      it "phrase" (test def ("foo" =: phrase ["bar", "baz"] ^=: 3.5) "q=foo:\"bar baz\"^=3.5")
+    it "boost" (test def (boost 1.5 ("foo" =: word "bar")) "q=(foo:bar^1.5)")
+    it "score" (test def (score 1.5 ("foo" =: word "bar")) "q=(foo:bar^=1.5)")
 
     describe "params" $ do
       it "one" (test (def & df "foo") (defaultField (word "bar")) "q={!df=foo}bar")

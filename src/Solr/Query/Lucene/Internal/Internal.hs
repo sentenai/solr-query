@@ -5,7 +5,6 @@ import Solr.Prelude
 import Builder
 import Solr.Query.Internal.Internal
 import Solr.Query.Lucene.Expr
-import Solr.Query.Lucene.Expr.Type
 
 newtype LuceneQuery
   = Q { unQ :: Builder }
@@ -64,15 +63,3 @@ infix 7 =:
 -- | Named version of ('=:').
 field :: Text -> LuceneExpr ty -> LuceneQuery
 field = (=:)
-
--- | The @\'^=\'@ constant score operator.
---
--- This is given right-fixity to reject queries like @q ^= 1 ^= 2@.
-(^=:) :: LuceneQuery -> Float -> LuceneQuery
-Q q ^=: n = Q (q <> "^=" <> bshow n)
-infixr 6 ^=:
-
--- | Named version of ('^=:').
-score :: LuceneQuery -> Float -> LuceneQuery
-score = (^=:)
-infixr 6 `score`

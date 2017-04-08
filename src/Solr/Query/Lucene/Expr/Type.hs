@@ -20,15 +20,8 @@ data LuceneExprTy
   | TRegex
   | TPhrase
   | TDateTime
-  | TFuzzy
-  | TBoosted
   | TRange
   | TSpatialPredicate
-
--- | 'word's and 'phrase's can fuzzed by the '~:' operator.
-class Fuzzable (ty :: LuceneExprTy)
-instance Fuzzable 'TWord
-instance Fuzzable 'TPhrase
 
 -- | 'word's and 'phrase's can be boosted by the '^:' operator.
 class Boostable (ty :: LuceneExprTy)
@@ -49,7 +42,6 @@ instance Rangeable 'TAny      'TDateTime
 instance Rangeable 'TAny      'TAny
 
 #if MIN_VERSION_base(4,9,0)
-instance {-# OVERLAPPABLE #-} TypeError ('Text "You can only fuzz words and phrases") => Fuzzable a
 instance {-# OVERLAPPABLE #-} TypeError ('Text "You can only boost words and phrases") => Boostable a
 instance {-# OVERLAPPABLE #-} TypeError ('Text "You can only use numbers, words, and dates in a range expression") => Rangeable a b
 #endif

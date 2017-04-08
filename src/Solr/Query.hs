@@ -5,6 +5,8 @@ module Solr.Query
   , (&&:)
   , (||:)
   , (-:)
+  , boost
+  , score
   , SomeQuery
   , someQuery
     -- * Compiling a 'Query'

@@ -5,8 +5,6 @@ module Solr.Query.Lucene
   , defaultField
   , (=:)
   , field
-  , (^=:)
-  , score
     -- ** Lucene expression
   , LuceneExpr
     -- *** @int@ expression
@@ -18,12 +16,14 @@ module Solr.Query.Lucene
   , false
     -- *** @word@ expression
   , word
+  , fuzzy
     -- *** @wild@ expression
   , wild
     -- *** @regex@ expression
   , regex
     -- *** @phrase@ expression
   , phrase
+  , proximity
     -- *** @datetime@ expression
   , datetime
   , DateTime
@@ -34,13 +34,6 @@ module Solr.Query.Lucene
   , Minute
   , Second
   , Millisecond
-    -- *** @fuzz@ expression
-  , (~:)
-  , fuzz
-  , fuzzy
-    -- *** @boost@ expression
-  , (^:)
-  , boost
     -- *** @range@ expressions
   , to
   , gt
@@ -58,7 +51,6 @@ module Solr.Query.Lucene
   , polygon
     -- *** Lucene expression types
   , LuceneExprTy(..)
-  , Fuzzable
   , Boostable
   , Rangeable
     -- ** Local parameters
