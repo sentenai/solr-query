@@ -41,13 +41,13 @@ newtype SomeQuery
   = SomeQ Builder
 
 instance Query SomeQuery where
-  data LocalParams SomeQuery
+  data LocalParams SomeQuery = SomeQueryParams -- unused
 
   compileLocalParams :: LocalParams SomeQuery -> [(Builder, Builder)]
   compileLocalParams _ = []
 
 instance Default (LocalParams SomeQuery) where
-  def = error "LocalParams SomeQuery: def"
+  def = SomeQueryParams
 
 -- | Create a 'SomeQuery' from a 'Query' and its 'LocalParams'.
 someQuery :: Query query => LocalParams query -> query -> SomeQuery

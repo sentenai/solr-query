@@ -49,6 +49,8 @@ module Solr.Query.Lucene
   , isWithin
   , Shape
   , polygon
+    -- *** Embedded 'GeofiltQuery'
+  , geofilt
     -- *** Lucene expression types
   , LuceneExprTy(..)
   , Boostable

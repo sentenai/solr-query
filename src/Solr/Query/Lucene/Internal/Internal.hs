@@ -4,6 +4,7 @@ import Solr.Prelude
 
 import Builder
 import Solr.Query.Internal.Internal
+import Solr.Query.Geofilt
 import Solr.Query.Lucene.Expr
 
 newtype LuceneQuery
@@ -63,3 +64,7 @@ infix 7 =:
 -- | Named version of ('=:').
 field :: Text -> LuceneExpr ty -> LuceneQuery
 field = (=:)
+
+-- | Embed a 'GeofiltQuery' in a 'LuceneQuery'
+geofilt :: LocalParams GeofiltQuery -> LuceneQuery
+geofilt params = Q (compileQuery params def)
