@@ -36,6 +36,7 @@ library
     , time        >= 1.1.2.0 && < 1.7
   exposed-modules:
       Solr.Query
+      Solr.Query.Escape
       Solr.Query.Filter
       Solr.Query.Geofilt
       Solr.Query.Internal

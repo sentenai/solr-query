@@ -47,7 +47,7 @@ word s = E (thaw' s)
 
 -- | A fuzzy word.
 fuzzy :: Text -> Int -> LuceneExpr 'TWord
-fuzzy s n = E (thaw' s <> char '~' <> bshow (max 0 (min 2 n)))
+fuzzy s n = E (mconcat [thaw' s, char '~', bshow (max 0 (min 2 n))])
 
 -- | A single word that may contain wildcard characters (@\'?\'@ and @\'*\'@),
 -- although the meaning of consecutive @\'*\'@s is probably ill-defined. Must
@@ -61,7 +61,7 @@ wild s = E (thaw' s)
 -- Note that the leading and trailing @\'/\'@ must be omitted. The regex
 -- innards are not type checked in any way.
 regex :: Text -> LuceneExpr 'TRegex
-regex s = E (char '/' <> thaw' s <> char '/')
+regex s = E (mconcat [char '/', thaw' s, char '/'])
 
 -- | A phrase, composed of multiple (non-fuzzy) words, none of which may
 -- contain wildcard characters. Both of these properties are enforced by the
@@ -72,8 +72,11 @@ phrase ss = E (dquotes (intersperse ' ' (map unE ss)))
 
 -- | A proximity phrase.
 proximity :: Int -> [LuceneExpr 'TWord] -> LuceneExpr 'TPhrase
-proximity n ss =
-  E (dquotes (intersperse ' ' (map unE ss)) <> char '~' <> bshow (max 0 n))
+proximity n ss = E (mconcat
+  [ dquotes (intersperse ' ' (map unE ss))
+  , char '~'
+  , bshow (max 0 n)
+  ])
 
 -- | A 'DateTime' expression. This may either be a timestamp ('UTCTime'), or a
 -- "truncated" 'DateTime' such as @(2015, 5, 12)@.
@@ -94,7 +97,7 @@ datetime t =
               (go ':' fmt formatMilli)))))
    where
     go :: Char -> (a -> String) -> (b -> Builder) -> (a, Maybe b) -> Builder
-    go c f g (a, b) = char c <> thawStr (f a) <> maybe (char '"') g b
+    go c f g (a, b) = mconcat [char c, thawStr (f a), maybe (char '"') g b]
 
     fmt :: Int -> String
     fmt = printf "%02d"
@@ -105,7 +108,7 @@ datetime t =
 
 -- | A range expression.
 to :: Rangeable a b => Boundary a -> Boundary b -> LuceneExpr 'TRange
-to b1 b2 = E (lhs b1 <> " TO " <> rhs b2)
+to b1 b2 = E (mconcat [lhs b1, " TO ", rhs b2])
  where
   lhs :: Boundary a -> Builder
   lhs (Inclusive e) = char '[' <> unE e
@@ -180,7 +183,7 @@ intersects (S s) = E (dquotes ("Intersects" <> parens s))
 
 -- | @\'IsWithin\'@ spatial predicate.
 isWithin :: Shape -> LuceneExpr 'TSpatialPredicate
-isWithin (S s) = E ("IsWithin(" <> s <> char ')')
+isWithin (S s) = E (mconcat ["IsWithin(", s, char ')'])
 
 -- | A shape.
 newtype Shape
