@@ -1,4 +1,16 @@
-module Solr.Query.Lucene.Internal.Internal where
+module Solr.Query.Lucene.Internal.Internal
+  ( LuceneQuery(..)
+  , LocalParams(LuceneParams, paramDf, paramQOp)
+  , QOp(..)
+  , df
+  , opAnd
+  , opOr
+  , neg
+  , defaultField
+  , (=:)
+  , field
+  , geofilt
+  ) where
 
 import Solr.Prelude
 
