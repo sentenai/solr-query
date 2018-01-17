@@ -12,6 +12,8 @@ import Solr.Query.Lucene.Expr.Type
 
 import Data.String (IsString(..))
 
+import qualified Data.Text as Text
+
 -- | A @lucene@ expression.
 newtype LuceneExpr (t :: LuceneExprTy) = E { unE :: Builder }
   deriving (Eq, Show)
@@ -43,7 +45,10 @@ false = E "false"
 -- 'LuceneExpr' 'TWord', but usually an explicit type signature
 -- will be required (at the interpretation site or earlier).
 word :: Text -> LuceneExpr 'TWord
-word s = E (thaw' s)
+word s =
+  if Text.null s
+    then E "\"\""
+    else E (thaw' s)
 
 -- | A fuzzy word.
 fuzzy :: Text -> Int -> LuceneExpr 'TWord
