@@ -165,7 +165,7 @@ lte e = star `to` incl e
 data Boundary ty where
   Inclusive :: LuceneExpr ty -> Boundary ty
   Exclusive :: LuceneExpr ty -> Boundary ty
-  Star :: Boundary 'TAny
+  Star :: Boundary ty
 
 deriving instance Eq (Boundary ty)
 deriving instance Show (Boundary ty)
@@ -178,9 +178,13 @@ incl = Inclusive
 excl :: LuceneExpr a -> Boundary a
 excl = Exclusive
 
--- | @\'*\'@ operator, signifying the minimum or maximun bound of a range.
+-- | @\'*\'@ operator, signifying the minimum or maximum bound of a range.
 star :: Boundary 'TAny
 star = Star
+
+-- | Returns 'Star' if Nothing
+fromMaybeStar :: Maybe (Boundary a) -> Boundary a
+fromMaybeStar = fromMaybe Star
 
 -- | @\'Intersects\'@ spatial predicate.
 intersects :: Shape -> LuceneExpr 'TSpatialPredicate
