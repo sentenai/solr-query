@@ -1,3 +1,5 @@
+{-# LANGUAGE TypeApplications #-}
+
 module Solr.Query.LuceneSpec where
 
 import Solr.Query
@@ -51,7 +53,7 @@ spec =
       it "clamps millisecond 99.999 <-" (test def ("foo" =: datetime (2015, 1, 1, 1, 1, 1, 100)) "q=foo:\"2015-01-01T01:01:01.99999Z\"")
 
     describe "range" $ do
-      it "[* TO *]" (test def ("foo" =: star `to` star) "q=foo:[* TO *]")
+      it "[* TO *]" (test def ("foo" =: (star @ 'TNum) `to` star) "q=foo:[* TO *]")
 
       describe "int" $ do
         it "incl/incl" (test def ("foo" =: incl (int 5) `to` incl (int 6)) "q=foo:[5 TO 6]")
@@ -96,7 +98,7 @@ spec =
         it "excl/excl" (test def ("foo" =: excl (datetime t1) `to` excl (datetime t2)) "q=foo:{\"2015-01-01T00:00:00Z\" TO \"2016-01-01T00:00:00Z\"}")
         it "star/incl" (test def ("foo" =: star `to` incl (datetime t1)) "q=foo:[* TO \"2015-01-01T00:00:00Z\"]")
         it "incl/star" (test def ("foo" =: incl (datetime t1) `to` star) "q=foo:[\"2015-01-01T00:00:00Z\" TO *]")
-        it "star/star" (test def ("foo" =: star `to` star) "q=foo:[* TO *]")
+        it "star/star" (test def ("foo" =: (star @ 'TNum) `to` star) "q=foo:[* TO *]")
         it "gt" (test def ("foo" =: gt (datetime t1)) "q=foo:{\"2015-01-01T00:00:00Z\" TO *]")
         it "gte" (test def ("foo" =: gte (datetime t1)) "q=foo:[\"2015-01-01T00:00:00Z\" TO *]")
         it "lt" (test def ("foo" =: lt (datetime t1)) "q=foo:[* TO \"2015-01-01T00:00:00Z\"}")

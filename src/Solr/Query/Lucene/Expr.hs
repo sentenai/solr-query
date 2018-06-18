@@ -112,7 +112,7 @@ datetime t =
   formatMilli ml = thawStr (tail (printf "%.5f" (ml / 100))) <> "Z\""
 
 -- | A range expression.
-to :: Rangeable a b => Boundary a -> Boundary b -> LuceneExpr 'TRange
+to :: Rangeable a => Boundary a -> Boundary a -> LuceneExpr 'TRange
 to b1 b2 = E (mconcat [lhs b1, " TO ", rhs b2])
  where
   lhs :: Boundary a -> Builder
@@ -131,7 +131,7 @@ infix 9 `to`
 -- @
 -- 'gt' e = 'excl' e \`to\` 'star'
 -- @
-gt :: Rangeable a 'TAny => LuceneExpr a -> LuceneExpr 'TRange
+gt :: Rangeable a => LuceneExpr a -> LuceneExpr 'TRange
 gt e = excl e `to` star
 
 -- | Short-hand for a greater-than-or-equal-to range query.
@@ -139,7 +139,7 @@ gt e = excl e `to` star
 -- @
 -- 'gte' e = 'incl' e \`to\` 'star'
 -- @
-gte :: Rangeable a 'TAny => LuceneExpr a -> LuceneExpr 'TRange
+gte :: Rangeable a => LuceneExpr a -> LuceneExpr 'TRange
 gte e = incl e `to` star
 
 -- | Short-hand for a less-than range query.
@@ -147,7 +147,7 @@ gte e = incl e `to` star
 -- @
 --  'lt' e = 'star' \`to\` 'excl' e
 -- @
-lt :: Rangeable 'TAny a => LuceneExpr a -> LuceneExpr 'TRange
+lt :: Rangeable a => LuceneExpr a -> LuceneExpr 'TRange
 lt e = star `to` excl e
 
 -- | Short-hand for a less-than-or-equal-to range query.
@@ -155,7 +155,7 @@ lt e = star `to` excl e
 -- @
 -- 'lte' e = 'star' \`to\` 'incl' e
 -- @
-lte :: Rangeable 'TAny a => LuceneExpr a -> LuceneExpr 'TRange
+lte :: Rangeable a => LuceneExpr a -> LuceneExpr 'TRange
 lte e = star `to` incl e
 
 -- | An inclusive or exclusive expression for use in a range query, built with
@@ -165,7 +165,7 @@ lte e = star `to` incl e
 data Boundary ty where
   Inclusive :: LuceneExpr ty -> Boundary ty
   Exclusive :: LuceneExpr ty -> Boundary ty
-  Star :: Boundary 'TAny
+  Star :: Boundary ty
 
 deriving instance Eq (Boundary ty)
 deriving instance Show (Boundary ty)
@@ -178,8 +178,8 @@ incl = Inclusive
 excl :: LuceneExpr a -> Boundary a
 excl = Exclusive
 
--- | @\'*\'@ operator, signifying the minimum or maximun bound of a range.
-star :: Boundary 'TAny
+-- | @\'*\'@ operator, signifying the minimum or maximum bound of a range.
+star :: Boundary a
 star = Star
 
 -- | @\'Intersects\'@ spatial predicate.
