@@ -44,7 +44,6 @@ module Solr.Query.Lucene
   , incl
   , excl
   , star
-  , fromMaybeStar
     -- *** @spatial predicate@ expressions
   , intersects
   , isWithin
