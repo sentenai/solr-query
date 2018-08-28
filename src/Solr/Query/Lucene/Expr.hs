@@ -23,11 +23,11 @@ instance IsString (LuceneExpr 'TWord) where
 
 -- | An @int@ expression.
 int :: Int64 -> LuceneExpr 'TNum
-int n = E (bshow n)
+int n = E (dquotes (bshow n))
 
 -- | A @float@ expression.
 float :: Double -> LuceneExpr 'TNum
-float n = E (bshow n)
+float n = E (dquotes (bshow n))
 
 -- | A @true@ expression.
 true :: LuceneExpr 'TBool
