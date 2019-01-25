@@ -11,9 +11,12 @@ data Param where
   ParamFl :: Text -> Param
   ParamFq :: Query query => FilterParams query -> query -> Param
   ParamRows :: Int -> Param
-  ParamSortAsc :: Text -> Param
-  ParamSortDesc :: Text -> Param
+  ParamSort :: [(Text, SortWay)] -> Param
   ParamStart :: Int -> Param
+
+data SortWay
+  = Asc
+  | Desc
 
 -- | The @\'fl\'@ query parameter.
 fl :: Text -> Param
@@ -27,13 +30,9 @@ fq = ParamFq
 rows :: Int -> Param
 rows = ParamRows
 
--- | The @\'sort\'@ query parameter (ascending).
-sortAsc :: Text -> Param
-sortAsc = ParamSortAsc
-
--- | The @\'sort\'@ query parameter (descending).
-sortDesc :: Text -> Param
-sortDesc = ParamSortDesc
+-- | The @\'sort\'@ query parameter.
+sort :: [(Text, SortWay)] -> Param
+sort = ParamSort
 
 -- | The @\'start\'@ query parameter.
 start :: Int -> Param
@@ -45,6 +44,10 @@ compileParam = \case
   ParamFl s            -> ("fl",    thaw' s)
   ParamFq locals query -> ("fq",    compileFilterQuery locals query)
   ParamRows n          -> ("rows",  bshow n)
-  ParamSortAsc s       -> ("sort",  thaw' s <> " asc")
-  ParamSortDesc s      -> ("sort",  thaw' s <> " desc")
+  ParamSort ss         -> ("sort",  intersperse ',' (map compileSortParam ss))
   ParamStart n         -> ("start", bshow n)
+
+compileSortParam :: (Text, SortWay) -> Builder
+compileSortParam = \case
+  (s, Asc)  -> thaw' s <> " asc"
+  (s, Desc) -> thaw' s <> " desc"

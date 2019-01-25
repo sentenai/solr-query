@@ -16,8 +16,8 @@ module Solr.Query
   , fl
   , fq
   , rows
-  , sortAsc
-  , sortDesc
+  , sort
+  , SortWay(..)
   , start
     -- * Re-exports
   , (&)
