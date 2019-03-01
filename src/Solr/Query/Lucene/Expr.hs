@@ -66,7 +66,10 @@ wild s = E (thaw' s)
 -- Note that the leading and trailing @\'/\'@ must be omitted. The regex
 -- innards are not type checked in any way.
 regex :: Text -> LuceneExpr 'TRegex
-regex s = E (mconcat [char '/', thaw' s, char '/'])
+regex s = E (mconcat [char '/', thaw' s', char '/'])
+  where
+    s' :: Text
+    s' = Text.replace "/" "\\/" s
 
 -- | A phrase, composed of multiple (non-fuzzy) words, none of which may
 -- contain wildcard characters. Both of these properties are enforced by the
