@@ -3,8 +3,8 @@ version: 0.4.0.1
 synopsis: Solr query EDSL
 description: A typed Solr query EDSL.
 category: DSLs
-author: Mitchell Rosen
-maintainer: mitchellwrosen@gmail.com
+author: Sentenai, Mitchell Rosen
+maintainer: Sentenai
 github: Sentenai/solr-query
 license: BSD3
 copyright: 2016 Sentenai, Inc.

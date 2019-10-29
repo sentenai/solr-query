@@ -1,8 +1,10 @@
--- This file has been generated from package.yaml by hpack version 0.20.0.
+cabal-version: 1.12
+
+-- This file has been generated from package.yaml by hpack version 0.31.2.
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 53058fce0b6fd5ee5e39448e20842e236687bf2f642fee542426e6ee005a5af4
+-- hash: 556b70a06ce251ef3cb58f5b865d00a084527bcbf938493de4e2bfb5bc676d61
 
 name:           solr-query
 version:        0.4.0.1
@@ -11,13 +13,12 @@ description:    A typed Solr query EDSL.
 category:       DSLs
 homepage:       https://github.com/Sentenai/solr-query#readme
 bug-reports:    https://github.com/Sentenai/solr-query/issues
-author:         Mitchell Rosen
-maintainer:     mitchellwrosen@gmail.com
+author:         Sentenai, Mitchell Rosen
+maintainer:     Sentenai
 copyright:      2016 Sentenai, Inc.
 license:        BSD3
 license-file:   LICENSE
 build-type:     Simple
-cabal-version:  >= 1.10
 
 source-repository head
   type: git
