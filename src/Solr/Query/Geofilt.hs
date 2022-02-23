@@ -1,9 +1,8 @@
+{-# LANGUAGE TupleSections #-}
 module Solr.Query.Geofilt
   ( -- * Geofilt query
     GeofiltQuery
     -- ** Local params
-  , Latitude
-  , Longitude
   , d
   , pt
   , sfield
@@ -13,9 +12,6 @@ import Solr.Prelude
 
 import Builder
 import Solr.Query.Internal.Internal
-
-type Latitude = Double
-type Longitude = Double
 
 -- | A 'GeofiltQuery' exists only through its 'LocalParams'. Use 'def' to
 -- construct a 'GeofiltQuery' to 'Solr.Query.compile'.
@@ -29,7 +25,7 @@ instance Default GeofiltQuery where
 instance Query GeofiltQuery where
   data LocalParams GeofiltQuery = GeofiltParams
     { _d :: Maybe Double
-    , _pt :: Maybe (Latitude, Longitude)
+    , _pt :: Maybe [Double]
     , _sfield :: Maybe Text
     }
 
@@ -37,15 +33,17 @@ instance Query GeofiltQuery where
   compileLocalParams GeofiltParams{_d, _pt, _sfield} =
     ("type", "geofilt") : catMaybes
       [ compileD <$> _d
-      , compilePt <$> _pt
+      , ("pt",) . compilePt <$> _pt
       , compileSfield <$> _sfield
       ]
    where
     compileD :: Double -> (Builder, Builder)
     compileD n = ("d", bshow n)
 
-    compilePt :: (Latitude, Longitude) -> (Builder, Builder)
-    compilePt (n, m) = ("pt", bshow n <> char ',' <> bshow m)
+    compilePt :: [Double] -> Builder
+    compilePt [] = ""
+    compilePt [a] = bshow a
+    compilePt (a:as) = bshow a <> char ',' <> compilePt as
 
     compileSfield :: Text -> (Builder, Builder)
     compileSfield s = ("sfield", thaw' s)
@@ -60,9 +58,9 @@ d x s = s { _d = Just x }
 
 -- | The @\'pt\'@ local parameter.
 pt
-  :: Latitude -> Longitude -> LocalParams GeofiltQuery
+  :: [Double] -> LocalParams GeofiltQuery
   -> LocalParams GeofiltQuery
-pt x y s = s { _pt = Just (x, y) }
+pt p s = s { _pt = Just p }
 
 -- | The @\'sfield\'@ local parameter.
 sfield :: Text -> LocalParams GeofiltQuery -> LocalParams GeofiltQuery
